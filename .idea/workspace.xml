@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cbe55f0b-2e2b-435a-9230-0911be3640c2" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/ant.xml" afterPath="$PROJECT_DIR$/.idea/ant.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="svg2ico.iws" />
@@ -65,7 +64,7 @@
       <file leaf-file-name="Svg2Ico.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/net/sourceforge/svg2ico/Svg2Ico.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="13" column="53" selection-start="706" selection-end="706" vertical-scroll-proportion="0.3288364">
+            <state line="16" column="33" selection-start="847" selection-end="847" vertical-scroll-proportion="0.63492066">
               <folding />
             </state>
           </provider>
@@ -75,15 +74,6 @@
         <entry file="file://$PROJECT_DIR$/src/documentation/net/sourceforge/svg2ico/maven/PomGenerator.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="64" column="52" selection-start="2876" selection-end="2876" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DocumentationGenerator.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/documentation/net/sourceforge/svg2ico/documentation/DocumentationGenerator.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="40" column="95" selection-start="1857" selection-end="1857" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -166,7 +156,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/documentation/urin/maven/PomGenerator.java" />
         <option value="$PROJECT_DIR$/src/documentation/net.sourceforge.urin/maven/PomGenerator.java" />
         <option value="$PROJECT_DIR$/src/documentation/net.sourceforge.urin/documentation/DocumentationGenerator.java" />
         <option value="$PROJECT_DIR$/src/documentation/net.sourceforge.urin/documentation/DownloadsPage.java" />
@@ -182,6 +171,7 @@
         <option value="$PROJECT_DIR$/src/documentation/net/sourceforge/svg2ico/documentation/DownloadsPage.java" />
         <option value="$PROJECT_DIR$/build.xml" />
         <option value="$PROJECT_DIR$/src/main/net/sourceforge/svg2ico/Svg2Ico.java" />
+        <option value="$PROJECT_DIR$/.idea/workspace.xml" />
       </list>
     </option>
   </component>
@@ -396,6 +386,20 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="svg2ico" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="svg2ico" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value=".idea" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Favorites" />
@@ -534,7 +538,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-5" width="1040" height="781" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -542,11 +546,11 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32924962" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25614753" sideWeight="0.6707504" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25614753" sideWeight="0.6707504" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -583,7 +587,7 @@
     <option name="CHECK_COMMIT_MESSAGE_SPELLING" value="true" />
     <option name="DEFAULT_PATCH_EXTENSION" value="patch" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Mark - Manually commit version.properties." />
+    <option name="LAST_COMMIT_MESSAGE" value="Mark - Remove workspace.xml from version control." />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -600,6 +604,9 @@
     <MESSAGE value="Mark - Fix FRS path." />
     <MESSAGE value="Mark - Fix copyright." />
     <MESSAGE value="Mark - Manually commit version.properties." />
+    <MESSAGE value="Mark - Add extra classpath bits to ant configuration." />
+    <MESSAGE value="Mark - Correct some scope." />
+    <MESSAGE value="Mark - Remove workspace.xml from version control." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -700,7 +707,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/net/sourceforge/svg2ico/Svg2Ico.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="53" selection-start="706" selection-end="706" vertical-scroll-proportion="0.3288364">
+        <state line="16" column="33" selection-start="847" selection-end="847" vertical-scroll-proportion="0.63492066">
           <folding />
         </state>
       </provider>
