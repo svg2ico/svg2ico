@@ -375,7 +375,7 @@
              password="${sourceforge.password}" trust="true">
             <fileset dir="${release.directory}/build/dist/documentation/"/>
         </scp>
-        <scp todir="${sourceforge.username},svg2ico@web.sourceforge.net:/home/frs/project/u/ur/svg2ico/"
+        <scp todir="${sourceforge.username},svg2ico@web.sourceforge.net:/home/frs/project/s/sv/svg2ico/"
              password="${sourceforge.password}" trust="true">
             <fileset dir="${release.directory}/build/dist/binaries/"/>
         </scp>
