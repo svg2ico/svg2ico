@@ -35,7 +35,7 @@ public final class Svg2Ico {
         }
     }
 
-    public static BufferedImage loadImage(File svgFile, float width, float height) throws TranscoderException, FileNotFoundException {
+    private static BufferedImage loadImage(File svgFile, float width, float height) throws TranscoderException, FileNotFoundException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
