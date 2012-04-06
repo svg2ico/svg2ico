@@ -16,6 +16,8 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Task;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -23,11 +25,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public final class Svg2Ico {
+public final class Svg2Ico extends Task {
+
+    private String dest;
+
     public void execute() {
+        if (dest == null) {
+            throw new BuildException("Mandatory dest not set.");
+        }
         try {
             BufferedImage bufferedImage = loadImage(new File("docs/favicon.svg"), 32, 32);
-            ICOEncoder.write(bufferedImage, new File("output.ico"));
+            ICOEncoder.write(bufferedImage, new File(dest));
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (TranscoderException e) {
@@ -45,6 +53,10 @@ public final class Svg2Ico {
         imageTranscoder.transcode(input, null);
 
         return imageTranscoder.getBufferedImage();
+    }
+
+    public void setDest(final String dest) {
+        this.dest = dest;
     }
 
     private static final class BufferedImageTranscoder extends ImageTranscoder {

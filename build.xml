@@ -44,6 +44,12 @@
         </fileset>
     </path>
 
+    <path id="compile-libs">
+        <fileset dir="${location.lib}/compile">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
     <path id="shipped-libs">
         <fileset dir="${location.lib}/shipped">
             <include name="**/*.jar"/>
@@ -68,14 +74,6 @@
         </classpath>
     </typedef>
 
-    <typedef name="rasterize" classname="org.apache.tools.ant.taskdefs.optional.RasterizerTask">
-        <classpath>
-            <pathelement location="${location.lib}/build/RasterizerTask.jar"/>
-            <pathelement location="${location.lib}/build/batik-all.jar"/>
-            <pathelement location="${location.lib}/build/xml-apis-ext.jar"/>
-        </classpath>
-    </typedef>
-
     <target name="compile" description="compiles all classes">
         <echo message="Starting compile"/>
         <delete dir="${location.classes}"/>
@@ -93,12 +91,14 @@
 
         <javac destdir="${location.classes}" debug="on" source="1.6" target="1.6" includeantruntime="false">
             <src path="${location.src}"/>
+            <classpath refid="compile-libs"/>
             <classpath refid="shipped-libs"/>
         </javac>
 
         <javac destdir="${location.optimisedclasses}" debug="on" optimize="true" source="1.6" target="1.6"
                includeantruntime="false">
             <src path="${location.src}"/>
+            <classpath refid="compile-libs"/>
             <classpath refid="shipped-libs"/>
         </javac>
 
@@ -202,8 +202,22 @@
         <copy todir="${location.dist.documentation}">
             <fileset dir="${location.documentation}" excludes="**/*.html"/>
         </copy>
+        <typedef name="rasterize" classname="org.apache.tools.ant.taskdefs.optional.RasterizerTask">
+            <classpath>
+                <pathelement location="${location.lib}/build/RasterizerTask.jar"/>
+                <pathelement location="${location.lib}/build/batik-all.jar"/>
+                <pathelement location="${location.lib}/build/xml-apis-ext.jar"/>
+            </classpath>
+        </typedef>
         <rasterize result="image/png" src="${location.documentation}/favicon.svg"
                    dest="${location.dist.documentation}/favicon-32x32.png" classname="jaxp"/>
+        <taskdef name="svg2ico" classname="net.sourceforge.svg2ico.Svg2Ico">
+            <classpath>
+                <pathelement path="${location.dist.binaries}/svg2ico-${version}.jar"/>
+                <pathelement path="${location.lib}/build/batik-all.jar"/>
+            </classpath>
+        </taskdef>
+        <svg2ico dest="${location.dist.documentation}/favicon.ico"/>
         <java classname="net.sourceforge.svg2ico.documentation.DocumentationGenerator" failonerror="true" fork="true">
             <arg value="${location.dist}/documentation/${version}"/>
             <classpath>
@@ -214,8 +228,12 @@
         </java>
         <mkdir dir="${location.dist.documentation}/javadoc"/>
         <javadoc destdir="${location.dist.documentation}/javadoc" windowtitle="svg2ico version ${version}"
-                 doctitle="scg2ico version ${version}" classpathref="shipped-libs">
+                 doctitle="scg2ico version ${version}">
             <sourcepath path="${location.src}"/>
+            <classpath>
+                <path refid="compile-libs"/>
+                <path refid="shipped-libs"/>
+            </classpath>
         </javadoc>
     </target>
 
@@ -257,35 +275,39 @@
         <delete dir="${location.dist}"/>
         <mkdir dir="${location.dist.binaries}"/>
 
-        <antcall target="documentation"/>
-        <!--<antcall target="pom"/>-->
-        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${location.lib}/build/jarjar-1.2.jar"/>
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                 classpath="${location.lib}/build/jarjar-1.2.jar"/>
         <jarjar basedir="${location.classes}" destfile="${location.dist.binaries}/svg2ico-${version}.jar">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
             <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
             <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
-            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
+            <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
         </jarjar>
         <jarjar basedir="${location.optimisedclasses}"
-             destfile="${location.dist.binaries}/svg2ico-small-${version}.jar" compress="true">
+                destfile="${location.dist.binaries}/svg2ico-small-${version}.jar" compress="true">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
             <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
             <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
-            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
-             </jarjar>
+            <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
+        </jarjar>
+        <antcall target="documentation"/>
+        <!--<antcall target="pom"/>-->
         <jarjar basedir="${location.classes}" destfile="${location.dist.maven}/svg2ico-${version}.jar">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
             <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
             <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
-            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
+            <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
         </jarjar>
         <jarjar basedir="${location.src}"
-             destfile="${location.dist.maven}/svg2ico-${version}-sources.jar"/>
+                destfile="${location.dist.maven}/svg2ico-${version}-sources.jar"/>
         <jarjar basedir="${location.dist}/documentation/${version}/javadoc"
-             destfile="${location.dist.maven}/svg2ico-${version}-javadoc.jar"/>
+                destfile="${location.dist.maven}/svg2ico-${version}-javadoc.jar"/>
     </target>
 
     <target name="prepare-release" description="Builds an official release locally">
