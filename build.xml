@@ -214,10 +214,9 @@
         <taskdef name="svg2ico" classname="net.sourceforge.svg2ico.Svg2Ico">
             <classpath>
                 <pathelement path="${location.dist.binaries}/svg2ico-${version}.jar"/>
-                <!--<pathelement path="${location.lib}/build/batik-all.jar"/>-->
             </classpath>
         </taskdef>
-        <svg2ico dest="${location.dist.documentation}/favicon.ico"/>
+        <svg2ico src="${location.documentation}/favicon.svg" dest="${location.dist.documentation}/favicon.ico"/>
         <java classname="net.sourceforge.svg2ico.documentation.DocumentationGenerator" failonerror="true" fork="true">
             <arg value="${location.dist}/documentation/${version}"/>
             <classpath>

@@ -29,17 +29,21 @@ import java.io.IOException;
 
 public final class Svg2Ico extends Task {
 
-    private String dest;
+    private File dest;
+    private File src;
 
     public void execute() {
         if (dest == null) {
             throw new BuildException("Mandatory dest not set.");
         }
+        if (src == null) {
+            throw new BuildException("Mandatory src not set.");
+        }
         try {
             String canonicalName = Parser.class.getCanonicalName();
             XMLResourceDescriptor.setCSSParserClassName(canonicalName);
-            BufferedImage bufferedImage = loadImage(new File("docs/favicon.svg"), 32, 32);
-            ICOEncoder.write(bufferedImage, new File(dest));
+            BufferedImage bufferedImage = loadImage(src, 32, 32);
+            ICOEncoder.write(bufferedImage, dest);
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (TranscoderException e) {
@@ -59,8 +63,12 @@ public final class Svg2Ico extends Task {
         return imageTranscoder.getBufferedImage();
     }
 
-    public void setDest(final String dest) {
+    public void setDest(final File dest) {
         this.dest = dest;
+    }
+
+    public void setSrc(final File src) {
+        this.src = src;
     }
 
     private static final class BufferedImageTranscoder extends ImageTranscoder {
