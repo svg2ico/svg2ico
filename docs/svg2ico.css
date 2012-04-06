@@ -1,0 +1,99 @@
+body, html {
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background: gray;
+    color: black;
+    font-size: 100%;
+    font-family: Sans-serif;
+}
+
+div {
+    text-align: left;
+    padding: 0;
+    margin: 0;
+}
+
+div#root {
+    width: 50em;
+    margin: 0 auto;
+    padding: 1em;
+    background: white;
+}
+
+h1 {
+    color: #200020;
+    font-size: 4em;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    font-size: 1em;
+}
+
+div#header {
+    clear: both;
+}
+
+div#navigation {
+    float: left;
+    width: 10em;
+    font-size: 1em;
+    padding-top: 1em;
+}
+
+#navigation ul {
+    list-style: none;
+    margin: 0;
+    padding: 1em;
+}
+
+#navigation li {
+    margin: 0;
+    padding: 0;
+}
+
+div#content {
+    float: right;
+    width: 40em;
+}
+
+div.code {
+    white-space: pre-wrap;
+    border: 0.2em dashed gray;
+    font-family: "Monospace font handling in Firefox is braindead", monospace;
+    font-size: 80%;
+    padding: 1em;
+    margin-left: 2em;
+    margin-right: 2em;
+}
+
+div#footer {
+    clear: both;
+    text-align: center;
+}
+
+* html #footer {
+    height: 1px;
+}
+
+#footer ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#footer li {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+a img {
+    border: none;
+}
+
+#footer a {
+    text-decoration: none;
+}
