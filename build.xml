@@ -259,17 +259,36 @@
 
         <antcall target="documentation"/>
         <!--<antcall target="pom"/>-->
-        <jar basedir="${location.classes}" destfile="${location.dist.binaries}/svg2ico-${version}.jar"/>
-        <jar basedir="${location.optimisedclasses}"
-             destfile="${location.dist.binaries}/svg2ico-small-${version}.jar" compress="true"/>
-        <jar basedir="${location.classes}" destfile="${location.dist.maven}/svg2ico-${version}.jar"/>
-        <jar basedir="${location.src}"
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${location.lib}/build/jarjar-1.2.jar"/>
+        <jarjar basedir="${location.classes}" destfile="${location.dist.binaries}/svg2ico-${version}.jar">
+            <zipfileset src="${location.lib}/shipped/image4j.jar"/>
+            <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
+            <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
+            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
+        </jarjar>
+        <jarjar basedir="${location.optimisedclasses}"
+             destfile="${location.dist.binaries}/svg2ico-small-${version}.jar" compress="true">
+            <zipfileset src="${location.lib}/shipped/image4j.jar"/>
+            <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
+            <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
+            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
+             </jarjar>
+        <jarjar basedir="${location.classes}" destfile="${location.dist.maven}/svg2ico-${version}.jar">
+            <zipfileset src="${location.lib}/shipped/image4j.jar"/>
+            <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
+            <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
+            <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
+            <rule pattern="org.w3c.dom.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.@1"/>
+        </jarjar>
+        <jarjar basedir="${location.src}"
              destfile="${location.dist.maven}/svg2ico-${version}-sources.jar"/>
-        <jar basedir="${location.dist}/documentation/${version}/javadoc"
+        <jarjar basedir="${location.dist}/documentation/${version}/javadoc"
              destfile="${location.dist.maven}/svg2ico-${version}-javadoc.jar"/>
     </target>
 
-    <target name="prepare-release" description="Builds an offical release locally">
+    <target name="prepare-release" description="Builds an official release locally">
         <property name="release" value="true"/>
         <antcall target="distribute"/>
     </target>
