@@ -11,11 +11,13 @@
 package net.sourceforge.svg2ico;
 
 import net.sf.image4j.codec.ico.ICOEncoder;
+import org.apache.batik.css.parser.Parser;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.apache.batik.util.XMLResourceDescriptor;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
@@ -34,6 +36,8 @@ public final class Svg2Ico extends Task {
             throw new BuildException("Mandatory dest not set.");
         }
         try {
+            String canonicalName = Parser.class.getCanonicalName();
+            XMLResourceDescriptor.setCSSParserClassName(canonicalName);
             BufferedImage bufferedImage = loadImage(new File("docs/favicon.svg"), 32, 32);
             ICOEncoder.write(bufferedImage, new File(dest));
         } catch (IOException e) {
