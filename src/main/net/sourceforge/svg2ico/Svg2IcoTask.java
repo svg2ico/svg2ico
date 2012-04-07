@@ -28,17 +28,17 @@ public final class Svg2IcoTask extends Task {
 
     public void execute() {
         if (dest == null) {
-            throw new BuildException("Mandatory dest not set.");
+            throw new BuildException("Mandatory dest attribute not set.");
         }
         if (src == null) {
-            throw new BuildException("Mandatory src not set.");
+            throw new BuildException("Mandatory src attribute not set.");
         }
         try {
             svgToIco(new FileInputStream(src), new FileOutputStream(dest));
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         } catch (TranscoderException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         }
     }
 
