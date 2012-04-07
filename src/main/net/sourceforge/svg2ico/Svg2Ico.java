@@ -10,22 +10,16 @@
 
 package net.sourceforge.svg2ico;
 
-import net.sf.image4j.codec.ico.ICOEncoder;
-import org.apache.batik.css.parser.Parser;
 import org.apache.batik.transcoder.TranscoderException;
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import org.apache.batik.transcoder.image.ImageTranscoder;
-import org.apache.batik.transcoder.image.PNGTranscoder;
-import org.apache.batik.util.XMLResourceDescriptor;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+
+import static net.sourceforge.svg2ico.Svg2IcoCore.svgToIco;
 
 public final class Svg2Ico extends Task {
 
@@ -40,27 +34,12 @@ public final class Svg2Ico extends Task {
             throw new BuildException("Mandatory src not set.");
         }
         try {
-            String canonicalName = Parser.class.getCanonicalName();
-            XMLResourceDescriptor.setCSSParserClassName(canonicalName);
-            BufferedImage bufferedImage = loadImage(src, 32, 32);
-            ICOEncoder.write(bufferedImage, dest);
+            svgToIco(new FileInputStream(src), new FileOutputStream(dest));
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (TranscoderException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-    }
-
-    private static BufferedImage loadImage(File svgFile, float width, float height) throws TranscoderException, FileNotFoundException {
-        BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
-
-        imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
-        imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
-
-        TranscoderInput input = new TranscoderInput(new FileInputStream(svgFile));
-        imageTranscoder.transcode(input, null);
-
-        return imageTranscoder.getBufferedImage();
     }
 
     public void setDest(final File dest) {
@@ -69,24 +48,6 @@ public final class Svg2Ico extends Task {
 
     public void setSrc(final File src) {
         this.src = src;
-    }
-
-    private static final class BufferedImageTranscoder extends ImageTranscoder {
-        private BufferedImage img = null;
-
-        @Override
-        public BufferedImage createImage(int w, int h) {
-            return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        }
-
-        @Override
-        public void writeImage(BufferedImage img, TranscoderOutput output) {
-            this.img = img;
-        }
-
-        public BufferedImage getBufferedImage() {
-            return img;
-        }
     }
 
 }
