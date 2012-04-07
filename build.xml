@@ -211,7 +211,7 @@
         </typedef>
         <rasterize result="image/png" src="resources/favicon.svg"
                    dest="${location.dist.documentation}/favicon-32x32.png" classname="jaxp"/>
-        <taskdef name="svg2ico" classname="net.sourceforge.svg2ico.Svg2Ico">
+        <taskdef name="svg2ico" classname="net.sourceforge.svg2ico.Svg2IcoTask">
             <classpath>
                 <pathelement path="${location.dist.binaries}/svg2ico-${version}.jar"/>
             </classpath>

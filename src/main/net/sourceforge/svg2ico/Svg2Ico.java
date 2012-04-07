@@ -10,44 +10,53 @@
 
 package net.sourceforge.svg2ico;
 
+import net.sf.image4j.codec.ico.ICOEncoder;
+import org.apache.batik.css.parser.Parser;
 import org.apache.batik.transcoder.TranscoderException;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.ImageTranscoder;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.awt.image.BufferedImage;
+import java.io.*;
 
-import static net.sourceforge.svg2ico.Svg2IcoCore.svgToIco;
+import static org.apache.batik.util.XMLResourceDescriptor.setCSSParserClassName;
 
-public final class Svg2Ico extends Task {
-
-    private File dest;
-    private File src;
-
-    public void execute() {
-        if (dest == null) {
-            throw new BuildException("Mandatory dest not set.");
-        }
-        if (src == null) {
-            throw new BuildException("Mandatory src not set.");
-        }
-        try {
-            svgToIco(new FileInputStream(src), new FileOutputStream(dest));
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (TranscoderException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+public class Svg2Ico {
+    static void svgToIco(final FileInputStream inputStream, final OutputStream outputStream) throws TranscoderException, IOException {
+        setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
+        BufferedImage bufferedImage = loadImage(32, 32, inputStream);
+        ICOEncoder.write(bufferedImage, outputStream);
     }
 
-    public void setDest(final File dest) {
-        this.dest = dest;
+    static BufferedImage loadImage(float width, float height, final InputStream inputStream) throws TranscoderException, FileNotFoundException {
+        BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
+
+        imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
+        imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
+
+        TranscoderInput input = new TranscoderInput(inputStream);
+        imageTranscoder.transcode(input, null);
+
+        return imageTranscoder.getBufferedImage();
     }
 
-    public void setSrc(final File src) {
-        this.src = src;
-    }
+    static final class BufferedImageTranscoder extends ImageTranscoder {
+        private BufferedImage img = null;
 
+        @Override
+        public BufferedImage createImage(int w, int h) {
+            return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        }
+
+        @Override
+        public void writeImage(BufferedImage img, TranscoderOutput output) {
+            this.img = img;
+        }
+
+        public BufferedImage getBufferedImage() {
+            return img;
+        }
+    }
 }
