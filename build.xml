@@ -294,7 +294,7 @@
             <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
         </jarjar>
         <antcall target="documentation"/>
-        <!--<antcall target="pom"/>-->
+        <antcall target="pom"/>
         <jarjar basedir="${location.classes}" destfile="${location.dist.maven}/svg2ico-${version}.jar">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
