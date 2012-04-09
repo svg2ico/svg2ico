@@ -236,20 +236,20 @@
         </javadoc>
     </target>
 
-    <!--<target name="pom">-->
-    <!--<mkdir dir="${location.dist.maven}"/>-->
-    <!--<java classname="net.sourceforge.svg2ico.maven.PomGenerator" failonerror="true" fork="true">-->
-    <!--<arg value="${location.dist.maven}"/>-->
-    <!--<arg value="${maven-staging-repository-id}"/>-->
-    <!--<arg value="${sonatype.username}"/>-->
-    <!--<arg value="${sonatype.password}"/>-->
-    <!--<arg value="${gpg.passphrase}"/>-->
-    <!--<classpath>-->
-    <!--<pathelement path="${location.documentationclasses}"/>-->
-    <!--<path refid="build-libs"/>-->
-    <!--</classpath>-->
-    <!--</java>-->
-    <!--</target>-->
+    <target name="pom">
+        <mkdir dir="${location.dist.maven}"/>
+        <java classname="net.sourceforge.svg2ico.maven.PomGenerator" failonerror="true" fork="true">
+            <arg value="${location.dist.maven}"/>
+            <arg value="${maven-staging-repository-id}"/>
+            <arg value="${sonatype.username}"/>
+            <arg value="${sonatype.password}"/>
+            <arg value="${gpg.passphrase}"/>
+            <classpath>
+                <pathelement path="${location.documentationclasses}"/>
+                <path refid="build-libs"/>
+            </classpath>
+        </java>
+    </target>
 
     <target name="development-version" unless="release">
         <property file="version.properties"/>
@@ -314,71 +314,71 @@
         <antcall target="distribute"/>
     </target>
 
-    <!--<target name="distribute-release-maven" description="deploy release version to Maven staging repository"-->
-    <!--xmlns:artifact="antlib:org.apache.maven.artifact.ant">-->
-    <!--<property name="release.directory.maven" value="${release.directory}/build/dist/maven"/>-->
-    <!--<artifact:mvn>-->
-    <!--<artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>-->
-    <!--<artifact:arg value="-s${release.directory.maven}/settings.xml"/>-->
-    <!--<artifact:arg value="-Durl=${maven-staging-repository-url}"/>-->
-    <!--<artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>-->
-    <!--<artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>-->
-    <!--<artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}.jar"/>-->
-    <!--<artifact:arg value="-Pgpg"/>-->
-    <!--<artifact:arg value="-X"/>-->
-    <!--</artifact:mvn>-->
+    <target name="distribute-release-maven" description="deploy release version to Maven staging repository"
+            xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+        <property name="release.directory.maven" value="${release.directory}/build/dist/maven"/>
+        <artifact:mvn>
+            <artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>
+            <artifact:arg value="-s${release.directory.maven}/settings.xml"/>
+            <artifact:arg value="-Durl=${maven-staging-repository-url}"/>
+            <artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>
+            <artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>
+            <artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}.jar"/>
+            <artifact:arg value="-Pgpg"/>
+            <artifact:arg value="-X"/>
+        </artifact:mvn>
 
-    <!--&lt;!&ndash; sign and deploy the sources artifact &ndash;&gt;-->
-    <!--<artifact:mvn>-->
-    <!--<artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>-->
-    <!--<artifact:arg value="-s${release.directory.maven}/settings.xml"/>-->
-    <!--<artifact:arg value="-Durl=${maven-staging-repository-url}"/>-->
-    <!--<artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>-->
-    <!--<artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>-->
-    <!--<artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}-sources.jar"/>-->
-    <!--<artifact:arg value="-Dclassifier=sources"/>-->
-    <!--<artifact:arg value="-Pgpg"/>-->
-    <!--<artifact:arg value="-X"/>-->
-    <!--</artifact:mvn>-->
+        <!-- sign and deploy the sources artifact -->
+        <artifact:mvn>
+            <artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>
+            <artifact:arg value="-s${release.directory.maven}/settings.xml"/>
+            <artifact:arg value="-Durl=${maven-staging-repository-url}"/>
+            <artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>
+            <artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>
+            <artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}-sources.jar"/>
+            <artifact:arg value="-Dclassifier=sources"/>
+            <artifact:arg value="-Pgpg"/>
+            <artifact:arg value="-X"/>
+        </artifact:mvn>
 
-    <!--&lt;!&ndash; sign and deploy the javadoc artifact &ndash;&gt;-->
-    <!--<artifact:mvn>-->
-    <!--<artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>-->
-    <!--<artifact:arg value="-s${release.directory.maven}/settings.xml"/>-->
-    <!--<artifact:arg value="-Durl=${maven-staging-repository-url}"/>-->
-    <!--<artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>-->
-    <!--<artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>-->
-    <!--<artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}-javadoc.jar"/>-->
-    <!--<artifact:arg value="-Dclassifier=javadoc"/>-->
-    <!--<artifact:arg value="-Pgpg"/>-->
-    <!--<artifact:arg value="-X"/>-->
-    <!--</artifact:mvn>-->
+        <!-- sign and deploy the javadoc artifact -->
+        <artifact:mvn>
+            <artifact:arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file"/>
+            <artifact:arg value="-s${release.directory.maven}/settings.xml"/>
+            <artifact:arg value="-Durl=${maven-staging-repository-url}"/>
+            <artifact:arg value="-DrepositoryId=${maven-staging-repository-id}"/>
+            <artifact:arg value="-DpomFile=${release.directory.maven}/pom.xml"/>
+            <artifact:arg value="-Dfile=${release.directory.maven}/svg2ico-${version}-javadoc.jar"/>
+            <artifact:arg value="-Dclassifier=javadoc"/>
+            <artifact:arg value="-Pgpg"/>
+            <artifact:arg value="-X"/>
+        </artifact:mvn>
 
-    <!--&lt;!&ndash; close the staging repository, whatever that means &ndash;&gt;-->
-    <!--<artifact:mvn>-->
-    <!--<artifact:arg value="nexus:staging-close"/>-->
-    <!--<artifact:arg value="-s${release.directory.maven}/settings.xml"/>-->
-    <!--<artifact:arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}"/>-->
-    <!--<artifact:arg value="-Dnexus.url=https://oss.sonatype.org"/>-->
-    <!--<artifact:arg value="-Dnexus.repositoryId=https://oss.sonatype.org"/>-->
-    <!--<artifact:arg value="-Dnexus.artifactId=svg2ico"/>-->
-    <!--<artifact:arg value="-Dnexus.groupId=net.sourceforge.svg2ico"/>-->
-    <!--<artifact:arg value="-Dnexus.automatic=true"/>-->
-    <!--<artifact:arg value="-X"/>-->
-    <!--</artifact:mvn>-->
+        <!-- close the staging repository, whatever that means -->
+        <artifact:mvn>
+            <artifact:arg value="nexus:staging-close"/>
+            <artifact:arg value="-s${release.directory.maven}/settings.xml"/>
+            <artifact:arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}"/>
+            <artifact:arg value="-Dnexus.url=https://oss.sonatype.org"/>
+            <artifact:arg value="-Dnexus.repositoryId=https://oss.sonatype.org"/>
+            <artifact:arg value="-Dnexus.artifactId=svg2ico"/>
+            <artifact:arg value="-Dnexus.groupId=net.sourceforge.svg2ico"/>
+            <artifact:arg value="-Dnexus.automatic=true"/>
+            <artifact:arg value="-X"/>
+        </artifact:mvn>
 
-    <!--&lt;!&ndash; release the staging repository &ndash;&gt;-->
-    <!--<artifact:mvn>-->
-    <!--<artifact:arg value="nexus:staging-release"/>-->
-    <!--<artifact:arg value="-s${release.directory.maven}/settings.xml"/>-->
-    <!--<artifact:arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}"/>-->
-    <!--<artifact:arg value="-Dnexus.url=https://oss.sonatype.org"/>-->
-    <!--<artifact:arg value="-Dnexus.promote.autoSelectOverride=true"/>-->
-    <!--<artifact:arg value="-Dnexus.automatic=true"/>-->
-    <!--<artifact:arg value="-DtargetRepositoryId=releases"/>-->
-    <!--<artifact:arg value="-X"/>-->
-    <!--</artifact:mvn>-->
-    <!--</target>-->
+        <!-- release the staging repository -->
+        <artifact:mvn>
+            <artifact:arg value="nexus:staging-release"/>
+            <artifact:arg value="-s${release.directory.maven}/settings.xml"/>
+            <artifact:arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}"/>
+            <artifact:arg value="-Dnexus.url=https://oss.sonatype.org"/>
+            <artifact:arg value="-Dnexus.promote.autoSelectOverride=true"/>
+            <artifact:arg value="-Dnexus.automatic=true"/>
+            <artifact:arg value="-DtargetRepositoryId=releases"/>
+            <artifact:arg value="-X"/>
+        </artifact:mvn>
+    </target>
 
     <target name="distribute-release" description="Does a real release">
         <property file="version.properties"/>
@@ -387,9 +387,9 @@
         <input addproperty="sourceforge.username" message="Sourceforge username"/>
         <input addproperty="sourceforge.password" message="Sourceforge password"/>
 
-        <!--<input addproperty="sonatype.username" message="Sonatype username"/>-->
-        <!--<input addproperty="sonatype.password" message="Sonatype password"/>-->
-        <!--<input addproperty="gpg.passphrase" message="GPG passphrase"/>-->
+        <input addproperty="sonatype.username" message="Sonatype username"/>
+        <input addproperty="sonatype.password" message="Sonatype password"/>
+        <input addproperty="gpg.passphrase" message="GPG passphrase"/>
 
         <!--TODO get code revision of trunk -->
         <!--<property name="release.revision" value="${git.info.rev}"/>-->
@@ -423,7 +423,7 @@
                  password="${sourceforge.password}"
                  command="rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
                  trust="true"/>
-        <!--<antcall target="distribute-release-maven"/>-->
+        <antcall target="distribute-release-maven"/>
         <propertyfile file="version.properties">
             <entry key="svg2ico.version.minor" type="int" default="0" operation="+"/>
         </propertyfile>
