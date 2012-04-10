@@ -25,7 +25,7 @@
         id="svg2"
         version="1.1"
         inkscape:version="0.48.1 r9760"
-        sodipodi:docname="favicon.svg"
+        sodipodi:docname="favicon-darkglass.svg"
         inkscape:export-filename="/home/mark/Projects/urin/docs/favicon-32x32.png"
         inkscape:export-xdpi="90"
         inkscape:export-ydpi="90">
@@ -75,234 +75,6 @@
                 x2="123.30134"
                 y2="109.49387"
                 gradientUnits="userSpaceOnUse"/>
-        <filter
-                id="filter4613"
-                inkscape:label="Neon"
-                inkscape:menu="Bevels"
-                inkscape:menu-tooltip="Neon light effect"
-                x="-0.25"
-                y="-0.25"
-                width="1.5"
-                height="1.5"
-                color-interpolation-filters="sRGB">
-            <feGaussianBlur
-                    id="feGaussianBlur4615"
-                    stdDeviation="1"
-                    result="result1"/>
-            <feComposite
-                    id="feComposite4617"
-                    in2="result1"
-                    in="result1"
-                    result="result4"
-                    operator="in"/>
-            <feGaussianBlur
-                    id="feGaussianBlur4619"
-                    stdDeviation="7"
-                    result="result6"
-                    in="result4"/>
-            <feComposite
-                    id="feComposite4621"
-                    in2="result4"
-                    operator="over"
-                    in="result6"
-                    result="result8"/>
-            <feComposite
-                    id="feComposite4623"
-                    in2="result8"
-                    operator="in"
-                    result="fbSourceGraphic"
-                    in="result6"/>
-            <feSpecularLighting
-                    id="feSpecularLighting4625"
-                    specularExponent="45"
-                    specularConstant="2"
-                    surfaceScale="2.5"
-                    lighting-color="rgb(255,255,255)"
-                    result="result1"
-                    in="fbSourceGraphic">
-                <fePointLight
-                        id="fePointLight4627"
-                        z="20000"
-                        y="-10000"
-                        x="-5000"/>
-            </feSpecularLighting>
-            <feComposite
-                    id="feComposite4629"
-                    in2="fbSourceGraphic"
-                    operator="in"
-                    result="result2"
-                    in="result1"/>
-            <feComposite
-                    id="feComposite4631"
-                    in2="result2"
-                    k3="1.5"
-                    k2="1.2"
-                    operator="arithmetic"
-                    result="result4"
-                    in="fbSourceGraphic"/>
-            <feComposite
-                    id="feComposite4633"
-                    in2="result4"
-                    operator="over"
-                    in="result9"
-                    result="result9"/>
-            <feBlend
-                    id="feBlend4635"
-                    in2="result9"
-                    mode="screen"/>
-        </filter>
-        <filter
-                id="filter4637"
-                inkscape:label="Neon"
-                inkscape:menu="Bevels"
-                inkscape:menu-tooltip="Neon light effect"
-                x="-0.25"
-                y="-0.25"
-                width="1.5"
-                height="1.5"
-                color-interpolation-filters="sRGB">
-            <feGaussianBlur
-                    id="feGaussianBlur4639"
-                    stdDeviation="1"
-                    result="result1"/>
-            <feComposite
-                    id="feComposite4641"
-                    in2="result1"
-                    in="result1"
-                    result="result4"
-                    operator="in"/>
-            <feGaussianBlur
-                    id="feGaussianBlur4643"
-                    stdDeviation="7"
-                    result="result6"
-                    in="result4"/>
-            <feComposite
-                    id="feComposite4645"
-                    in2="result4"
-                    operator="over"
-                    in="result6"
-                    result="result8"/>
-            <feComposite
-                    id="feComposite4647"
-                    in2="result8"
-                    operator="in"
-                    result="fbSourceGraphic"
-                    in="result6"/>
-            <feSpecularLighting
-                    id="feSpecularLighting4649"
-                    specularExponent="45"
-                    specularConstant="2"
-                    surfaceScale="2.5"
-                    lighting-color="rgb(255,255,255)"
-                    result="result1"
-                    in="fbSourceGraphic">
-                <fePointLight
-                        id="fePointLight4651"
-                        z="20000"
-                        y="-10000"
-                        x="-5000"/>
-            </feSpecularLighting>
-            <feComposite
-                    id="feComposite4653"
-                    in2="fbSourceGraphic"
-                    operator="in"
-                    result="result2"
-                    in="result1"/>
-            <feComposite
-                    id="feComposite4655"
-                    in2="result2"
-                    k3="1.5"
-                    k2="1.2"
-                    operator="arithmetic"
-                    result="result4"
-                    in="fbSourceGraphic"/>
-            <feComposite
-                    id="feComposite4657"
-                    in2="result4"
-                    operator="over"
-                    in="result9"
-                    result="result9"/>
-            <feBlend
-                    id="feBlend4659"
-                    in2="result9"
-                    mode="screen"/>
-        </filter>
-        <filter
-                id="filter4661"
-                inkscape:label="Neon"
-                inkscape:menu="Bevels"
-                inkscape:menu-tooltip="Neon light effect"
-                x="-0.25"
-                y="-0.25"
-                width="1.5"
-                height="1.5"
-                color-interpolation-filters="sRGB">
-            <feGaussianBlur
-                    id="feGaussianBlur4663"
-                    stdDeviation="1"
-                    result="result1"/>
-            <feComposite
-                    id="feComposite4665"
-                    in2="result1"
-                    in="result1"
-                    result="result4"
-                    operator="in"/>
-            <feGaussianBlur
-                    id="feGaussianBlur4667"
-                    stdDeviation="7"
-                    result="result6"
-                    in="result4"/>
-            <feComposite
-                    id="feComposite4669"
-                    in2="result4"
-                    operator="over"
-                    in="result6"
-                    result="result8"/>
-            <feComposite
-                    id="feComposite4671"
-                    in2="result8"
-                    operator="in"
-                    result="fbSourceGraphic"
-                    in="result6"/>
-            <feSpecularLighting
-                    id="feSpecularLighting4673"
-                    specularExponent="45"
-                    specularConstant="2"
-                    surfaceScale="2.5"
-                    lighting-color="rgb(255,255,255)"
-                    result="result1"
-                    in="fbSourceGraphic">
-                <fePointLight
-                        id="fePointLight4675"
-                        z="20000"
-                        y="-10000"
-                        x="-5000"/>
-            </feSpecularLighting>
-            <feComposite
-                    id="feComposite4677"
-                    in2="fbSourceGraphic"
-                    operator="in"
-                    result="result2"
-                    in="result1"/>
-            <feComposite
-                    id="feComposite4679"
-                    in2="result2"
-                    k3="1.5"
-                    k2="1.2"
-                    operator="arithmetic"
-                    result="result4"
-                    in="fbSourceGraphic"/>
-            <feComposite
-                    id="feComposite4681"
-                    in2="result4"
-                    operator="over"
-                    in="result9"
-                    result="result9"/>
-            <feBlend
-                    id="feBlend4683"
-                    in2="result9"
-                    mode="screen"/>
-        </filter>
     </defs>
     <sodipodi:namedview
             id="base"
@@ -345,7 +117,7 @@
             transform="translate(-96.109932,-92.857155)">
         <path
                 sodipodi:type="arc"
-                style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104000000002;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter4613)"
+                style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104;stroke-miterlimit:4;stroke-dasharray:none"
                 id="path2994"
                 sodipodi:cx="16.842503"
                 sodipodi:cy="9.8001871"
@@ -355,7 +127,7 @@
                 transform="matrix(2.6868644,0,0,2.6868644,66.856411,75.525381)"/>
         <path
                 sodipodi:type="arc"
-                style="fill:#00ff00;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104000000002;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter4637)"
+                style="fill:#00ff00;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104;stroke-miterlimit:4;stroke-dasharray:none"
                 id="path2994-0"
                 sodipodi:cx="16.842503"
                 sodipodi:cy="9.8001871"
@@ -365,7 +137,7 @@
                 transform="matrix(2.6868644,0,0,2.6868644,58.856411,89.525381)"/>
         <path
                 sodipodi:type="arc"
-                style="fill:#0000ff;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104000000002;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter4661)"
+                style="fill:#0000ff;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.37218104;stroke-miterlimit:4;stroke-dasharray:none"
                 id="path2994-5"
                 sodipodi:cx="16.842503"
                 sodipodi:cy="9.8001871"
