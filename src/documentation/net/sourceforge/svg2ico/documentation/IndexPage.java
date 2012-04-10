@@ -12,8 +12,7 @@ package net.sourceforge.svg2ico.documentation;
 
 import org.sourceforge.xazzle.xhtml.HtmlTag;
 
-import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.anSvg2IcoPage;
-import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.jarSvg2Ico;
+import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.*;
 import static org.sourceforge.xazzle.xhtml.Href.href;
 import static org.sourceforge.xazzle.xhtml.Tags.*;
 
@@ -23,6 +22,7 @@ final class IndexPage {
     }
 
     public static HtmlTag indexPage(final String version) {
+        final String svg2IcoPath = "lib/build/svg2ico-" + version + ".jar";
         return anSvg2IcoPage(
                 h2Tag(xhtmlText("Introduction")),
                 paragraphTag(xhtmlText("svg2ico converts SVG images into ICO images.  It is written in Java, and is available as an Ant task.  It is open source, and free for you to use.")),
@@ -32,7 +32,21 @@ final class IndexPage {
                         xhtmlText(".  The "),
                         anchorTag(xhtmlText("javadoc")).withHref(href("javadoc/")),
                         xhtmlText(" is also available online.")
-                )
+                ),
+                h2Tag(xhtmlText("Ant Example")),
+                paragraphTag(xhtmlText("svg2ico can be used as an ant task to convert "), codeSnippet("resources/favicon.svg"),
+                        xhtmlText(" to an ICO with an Ant task like this:")),
+                codeBlock("<target name=\"Convert SVG to ICO\">\n" +
+                        "    <taskdef name=\"svg2ico\"\n" +
+                        "             classname=\"net.sourceforge.svg2ico.Svg2IcoTask\" \n" +
+                        "             classpath=\"" + svg2IcoPath + "\"/>\n" +
+                        "    <svg2ico src=\"resources/favicon.svg\"\n" +
+                        "             dest=\"resources/favicon.ico\"\n" +
+                        "             width=\"32\"\n" +
+                        "             height=\"32\"/>\n" +
+                        "</target>"),
+                paragraphTag(xhtmlText("Where "), codeSnippet(svg2IcoPath), xhtmlText(" points to where the svg2ico jar " +
+                        "can be found."))
         );
     }
 
