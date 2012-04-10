@@ -25,20 +25,29 @@ public final class Svg2IcoTask extends Task {
 
     private File dest;
     private File src;
+    private Float width;
+    private Float height;
 
     public void execute() {
-        if (dest == null) {
-            throw new BuildException("Mandatory dest attribute not set.");
-        }
-        if (src == null) {
-            throw new BuildException("Mandatory src attribute not set.");
-        }
         try {
-            svgToIco(new FileInputStream(src), new FileOutputStream(dest));
+            svgToIco(
+                    new FileInputStream(checkSet("src", src)),
+                    new FileOutputStream(checkSet("dest", dest)),
+                    checkSet("width", width),
+                    checkSet("height", height)
+            );
         } catch (IOException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         } catch (TranscoderException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
+        }
+    }
+
+    private static <T> T checkSet(final String fieldName, final T value) {
+        if (value == null) {
+            throw new BuildException("Mandatory " + fieldName + " attribute not set.");
+        } else {
+            return value;
         }
     }
 
@@ -50,4 +59,11 @@ public final class Svg2IcoTask extends Task {
         this.src = src;
     }
 
+    public void setWidth(final float width) {
+        this.width = width;
+    }
+
+    public void setHeight(final float height) {
+        this.height = height;
+    }
 }

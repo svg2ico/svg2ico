@@ -24,9 +24,9 @@ import java.io.*;
 import static org.apache.batik.util.XMLResourceDescriptor.setCSSParserClassName;
 
 public class Svg2Ico {
-    static void svgToIco(final FileInputStream inputStream, final OutputStream outputStream) throws TranscoderException, IOException {
+    static void svgToIco(final FileInputStream inputStream, final OutputStream outputStream, final float width, final float height) throws TranscoderException, IOException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
-        BufferedImage bufferedImage = loadImage(32, 32, inputStream);
+        BufferedImage bufferedImage = loadImage(width, height, inputStream);
         ICOEncoder.write(bufferedImage, outputStream);
     }
 
