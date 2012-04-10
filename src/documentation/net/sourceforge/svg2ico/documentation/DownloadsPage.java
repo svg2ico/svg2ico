@@ -12,8 +12,7 @@ package net.sourceforge.svg2ico.documentation;
 
 import org.sourceforge.xazzle.xhtml.HtmlTag;
 
-import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.anSvg2IcoPage;
-import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.standardJarSvg2Ico;
+import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.*;
 import static net.sourceforge.urin.Authority.authority;
 import static net.sourceforge.urin.HierarchicalPart.hierarchicalPart;
 import static net.sourceforge.urin.Host.registeredName;
@@ -21,7 +20,6 @@ import static net.sourceforge.urin.Path.path;
 import static net.sourceforge.urin.Scheme.scheme;
 import static net.sourceforge.urin.Urin.urin;
 import static net.sourceforge.urin.scheme.Http.http;
-import static net.sourceforge.urin.scheme.Http.https;
 import static org.sourceforge.xazzle.xhtml.Href.href;
 import static org.sourceforge.xazzle.xhtml.Tags.*;
 
@@ -31,8 +29,7 @@ final class DownloadsPage {
     }
 
     static HtmlTag downloadsPage(final String version) {
-        String standardJarUrl = standardJarSvg2Ico(version).asString();
-        String smallJarUrl = https(registeredName("sourceforge.net"), path("projects", "svg2ico", "files", version, "svg2ico-small-" + version + ".jar", "download")).asString();
+        String standardJarUrl = jarSvg2Ico(version).asString();
         String gitUri = urin(scheme("git"), hierarchicalPart(authority(registeredName("git.code.sf.net")), path("p", "svg2ico", "code"))).asString();
         return anSvg2IcoPage(
                 h2Tag(xhtmlText("Downloads")),
@@ -42,18 +39,15 @@ final class DownloadsPage {
                         xhtmlText(".  It can be downloaded in three forms:")),
                 unorderedListTag(
                         listItemTag(
-                                xhtmlText("the "), anchorTag(xhtmlText("standard jar")).withHref(href(standardJarUrl)), xhtmlText(", with source code included,")
+                                xhtmlText("a "), anchorTag(xhtmlText(" jar")).withHref(href(standardJarUrl)), xhtmlText(", with source code and dependencies included,")
                         ),
                         listItemTag(
-                                xhtmlText("a "), anchorTag(xhtmlText("compact jar")).withHref(href(smallJarUrl)), xhtmlText(", with no source, and no debug information,")
+                                xhtmlText("as a Maven dependency from central, using "), codeBlock("<dependency>\n" +
+                                "   <groupId>net.sourceforge.svg2ico</groupId>\n" +
+                                "   <artifactId>svg2ico</artifactId>\n" +
+                                "   <version>" + version + "</version>\n" +
+                                "</dependency>")
                         ),
-//                        listItemTag(
-//                                xhtmlText("as a Maven dependency from central, using "), codeBlock("<dependency>\n" +
-//                                "   <groupId>net.sourceforge.svg2ico</groupId>\n" +
-//                                "   <artifactId>svg2ico</artifactId>\n" +
-//                                "   <version>" + version + "</version>\n" +
-//                                "</dependency>")
-//                        ),
                         listItemTag(
                                 xhtmlText("or as the full source code including tests etc. using Git from "), codeTag(anchorTag(xhtmlText(gitUri)).withHref(href(gitUri))), xhtmlText(".")
                         )

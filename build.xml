@@ -25,7 +25,6 @@
     <property name="location.build" value="build"/>
     <property name="location.classes" value="${location.build}/classes"/>
     <property name="location.documentationclasses" value="${location.build}/documentation-classes"/>
-    <property name="location.optimisedclasses" value="${location.build}/optimised-classes"/>
     <property name="location.testsupportclasses" value="${location.build}/test-support-classes"/>
     <property name="location.testclasses" value="${location.build}/test-classes"/>
     <property name="location.integration-testclasses" value="${location.build}/integration-test-classes"/>
@@ -80,8 +79,6 @@
         <mkdir dir="${location.classes}"/>
         <delete dir="${location.documentationclasses}"/>
         <mkdir dir="${location.documentationclasses}"/>
-        <delete dir="${location.optimisedclasses}"/>
-        <mkdir dir="${location.optimisedclasses}"/>
         <!--<delete dir="${location.testsupportclasses}"/>-->
         <!--<mkdir dir="${location.testsupportclasses}"/>-->
         <!--<delete dir="${location.testclasses}"/>-->
@@ -90,13 +87,6 @@
         <!--<mkdir dir="${location.integration-testclasses}"/>-->
 
         <javac destdir="${location.classes}" debug="on" source="1.6" target="1.6" includeantruntime="false">
-            <src path="${location.src}"/>
-            <classpath refid="compile-libs"/>
-            <classpath refid="shipped-libs"/>
-        </javac>
-
-        <javac destdir="${location.optimisedclasses}" debug="on" optimize="true" source="1.6" target="1.6"
-               includeantruntime="false">
             <src path="${location.src}"/>
             <classpath refid="compile-libs"/>
             <classpath refid="shipped-libs"/>
@@ -277,15 +267,6 @@
         <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
                  classpath="${location.lib}/build/jarjar-1.2.jar"/>
         <jarjar basedir="${location.classes}" destfile="${location.dist.binaries}/svg2ico-${version}.jar">
-            <zipfileset src="${location.lib}/shipped/image4j.jar"/>
-            <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
-            <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
-            <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
-            <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
-            <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
-        </jarjar>
-        <jarjar basedir="${location.optimisedclasses}"
-                destfile="${location.dist.binaries}/svg2ico-small-${version}.jar" compress="true">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
             <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>

@@ -13,7 +13,7 @@ package net.sourceforge.svg2ico.documentation;
 import org.sourceforge.xazzle.xhtml.HtmlTag;
 
 import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.anSvg2IcoPage;
-import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.standardJarSvg2Ico;
+import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.jarSvg2Ico;
 import static org.sourceforge.xazzle.xhtml.Href.href;
 import static org.sourceforge.xazzle.xhtml.Tags.*;
 
@@ -28,7 +28,7 @@ final class IndexPage {
                 paragraphTag(xhtmlText("svg2ico converts SVG images into ICO images.  It is written in Java, and is available as an Ant task.  It is open source, and free for you to use.")),
                 paragraphTag(
                         xhtmlText("The latest version of svg2ico available for download is "),
-                        anchorTag(xhtmlText(version)).withHref(href(standardJarSvg2Ico(version).asString())),
+                        anchorTag(xhtmlText(version)).withHref(href(jarSvg2Ico(version).asString())),
                         xhtmlText(".  The "),
                         anchorTag(xhtmlText("javadoc")).withHref(href("javadoc/")),
                         xhtmlText(" is also available online.")

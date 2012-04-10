@@ -141,7 +141,7 @@ final class Svg2IcoPage {
         return codeTag(xhtmlText(clazz.getSimpleName()));
     }
 
-    static Urin standardJarSvg2Ico(final String version) {
+    static Urin jarSvg2Ico(final String version) {
         return https(registeredName("sourceforge.net"), path("projects", "svg2ico", "files", version, "svg2ico-" + version + ".jar", "download"));
     }
 }
