@@ -46,7 +46,13 @@ final class IndexPage {
                         "             height=\"32\"/>\n" +
                         "</target>"),
                 paragraphTag(xhtmlText("Where "), codeSnippet(svg2IcoPath), xhtmlText(" points to where the svg2ico jar " +
-                        "can be found."))
+                        "can be found.")),
+                h2Tag(xhtmlText("Credits")),
+                paragraphTag(xhtmlText("svg2ico uses the excellent "), anchorTag(xhtmlText("Batik")).withHref(href("http://xmlgraphics.apache.org/batik/")),
+                        xhtmlText(" and "), anchorTag(xhtmlText("image4j")).withHref(href("http://image4j.sourceforge.net/")),
+                        xhtmlText(", but you don't need to worry about these dependencies because they're included in the distribution " +
+                                "using the equally excellent "), anchorTag(xhtmlText("Jar Jar Links")).withHref(href("http://code.google.com/p/jarjar/")),
+                        xhtmlText("."))
         );
     }
 
