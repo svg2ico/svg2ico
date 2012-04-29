@@ -33,6 +33,10 @@ final class IndexPage {
                         anchorTag(xhtmlText("javadoc")).withHref(href("javadoc/")),
                         xhtmlText(" is also available online.")
                 ),
+                h2Tag(xhtmlText("Command Line Example")),
+                paragraphTag(xhtmlText("svg2ico can be used from the command line to convert "), codeSnippet("resources/favicon.svg"),
+                        xhtmlText(" to an ICO from the command line like this:")),
+                codeBlock("./svg2ico-" + version + ".jar -src resources/favicon.svg -dest favicon.ico -width 32 -height 32"),
                 h2Tag(xhtmlText("Ant Example")),
                 paragraphTag(xhtmlText("svg2ico can be used as an ant task to convert "), codeSnippet("resources/favicon.svg"),
                         xhtmlText(" to an ICO with an Ant task like this:")),
