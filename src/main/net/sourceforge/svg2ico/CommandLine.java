@@ -81,6 +81,6 @@ public class CommandLine {
     }
 
     private static void printHelp() {
-        new HelpFormatter().printHelp("blah", OPTIONS);
+        new HelpFormatter().printHelp("svg2ico", OPTIONS);
     }
 }
