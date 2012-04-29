@@ -24,13 +24,13 @@ import java.io.*;
 import static org.apache.batik.util.XMLResourceDescriptor.setCSSParserClassName;
 
 public class Svg2Ico {
-    static void svgToIco(final FileInputStream inputStream, final OutputStream outputStream, final float width, final float height) throws TranscoderException, IOException {
+    static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height) throws TranscoderException, IOException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
         BufferedImage bufferedImage = loadImage(width, height, inputStream);
         ICOEncoder.write(bufferedImage, outputStream);
     }
 
-    static BufferedImage loadImage(float width, float height, final InputStream inputStream) throws TranscoderException, FileNotFoundException {
+    private static BufferedImage loadImage(float width, float height, final InputStream inputStream) throws TranscoderException, FileNotFoundException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
@@ -42,7 +42,7 @@ public class Svg2Ico {
         return imageTranscoder.getBufferedImage();
     }
 
-    static final class BufferedImageTranscoder extends ImageTranscoder {
+    private static final class BufferedImageTranscoder extends ImageTranscoder {
         private BufferedImage img = null;
 
         @Override
