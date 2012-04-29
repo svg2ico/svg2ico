@@ -280,20 +280,32 @@
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
             <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
+            <zipfileset src="${location.lib}/shipped/commons-cli-1.2.jar"/>
             <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
             <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
             <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
+            <rule pattern="org.apache.commons.cli.**" result="net.sourceforge.svg2ico.jarjar.org.apache.commons.cli.@1"/>
+            <manifest>
+                <attribute name="Main-Class" value="net.sourceforge.svg2ico.CommandLine"/>
+            </manifest>
         </jarjar>
+        <chmod file="${location.dist.binaries}/svg2ico-${version}.jar" perm="u+x"/>
         <antcall target="documentation"/>
         <antcall target="pom"/>
         <jarjar basedir="${location.classes}" destfile="${location.dist.maven}/svg2ico-${version}.jar">
             <zipfileset src="${location.lib}/shipped/image4j.jar"/>
             <zipfileset src="${location.lib}/shipped/batik-all.jar"/>
             <zipfileset src="${location.lib}/shipped/xml-apis-ext.jar"/>
+            <zipfileset src="${location.lib}/shipped/commons-cli-1.2.jar"/>
             <rule pattern="net.sf.image4j.**" result="net.sourceforge.svg2ico.jarjar.net.sf.image4j.@1"/>
             <rule pattern="org.apache.batik.**" result="net.sourceforge.svg2ico.jarjar.org.apache.batik.@1"/>
             <rule pattern="org.w3c.dom.svg.**" result="net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg.@1"/>
+            <rule pattern="org.apache.commons.cli.**" result="net.sourceforge.svg2ico.jarjar.org.apache.commons.cli.@1"/>
+            <manifest>
+                <attribute name="Main-Class" value="net.sourceforge.svg2ico.CommandLine"/>
+            </manifest>
         </jarjar>
+        <chmod file="${location.dist.maven}/svg2ico-${version}.jar" perm="u+x"/>
         <jarjar basedir="${location.src}"
                 destfile="${location.dist.maven}/svg2ico-${version}-sources.jar"/>
         <jarjar basedir="${location.dist}/documentation/${version}/javadoc"
