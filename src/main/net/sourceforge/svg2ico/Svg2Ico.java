@@ -19,15 +19,38 @@ import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+import static java.util.Arrays.asList;
 import static org.apache.batik.util.XMLResourceDescriptor.setCSSParserClassName;
 
-public class Svg2Ico {
+public final class Svg2Ico {
+
+    private Svg2Ico() {
+    }
+
     static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height) throws TranscoderException, IOException {
+        ICOEncoder.write(loadBufferedImage(inputStream, width, height), outputStream);
+    }
+
+    static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth) throws TranscoderException, IOException {
+        ICOEncoder.write(loadBufferedImage(inputStream, width, height), colourDepth, outputStream);
+    }
+
+    static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height) throws TranscoderException, IOException {
+        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height)), new int[]{-1}, new boolean[] {true}, outputStream);
+    }
+
+    static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth) throws TranscoderException, IOException {
+        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height)), new int[]{colourDepth}, new boolean[] {true}, outputStream);
+    }
+
+    private static BufferedImage loadBufferedImage(final InputStream inputStream, final float width, final float height) throws TranscoderException, FileNotFoundException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
-        BufferedImage bufferedImage = loadImage(width, height, inputStream);
-        ICOEncoder.write(bufferedImage, outputStream);
+        return loadImage(width, height, inputStream);
     }
 
     private static BufferedImage loadImage(float width, float height, final InputStream inputStream) throws TranscoderException, FileNotFoundException {

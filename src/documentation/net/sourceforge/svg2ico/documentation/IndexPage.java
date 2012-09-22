@@ -35,11 +35,14 @@ final class IndexPage {
                 ),
                 h2Tag(xhtmlText("Command Line Example")),
                 paragraphTag(xhtmlText("svg2ico can be used from the command line to convert "), codeSnippet("resources/favicon.svg"),
-                        xhtmlText(" to an ICO from the command line like this:")),
+                        xhtmlText(" to an ICO like this:")),
                 codeBlock("./svg2ico-" + version + ".jar -src resources/favicon.svg -dest favicon.ico -width 32 -height 32"),
+                paragraphTag(xhtmlText("Two additional optional arguments are supported.  "), codeSnippet("depth"),
+                        xhtmlText(" specifies the colour depth in bits per pixel, e.g. "), codeSnippet("-depth 8"),
+                        xhtmlText(" outputs eight bits per pixel.  The "), codeSnippet("-compress"), xhtmlText(" flag causes the output to be compressed ICO format.")),
                 h2Tag(xhtmlText("Ant Example")),
-                paragraphTag(xhtmlText("svg2ico can be used as an ant task to convert "), codeSnippet("resources/favicon.svg"),
-                        xhtmlText(" to an ICO with an Ant task like this:")),
+                paragraphTag(xhtmlText("svg2ico can be used as an Ant task to convert "), codeSnippet("resources/favicon.svg"),
+                        xhtmlText(" to an ICO like this:")),
                 codeBlock("<target name=\"Convert SVG to ICO\">\n" +
                         "    <taskdef name=\"svg2ico\"\n" +
                         "             classname=\"net.sourceforge.svg2ico.Svg2IcoTask\" \n" +
@@ -49,8 +52,10 @@ final class IndexPage {
                         "             width=\"32\"\n" +
                         "             height=\"32\"/>\n" +
                         "</target>"),
-                paragraphTag(xhtmlText("Where "), codeSnippet(svg2IcoPath), xhtmlText(" points to where the svg2ico jar " +
-                        "can be found.")),
+                paragraphTag(xhtmlText("where "), codeSnippet(svg2IcoPath), xhtmlText(" points to where the svg2ico jar " +
+                        "can be found.  As with the command line, two optional attributes are supported.  "), codeSnippet("depth"),
+                        xhtmlText(" specifies the colour depth in bits per pixel, e.g. "), codeSnippet("depth=\"8\""), xhtmlText(" outputs eight bits per pixel.  "),
+                        codeSnippet("compress"), xhtmlText(" causes the output to be compressed ICO, e.g. "), codeSnippet("compressed=\"true\""), xhtmlText(".")),
                 h2Tag(xhtmlText("Credits")),
                 paragraphTag(xhtmlText("svg2ico uses the excellent "), anchorTag(xhtmlText("Batik")).withHref(href("http://xmlgraphics.apache.org/batik/")),
                         xhtmlText(" and "), anchorTag(xhtmlText("image4j")).withHref(href("http://image4j.sourceforge.net/")),

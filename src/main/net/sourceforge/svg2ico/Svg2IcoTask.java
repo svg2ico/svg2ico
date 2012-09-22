@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import static net.sourceforge.svg2ico.Svg2Ico.svgToCompressedIco;
 import static net.sourceforge.svg2ico.Svg2Ico.svgToIco;
 
 public final class Svg2IcoTask extends Task {
@@ -27,15 +28,28 @@ public final class Svg2IcoTask extends Task {
     private File src;
     private Float width;
     private Float height;
+    private Integer depth;
+    private Boolean compress;
 
     public void execute() {
         try {
-            svgToIco(
-                    new FileInputStream(checkSet("src", src)),
-                    new FileOutputStream(checkSet("dest", dest)),
-                    checkSet("width", width),
-                    checkSet("height", height)
-            );
+            final FileInputStream inputStream = new FileInputStream(checkSet("src", src));
+            final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest));
+            final Float width = checkSet("width", this.width);
+            final Float height = checkSet("height", this.height);
+            if (isSet(depth)) {
+                if (isSet(compress) && compress) {
+                    svgToCompressedIco(inputStream, outputStream, width, height, depth);
+                } else {
+                    svgToIco(inputStream, outputStream, width, height, depth);
+                }
+            } else {
+                if (isSet(compress) && compress) {
+                    svgToCompressedIco(inputStream, outputStream, width, height);
+                } else {
+                    svgToIco(inputStream, outputStream, width, height);
+                }
+            }
         } catch (IOException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         } catch (TranscoderException e) {
@@ -49,6 +63,10 @@ public final class Svg2IcoTask extends Task {
         } else {
             return value;
         }
+    }
+
+    private static boolean isSet(Object value) {
+        return !(value == null);
     }
 
     public void setDest(final File dest) {
@@ -65,5 +83,13 @@ public final class Svg2IcoTask extends Task {
 
     public void setHeight(final float height) {
         this.height = height;
+    }
+
+    public void setDepth(final int depth) {
+        this.depth = depth;
+    }
+
+    public void setCompress(final boolean compress) {
+        this.compress = compress;
     }
 }

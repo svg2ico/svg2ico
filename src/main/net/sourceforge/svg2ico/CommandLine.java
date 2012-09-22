@@ -19,6 +19,8 @@ import org.apache.commons.cli.PosixParser;
 import java.io.*;
 
 import static java.lang.Float.parseFloat;
+import static java.lang.Integer.parseInt;
+import static net.sourceforge.svg2ico.Svg2Ico.svgToCompressedIco;
 import static net.sourceforge.svg2ico.Svg2Ico.svgToIco;
 
 public class CommandLine {
@@ -27,7 +29,9 @@ public class CommandLine {
             .addOption("src", true, "source SVG file")
             .addOption("dest", true, "destination ICO file")
             .addOption("width", true, "width of output ICO in pixels")
-            .addOption("height", true, "height of output ICO in pixels");
+            .addOption("height", true, "height of output ICO in pixels")
+            .addOption("depth", true, "optional colour depth in bits per pixel")
+            .addOption("compress", false, "optional flag to output compressed ICO");
 
     public static void main(String[] args) throws ParseException {
         org.apache.commons.cli.CommandLine commandLine;
@@ -46,10 +50,22 @@ public class CommandLine {
                     } else {
                         srcFileInputStream = new FileInputStream(src);
                         destFileOutputStream = new FileOutputStream(dest);
-                    svgToIco(srcFileInputStream,
-                            destFileOutputStream,
-                            parseFloat(commandLine.getOptionValue("width")),
-                            parseFloat(commandLine.getOptionValue("height")));
+                        float width = parseFloat(commandLine.getOptionValue("width"));
+                        float height = parseFloat(commandLine.getOptionValue("height"));
+                        if (commandLine.hasOption("depth")) {
+                            int depth = parseInt(commandLine.getOptionValue("depth"));
+                            if (commandLine.hasOption("compress")) {
+                                svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                            } else {
+                                svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                            }
+                        } else {
+                            if (commandLine.hasOption("compress")) {
+                                svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height);
+                            } else {
+                                svgToIco(srcFileInputStream, destFileOutputStream, width, height);
+                            }
+                        }
                     }
                 } catch (FileNotFoundException e) {
                     printFailure(e);
