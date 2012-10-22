@@ -31,7 +31,8 @@ public class CommandLine {
             .addOption("width", true, "width of output ICO in pixels")
             .addOption("height", true, "height of output ICO in pixels")
             .addOption("depth", true, "optional colour depth in bits per pixel")
-            .addOption("compress", false, "optional flag to output compressed ICO");
+            .addOption("compress", false, "optional flag to output compressed ICO")
+            .addOption("userStylesheet", true, "optional user stylesheet file");
 
     public static void main(String[] args) throws ParseException {
         org.apache.commons.cli.CommandLine commandLine;
@@ -54,16 +55,34 @@ public class CommandLine {
                         float height = parseFloat(commandLine.getOptionValue("height"));
                         if (commandLine.hasOption("depth")) {
                             int depth = parseInt(commandLine.getOptionValue("depth"));
-                            if (commandLine.hasOption("compress")) {
-                                svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                            if (commandLine.hasOption("userStylesheet")) {
+                                File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
+                                if (commandLine.hasOption("compress")) {
+                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                                } else {
+                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                                }
                             } else {
-                                svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                if (commandLine.hasOption("compress")) {
+                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                } else {
+                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                }
                             }
                         } else {
-                            if (commandLine.hasOption("compress")) {
-                                svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height);
+                            if (commandLine.hasOption("userStylesheet")) {
+                                File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
+                                if (commandLine.hasOption("compress")) {
+                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
+                                } else {
+                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
+                                }
                             } else {
-                                svgToIco(srcFileInputStream, destFileOutputStream, width, height);
+                                if (commandLine.hasOption("compress")) {
+                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height);
+                                } else {
+                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height);
+                                }
                             }
                         }
                     }

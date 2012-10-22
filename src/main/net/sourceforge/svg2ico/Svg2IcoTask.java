@@ -26,6 +26,7 @@ public final class Svg2IcoTask extends Task {
 
     private File dest;
     private File src;
+    private File userStylesheet;
     private Float width;
     private Float height;
     private Integer depth;
@@ -38,16 +39,32 @@ public final class Svg2IcoTask extends Task {
             final Float width = checkSet("width", this.width);
             final Float height = checkSet("height", this.height);
             if (isSet(depth)) {
-                if (isSet(compress) && compress) {
-                    svgToCompressedIco(inputStream, outputStream, width, height, depth);
+                if (isSet(userStylesheet)) {
+                    if (isSet(compress) && compress) {
+                        svgToCompressedIco(inputStream, outputStream, width, height, depth, userStylesheet.toURI());
+                    } else {
+                        svgToIco(inputStream, outputStream, width, height, depth, userStylesheet.toURI());
+                    }
                 } else {
-                    svgToIco(inputStream, outputStream, width, height, depth);
+                    if (isSet(compress) && compress) {
+                        svgToCompressedIco(inputStream, outputStream, width, height, depth);
+                    } else {
+                        svgToIco(inputStream, outputStream, width, height, depth);
+                    }
                 }
             } else {
-                if (isSet(compress) && compress) {
-                    svgToCompressedIco(inputStream, outputStream, width, height);
+                if (isSet(userStylesheet)) {
+                    if (isSet(compress) && compress) {
+                        svgToCompressedIco(inputStream, outputStream, width, height, userStylesheet.toURI());
+                    } else {
+                        svgToIco(inputStream, outputStream, width, height, userStylesheet.toURI());
+                    }
                 } else {
-                    svgToIco(inputStream, outputStream, width, height);
+                    if (isSet(compress) && compress) {
+                        svgToCompressedIco(inputStream, outputStream, width, height);
+                    } else {
+                        svgToIco(inputStream, outputStream, width, height);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -75,6 +92,10 @@ public final class Svg2IcoTask extends Task {
 
     public void setSrc(final File src) {
         this.src = src;
+    }
+
+    public void setUserStylesheet(final File userStylesheet) {
+        this.userStylesheet = userStylesheet;
     }
 
     public void setWidth(final float width) {
