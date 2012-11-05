@@ -23,7 +23,7 @@ import static java.lang.Integer.parseInt;
 import static net.sourceforge.svg2ico.Svg2Ico.svgToCompressedIco;
 import static net.sourceforge.svg2ico.Svg2Ico.svgToIco;
 
-public class CommandLine {
+public final class CommandLine {
 
     private static final Options OPTIONS = new Options()
             .addOption("src", true, "source SVG file")
