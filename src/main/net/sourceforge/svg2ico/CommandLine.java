@@ -10,7 +10,6 @@
 
 package net.sourceforge.svg2ico;
 
-import org.apache.batik.transcoder.TranscoderException;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -88,7 +87,7 @@ public final class CommandLine {
                     }
                 } catch (FileNotFoundException e) {
                     printFailure(e);
-                } catch (TranscoderException e) {
+                } catch (ImageConversionException e) {
                     printFailure(e);
                 } catch (IOException e) {
                     printFailure(e);

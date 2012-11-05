@@ -10,7 +10,6 @@
 
 package net.sourceforge.svg2ico;
 
-import org.apache.batik.transcoder.TranscoderException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
@@ -69,7 +68,7 @@ public final class Svg2IcoTask extends Task {
             }
         } catch (IOException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
-        } catch (TranscoderException e) {
+        } catch (ImageConversionException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         }
     }
