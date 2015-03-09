@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Mark Slater
+ * Copyright 2015 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -10,7 +10,7 @@
 
 package net.sourceforge.svg2ico.documentation;
 
-import org.sourceforge.xazzle.xhtml.HtmlTag;
+import net.sourceforge.xazzle.xhtml.HtmlTag;
 
 import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.*;
 import static net.sourceforge.urin.Authority.authority;
@@ -20,8 +20,8 @@ import static net.sourceforge.urin.Path.path;
 import static net.sourceforge.urin.Scheme.scheme;
 import static net.sourceforge.urin.Urin.urin;
 import static net.sourceforge.urin.scheme.Http.http;
-import static org.sourceforge.xazzle.xhtml.Href.href;
-import static org.sourceforge.xazzle.xhtml.Tags.*;
+import static net.sourceforge.xazzle.xhtml.Href.href;
+import static net.sourceforge.xazzle.xhtml.Tags.*;
 
 final class DownloadsPage {
 

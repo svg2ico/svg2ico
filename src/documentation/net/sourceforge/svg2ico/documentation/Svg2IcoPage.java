@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Mark Slater
+ * Copyright 2015 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -13,32 +13,32 @@ package net.sourceforge.svg2ico.documentation;
 import net.sourceforge.urin.Host;
 import net.sourceforge.urin.Path;
 import net.sourceforge.urin.Urin;
-import org.sourceforge.xazzle.xhtml.*;
+import net.sourceforge.xazzle.xhtml.*;
 
 import static net.sourceforge.urin.Host.registeredName;
 import static net.sourceforge.urin.Path.path;
 import static net.sourceforge.urin.Query.query;
 import static net.sourceforge.urin.RelativeReference.relativeReference;
 import static net.sourceforge.urin.scheme.Http.*;
-import static org.sourceforge.xazzle.xhtml.AlternateText.alternateText;
-import static org.sourceforge.xazzle.xhtml.ClassName.className;
-import static org.sourceforge.xazzle.xhtml.Href.href;
-import static org.sourceforge.xazzle.xhtml.Id.id;
-import static org.sourceforge.xazzle.xhtml.ImageSource.imageSource;
-import static org.sourceforge.xazzle.xhtml.MetaContent.metaContent;
-import static org.sourceforge.xazzle.xhtml.MetaName.metaName;
-import static org.sourceforge.xazzle.xhtml.MimeType.mimeType;
-import static org.sourceforge.xazzle.xhtml.Relationship.STYLESHEET;
-import static org.sourceforge.xazzle.xhtml.Relationship.relationship;
-import static org.sourceforge.xazzle.xhtml.Tags.*;
-import static org.sourceforge.xazzle.xhtml.XhtmlDimension.pixels;
+import static net.sourceforge.xazzle.xhtml.AlternateText.alternateText;
+import static net.sourceforge.xazzle.xhtml.ClassName.className;
+import static net.sourceforge.xazzle.xhtml.Href.href;
+import static net.sourceforge.xazzle.xhtml.Id.id;
+import static net.sourceforge.xazzle.xhtml.ImageSource.imageSource;
+import static net.sourceforge.xazzle.xhtml.MetaContent.metaContent;
+import static net.sourceforge.xazzle.xhtml.MetaName.metaName;
+import static net.sourceforge.xazzle.xhtml.MimeType.mimeType;
+import static net.sourceforge.xazzle.xhtml.Relationship.STYLESHEET;
+import static net.sourceforge.xazzle.xhtml.Relationship.relationship;
+import static net.sourceforge.xazzle.xhtml.Tags.*;
+import static net.sourceforge.xazzle.xhtml.XhtmlDimension.pixels;
 
 final class Svg2IcoPage {
     static final Host SOURCEFORGE = registeredName("sourceforge.net");
     static final Host W3_JIGSAW = registeredName("jigsaw.w3.org");
     static final Host W3_WWW = registeredName("www.w3.org");
 
-    public static HtmlTag anSvg2IcoPage(final BodyElement... body) {
+    public static HtmlTag anSvg2IcoPage(final BlockElement<DoesNotContainFormTag>... body) {
         final Href projectSiteHref = href(http(SOURCEFORGE, path("projects", "svg2ico")).asString());
         return htmlTag(
                 headTag(
@@ -65,24 +65,20 @@ final class Svg2IcoPage {
                 bodyTag(
                         divTag(
                                 divTag(
-                                        h1Tag(xhtmlText("svg2ico"))
-                                ).withId(id("header")),
+                                        Tags.h1Tag(Tags.xhtmlText("svg2ico"))
+                                ).withId(Id.id("header")),
                                 divTag(
                                         unorderedListTag(
                                                 listItemTag(
-                                                        anchorTag(xhtmlText("Home"))
+                                                        Tags.anchorTag(Tags.xhtmlText("Home"))
                                                                 .withHref(href(relativeReference(Path.rootlessPath("index.html")).asString()))
                                                 ),
                                                 listItemTag(
-                                                        anchorTag(xhtmlText("Downloads"))
+                                                        Tags.anchorTag(Tags.xhtmlText("Downloads"))
                                                                 .withHref(href(relativeReference(Path.rootlessPath("downloads.html")).asString()))
                                                 ),
                                                 listItemTag(
-                                                        anchorTag(xhtmlText("Support"))
-                                                                .withHref(href(relativeReference(Path.rootlessPath("support.html")).asString()))
-                                                ),
-                                                listItemTag(
-                                                        anchorTag(xhtmlText("Project Site"))
+                                                        Tags.anchorTag(Tags.xhtmlText("Project Site"))
                                                                 .withHref(projectSiteHref)
                                                 )
                                         )
@@ -131,14 +127,10 @@ final class Svg2IcoPage {
         return codeTag(xhtmlText(snippet));
     }
 
-    static BlockLevelTag codeBlock(String someCode) {
+    static BlockElement<DoesNotContainFormTag> codeBlock(String someCode) {
         return divTag(
                 xhtmlText(someCode)
         ).withClass(className("code"));
-    }
-
-    static InlineTag simpleNameOf(final Class clazz) {
-        return codeTag(xhtmlText(clazz.getSimpleName()));
     }
 
     static Urin jarSvg2Ico(final String version) {
