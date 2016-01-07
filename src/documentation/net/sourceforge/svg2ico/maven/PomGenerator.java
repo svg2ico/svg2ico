@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Slater
+ * Copyright 2016 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -70,7 +70,7 @@ public class PomGenerator {
                 pomTag(tagName("version"), text(version)),
                 pomTag(tagName("packaging"), text("jar")),
                 pomTag(tagName("name"), text("svg2ico")),
-                pomTag(tagName("description"), text("svg2ico is an open source URI generator and parser written in Java.")),
+                pomTag(tagName("description"), text("svg2ico is a Java library for converting SVG images to ICO images.  It includes an Ant task for doing this, and can also be used from the command line.")),
                 pomTag(tagName("url"), text("http://svg2ico.sourceforge.net")),
                 pomTag(tagName("licenses"),
                         pomTag(tagName("license"),
