@@ -6,8 +6,6 @@
         <entry path="file://$PROJECT_DIR$/lib/build/jsch-0.1.24.jar" />
         <entry path="file://$PROJECT_DIR$/lib/build/ant-jsch-1.6.5.jar" />
       </additionalClassPath>
-      <customJdkName value="1.7" />
     </buildFile>
   </component>
 </project>
-

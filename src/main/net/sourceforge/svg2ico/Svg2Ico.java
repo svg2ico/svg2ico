@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Mark Slater
+ * Copyright 2016 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -19,10 +19,7 @@ import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
 import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 
 import static java.util.Arrays.asList;
@@ -34,70 +31,101 @@ public final class Svg2Ico {
     }
 
     public static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height) throws IOException, ImageConversionException {
-        ICOEncoder.write(loadBufferedImage(inputStream, width, height), outputStream);
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(inputStream), width, height), outputStream);
+    }
+
+    public static void svgToIco(final Reader reader, final OutputStream outputStream, final float width, final float height) throws IOException, ImageConversionException {
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(reader), width, height), outputStream);
     }
 
     public static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth) throws IOException, ImageConversionException {
-        ICOEncoder.write(loadBufferedImage(inputStream, width, height), colourDepth, outputStream);
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(inputStream), width, height), colourDepth, outputStream);
+    }
+
+    public static void svgToIco(final Reader reader, final OutputStream outputStream, final float width, final float height, int colourDepth) throws IOException, ImageConversionException {
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(reader), width, height), colourDepth, outputStream);
     }
 
     public static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height) throws IOException, ImageConversionException {
-        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height)), new int[]{-1}, new boolean[] {true}, outputStream);
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(inputStream), width, height)), new int[]{-1}, new boolean[]{true}, outputStream);
+    }
+
+    public static void svgToCompressedIco(final Reader reader, final OutputStream outputStream, final float width, final float height) throws IOException, ImageConversionException {
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(reader), width, height)), new int[]{-1}, new boolean[]{true}, outputStream);
     }
 
     public static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth) throws IOException, ImageConversionException {
-        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height)), new int[]{colourDepth}, new boolean[] {true}, outputStream);
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(inputStream), width, height)), new int[]{colourDepth}, new boolean[]{true}, outputStream);
+    }
+
+    public static void svgToCompressedIco(final Reader reader, final OutputStream outputStream, final float width, final float height, int colourDepth) throws IOException, ImageConversionException {
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(reader), width, height)), new int[]{colourDepth}, new boolean[]{true}, outputStream);
     }
 
     public static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, final URI userStylesheet) throws IOException, ImageConversionException {
-        ICOEncoder.write(loadBufferedImage(inputStream, width, height, userStylesheet), outputStream);
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet), outputStream);
+    }
+
+    public static void svgToIco(final Reader reader, final OutputStream outputStream, final float width, final float height, final URI userStylesheet) throws IOException, ImageConversionException {
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet), outputStream);
     }
 
     public static void svgToIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth, final URI userStylesheet) throws IOException, ImageConversionException {
-        ICOEncoder.write(loadBufferedImage(inputStream, width, height, userStylesheet), colourDepth, outputStream);
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet), colourDepth, outputStream);
+    }
+
+    public static void svgToIco(final Reader reader, final OutputStream outputStream, final float width, final float height, int colourDepth, final URI userStylesheet) throws IOException, ImageConversionException {
+        ICOEncoder.write(loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet), colourDepth, outputStream);
     }
 
     public static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, final URI userStylesheet) throws IOException, ImageConversionException {
-        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height, userStylesheet)), new int[]{-1}, new boolean[] {true}, outputStream);
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet)), new int[]{-1}, new boolean[]{true}, outputStream);
+    }
+
+    public static void svgToCompressedIco(final Reader reader, final OutputStream outputStream, final float width, final float height, final URI userStylesheet) throws IOException, ImageConversionException {
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet)), new int[]{-1}, new boolean[]{true}, outputStream);
     }
 
     public static void svgToCompressedIco(final InputStream inputStream, final OutputStream outputStream, final float width, final float height, int colourDepth, final URI userStylesheet) throws IOException, ImageConversionException {
-        ICOEncoder.write(asList(loadBufferedImage(inputStream, width, height, userStylesheet)), new int[]{colourDepth}, new boolean[] {true}, outputStream);
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet)), new int[]{colourDepth}, new boolean[]{true}, outputStream);
     }
 
-    private static BufferedImage loadBufferedImage(final InputStream inputStream, final float width, final float height) throws FileNotFoundException, ImageConversionException {
+    public static void svgToCompressedIco(final Reader reader, final OutputStream outputStream, final float width, final float height, int colourDepth, final URI userStylesheet) throws IOException, ImageConversionException {
+        ICOEncoder.write(asList(loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet)), new int[]{colourDepth}, new boolean[]{true}, outputStream);
+    }
+
+    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height) throws FileNotFoundException, ImageConversionException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
-        return loadImage(width, height, inputStream);
+        return loadImage(transcoderInput, width, height);
     }
 
-    private static BufferedImage loadBufferedImage(final InputStream inputStream, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
-        return loadImage(width, height, userStylesheet, inputStream);
+        return loadImage(transcoderInput, width, height, userStylesheet);
     }
 
-    private static BufferedImage loadImage(final float width, final float height, final InputStream inputStream) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height) throws FileNotFoundException, ImageConversionException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
 
-        return loadImage(inputStream, imageTranscoder);
+        return loadImage(transcoderInput, imageTranscoder);
     }
 
-    private static BufferedImage loadImage(final float width, final float height, final URI userStylesheet, final InputStream inputStream) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_USER_STYLESHEET_URI, userStylesheet.toASCIIString());
 
-        return loadImage(inputStream, imageTranscoder);
+        return loadImage(transcoderInput, imageTranscoder);
     }
 
-    private static BufferedImage loadImage(InputStream inputStream, BufferedImageTranscoder imageTranscoder) throws ImageConversionException {
-        TranscoderInput input = new TranscoderInput(inputStream);
+    private static BufferedImage loadImage(TranscoderInput transcoderInput, BufferedImageTranscoder imageTranscoder) throws ImageConversionException {
         try {
-            imageTranscoder.transcode(input, null);
+            imageTranscoder.transcode(transcoderInput, null);
         } catch (TranscoderException e) {
             throw new ImageConversionException(e);
         }
