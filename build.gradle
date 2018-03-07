@@ -1,0 +1,275 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.11.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+    }
+}
+
+plugins {
+    id 'org.unbroken-dome.test-sets' version '1.4.2'
+    id 'org.hidetake.ssh' version '2.9.0'
+    id 'org.tenne.rest' version '0.4.2'
+}
+
+apply plugin: 'com.github.johnrengelman.plugin-shadow'
+apply plugin: 'io.codearte.nexus-staging'
+apply plugin: 'java'
+apply plugin: 'pmd'
+apply plugin: 'findbugs'
+apply plugin: 'signing'
+apply plugin: 'maven'
+
+
+repositories {
+    mavenCentral()
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2'
+}
+
+sourceSets {
+    documentation
+}
+
+configurations {
+    svg2ico
+    batik
+}
+
+dependencies {
+    compile group: 'org.apache.ant', name: 'ant', version: '1.10.2'
+    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.8'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.3.1'
+    compile group: 'org.jclarion', name: 'image4j', version: '0.7'
+    compile group: 'xml-apis', name: 'xml-apis-ext', version: '1.3.04'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.hamcrest', name: 'java-hamcrest', version: '2.0.0.0'
+    testCompile group: 'net.sourceforge.ickles', name: 'ickles', version: '0.12'
+    testCompile group: 'com.google.guava', name: 'guava', version: '19.0'
+
+    documentationCompile sourceSets.main.output
+    documentationCompile group: 'net.sourceforge.writexml', name: 'writexml', version: '1.1'
+    documentationCompile group: 'net.sourceforge.xazzle', name: 'xazzle', version: '0.39'
+    documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
+    documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '2.22'
+
+    svg2ico group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
+    batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.8'
+    batik group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0'
+    batik group: 'org.apache.xmlgraphics', name: 'batik-codec', version: '1.8'
+}
+
+group = 'net.sourceforge.svg2ico'
+version = "${majorVersion}.${minorVersion}"
+description = 'svg2ico converts images in SVG format to ICO.'
+
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
+shadowJar {
+    relocate 'net.sf.image4j', 'net.sourceforge.svg2ico.jarjar.net.sf.image4j'
+    relocate 'org.apache.batik', 'net.sourceforge.svg2ico.jarjar.org.apache.batik'
+    relocate 'org.w3c.dom.svg', 'net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg'
+    relocate 'org.apache.commons.cli', 'net.sourceforge.svg2ico.jarjar.org.apache.commons.cli'
+}
+
+task myJavadoc(type: Javadoc) {
+    source = sourceSets.main.allJava
+    title = "svg2ico version ${version}"
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from myJavadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task combinedJar(type: Jar) {
+    classifier = 'combined'
+    from sourceSets.main.allSource
+    from sourceSets.main.output
+}
+
+artifacts {
+    archives shadowJar, javadocJar, sourcesJar
+}
+
+task documentationDirectory << {
+    mkdir("${project.buildDir}/documentation")
+}
+
+task ico(dependsOn: documentationDirectory) << {
+    ant.taskdef(name: 'svg2ico',
+            classname: 'net.sourceforge.svg2ico.Svg2IcoTask',
+            classpath: configurations.svg2ico.asPath)
+    ant.svg2ico(src: 'resources/favicon.svg',
+            dest: "${project.buildDir}/documentation/favicon.ico",
+            width: '32',
+            height: '32'
+    )
+}
+
+task iconsDirectory << {
+    mkdir("${project.buildDir}/icons")
+}
+
+task png(type: JavaExec, dependsOn: iconsDirectory) {
+    main = 'org.apache.batik.apps.rasterizer.Main'
+    classpath = configurations.batik
+    args '-d', "${project.buildDir}/icons/", '-scriptSecurityOff', '-m', 'image/png', '-w', '48', '-h', '48', 'resources/favicon.svg'
+}
+
+
+task buildDocumentation(type: JavaExec, dependsOn: documentationDirectory) {
+    main = 'net.sourceforge.svg2ico.documentation.DocumentationGenerator'
+    args("${project.buildDir}/documentation")
+    classpath = sourceSets.documentation.runtimeClasspath
+}
+
+task documentationJar(type: Tar, dependsOn: [ buildDocumentation, ico]) {
+    from "${project.buildDir}/documentation"
+    from 'docs'
+    baseName 'documentation'
+    compression = Compression.GZIP
+}
+
+remotes {
+    sourceforgeShell {
+        host = 'shell.sourceforge.net'
+        user = "$sourceforgeUser,svg2ico"
+        password = "$sourceforgePassword"
+
+    }
+        sourceforgeWeb {
+        host = 'web.sourceforge.net'
+        user = "$sourceforgeUser,svg2ico"
+        password = "$sourceforgePassword"
+
+    }
+}
+
+task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) << {
+    ssh.run {
+        session(remotes.sourceforgeShell) {
+            execute 'create'
+            execute "mkdir -p /home/frs/project/svg2ico/${version}"
+        }
+        session(remotes.sourceforgeWeb) {
+            put from: "${project.buildDir}/distributions/documentation-${version}.tgz", into: '/home/project-web/svg2ico/'
+            put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
+            put from: "${project.buildDir}/libs/svg2ico-${version}-combined.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
+        }
+        session(remotes.sourceforgeShell) {
+            execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
+        }
+    }
+}
+
+task updateSourceforgeDefaultDownload(type: org._10ne.gradle.rest.RestTask) {
+    httpMethod = 'put'
+    uri = "https://sourceforge.net/projects/svg2ico/files/${version}//svg2ico-${version}.jar"
+    requestContentType = groovyx.net.http.ContentType.URLENC
+    contentType = groovyx.net.http.ContentType.JSON
+    requestBody = "default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${version}%20with%20source&api_key=$sourceforgeApiKey"
+}
+
+/*
+ * Copyright 2018 Mark Slater
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ */
+
+// Signature of artifacts
+signing {
+    sign configurations.archives
+}
+
+// OSSRH publication
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            // POM signature
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            // Target repository
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUser, password: ossrhPassword)
+            }
+            pom.scopeMappings.with {
+                mappings.clear()
+            }
+            pom.project {
+                name 'svg2ico'
+                description project.description
+                packaging 'jar'
+                url 'http://svg2ico.sourceforge.net'
+
+                scm {
+                    url 'git://git.code.sf.net/p/svg2ico/code'
+                }
+
+                developers {
+                    developer {
+                        id = 'mos20'
+                        name = 'Mark Slater'
+                    }
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+nexusStaging {
+    username = ossrhUser
+    password = ossrhPassword
+}
+
+task aMomentOfReflection() << {
+    sleep(30 * 1000)
+}
+
+build.mustRunAfter clean
+uploadArchives.mustRunAfter build
+closeRepository.mustRunAfter uploadArchives
+aMomentOfReflection.mustRunAfter closeRepository
+promoteRepository.mustRunAfter aMomentOfReflection
+updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
+
+task performRelease(dependsOn: [clean, build, uploadArchives, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) << {
+    println 'Release complete :)'
+}
+
+task buildAndDeployCleanVersion(dependsOn: [clean, performRelease]) << {
+}
+
+task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) << {
+    ant.propertyfile(file: file('gradle.properties')) {
+        entry(key: 'minorVersion', type: 'int', operation: '+', value: 1)
+    }
+}
+
+task deploy(dependsOn: incrementVersionNumber) << {}
+

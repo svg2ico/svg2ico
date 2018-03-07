@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Slater
+ * Copyright 2018 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -15,11 +15,13 @@ import net.sourceforge.urin.Path;
 import net.sourceforge.urin.Urin;
 import net.sourceforge.xazzle.xhtml.*;
 
+import static net.sourceforge.urin.Authority.authority;
 import static net.sourceforge.urin.Host.registeredName;
 import static net.sourceforge.urin.Path.path;
-import static net.sourceforge.urin.Query.query;
-import static net.sourceforge.urin.RelativeReference.relativeReference;
-import static net.sourceforge.urin.scheme.Http.*;
+import static net.sourceforge.urin.scheme.http.Http.HTTP;
+import static net.sourceforge.urin.scheme.http.HttpQuery.queryParameter;
+import static net.sourceforge.urin.scheme.http.HttpQuery.queryParameters;
+import static net.sourceforge.urin.scheme.http.Https.HTTPS;
 import static net.sourceforge.xazzle.xhtml.AlternateText.alternateText;
 import static net.sourceforge.xazzle.xhtml.ClassName.className;
 import static net.sourceforge.xazzle.xhtml.Href.href;
@@ -34,12 +36,12 @@ import static net.sourceforge.xazzle.xhtml.Tags.*;
 import static net.sourceforge.xazzle.xhtml.XhtmlDimension.pixels;
 
 final class Svg2IcoPage {
-    static final Host SOURCEFORGE = registeredName("sourceforge.net");
-    static final Host W3_JIGSAW = registeredName("jigsaw.w3.org");
-    static final Host W3_WWW = registeredName("www.w3.org");
+    private static final Host SOURCEFORGE = registeredName("sourceforge.net");
+    private static final Host W3_JIGSAW = registeredName("jigsaw.w3.org");
+    private static final Host W3_WWW = registeredName("www.w3.org");
 
     public static HtmlTag anSvg2IcoPage(final BlockElement<DoesNotContainFormTag>... body) {
-        final Href projectSiteHref = href(http(SOURCEFORGE, path("projects", "svg2ico")).asString());
+        final Href projectSiteHref = href(HTTP.urin(authority(SOURCEFORGE), path("projects", "svg2ico")).asString());
         return htmlTag(
                 headTag(
                         titleTag("svg2ico - A Java library for converting images in SVG format to ICO format"),
@@ -71,11 +73,11 @@ final class Svg2IcoPage {
                                         unorderedListTag(
                                                 listItemTag(
                                                         Tags.anchorTag(Tags.xhtmlText("Home"))
-                                                                .withHref(href(relativeReference(Path.rootlessPath("index.html")).asString()))
+                                                                .withHref(href(HTTP.relativeReference(Path.rootlessPath("index.html")).asString()))
                                                 ),
                                                 listItemTag(
                                                         Tags.anchorTag(Tags.xhtmlText("Downloads"))
-                                                                .withHref(href(relativeReference(Path.rootlessPath("downloads.html")).asString()))
+                                                                .withHref(href(HTTP.relativeReference(Path.rootlessPath("downloads.html")).asString()))
                                                 ),
                                                 listItemTag(
                                                         Tags.anchorTag(Tags.xhtmlText("Project Site"))
@@ -89,7 +91,7 @@ final class Svg2IcoPage {
                                                 listItemTag(
                                                         anchorTag(
                                                                 imageTag(
-                                                                        imageSource(http(registeredName("sflogo.sourceforge.net"), path("sflogo.php"), queryParameters(queryParameter("group_id", "740443"), queryParameter("type", "13"))).asString()),
+                                                                        imageSource(HTTP.urin(authority(registeredName("sflogo.sourceforge.net")), path("sflogo.php"), queryParameters(queryParameter("group_id", "740443"), queryParameter("type", "13"))).asString()),
                                                                         alternateText("Get svg2ico at SourceForge.net. Fast, secure and Free Open Source software downloads")
                                                                 )
                                                                         .withHeight(pixels("30"))
@@ -99,22 +101,22 @@ final class Svg2IcoPage {
                                                 listItemTag(
                                                         anchorTag(
                                                                 imageTag(
-                                                                        imageSource(http(W3_JIGSAW, path("css-validator", "images", "vcss")).asString()),
+                                                                        imageSource(HTTP.urin(authority(W3_JIGSAW), path("css-validator", "images", "vcss")).asString()),
                                                                         alternateText("Valid CSS!")
                                                                 )
                                                                         .withHeight(pixels("31"))
                                                                         .withWidth(pixels("88"))
-                                                        ).withHref(href(http(W3_JIGSAW, path("css-validator", "check", "referer")).asString()))
+                                                        ).withHref(href(HTTP.urin(authority(W3_JIGSAW), path("css-validator", "check", "referer")).asString()))
                                                 ),
                                                 listItemTag(
                                                         anchorTag(
                                                                 imageTag(
-                                                                        imageSource(http(W3_WWW, path("Icons", "valid-xhtml10")).asString()),
+                                                                        imageSource(HTTP.urin(authority(W3_WWW), path("Icons", "valid-xhtml10")).asString()),
                                                                         alternateText("Valid XHTML 1.0 Strict")
                                                                 )
                                                                         .withHeight(pixels("31"))
                                                                         .withWidth(pixels("88"))
-                                                        ).withHref(href(http(registeredName("validator.w3.org"), path("check"), query("uri=referer")).asString()))
+                                                        ).withHref(href(HTTP.urin(authority(registeredName("validator.w3.org")), path("check"), queryParameters(queryParameter("uri", "referer"))).asString()))
                                                 )
                                         )
                                 ).withId(id("footer"))
@@ -134,6 +136,6 @@ final class Svg2IcoPage {
     }
 
     static Urin jarSvg2Ico(final String version) {
-        return https(registeredName("sourceforge.net"), path("projects", "svg2ico", "files", version, "svg2ico-" + version + ".jar", "download"));
+        return HTTPS.urin(authority(registeredName("sourceforge.net")), path("projects", "svg2ico", "files", version, "svg2ico-" + version + ".jar", "download"));
     }
 }

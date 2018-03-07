@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Slater
+ * Copyright 2018 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -14,12 +14,10 @@ import net.sourceforge.writexml.CompactXmlFormatter;
 import net.sourceforge.writexml.XmlWriteException;
 import net.sourceforge.xazzle.xhtml.HtmlTag;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.sourceforge.svg2ico.documentation.DownloadsPage.downloadsPage;
 import static net.sourceforge.svg2ico.documentation.IndexPage.indexPage;
 import static net.sourceforge.svg2ico.documentation.SupportPage.supportPage;
@@ -39,15 +37,23 @@ public class DocumentationGenerator {
 
     private static String versionString() throws IOException {
         Properties properties = new Properties();
-        properties.load(new FileReader("version.properties"));
-        return properties.getProperty("svg2ico.version.major") + "." + properties.getProperty("svg2ico.version.minor");
+        try (
+                final FileInputStream fileInputStream = new FileInputStream("gradle.properties");
+                final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, UTF_8);
+        ) {
+            properties.load(inputStreamReader);
+            return properties.getProperty("svg2ico.version.major") + "." + properties.getProperty("svg2ico.version.minor");
+        }
     }
 
     private static void writePage(final HtmlTag svg2IcoPage, final File destination, final String fileName) throws IOException, XmlWriteException {
         final File file = new File(destination, fileName);
-        final FileWriter fileWriter = new FileWriter(file);
-        XML_FORMATTER.write(svg2IcoPage.asDocument(), fileWriter);
-        fileWriter.close();
+        try (
+                final FileOutputStream fileOutputStream = new FileOutputStream(file);
+                final OutputStreamWriter fileWriter = new OutputStreamWriter(fileOutputStream, UTF_8);
+        ) {
+            XML_FORMATTER.write(svg2IcoPage.asDocument(), fileWriter);
+        }
     }
 
 }

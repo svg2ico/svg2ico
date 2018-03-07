@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Slater
+ * Copyright 2018 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -14,9 +14,10 @@ import net.sourceforge.urin.Host;
 import net.sourceforge.xazzle.xhtml.HtmlTag;
 
 import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.anSvg2IcoPage;
+import static net.sourceforge.urin.Authority.authority;
 import static net.sourceforge.urin.Host.registeredName;
 import static net.sourceforge.urin.Path.path;
-import static net.sourceforge.urin.scheme.Http.https;
+import static net.sourceforge.urin.scheme.http.Https.HTTPS;
 import static net.sourceforge.xazzle.xhtml.Href.href;
 import static net.sourceforge.xazzle.xhtml.Tags.*;
 
@@ -33,16 +34,16 @@ final class SupportPage {
                 h2Tag(xhtmlText("Support")),
                 paragraphTag(
                         xhtmlText("The best way to get help on svg2ico is via the "),
-                        anchorTag(xhtmlText("help forum")).withHref(href(https(SOURCE_FORGE, path("p", "svg2ico", "discussion", "help")).asString())),
+                        anchorTag(xhtmlText("help forum")).withHref(href(HTTPS.urin(authority(SOURCE_FORGE), path("p", "svg2ico", "discussion", "help")).asString())),
                         xhtmlText(".")),
                 paragraphTag(
                         xhtmlText("Alternatively, report a bug or request a feature by "),
-                        anchorTag(xhtmlText("raising a ticket")).withHref(href(https(SOURCE_FORGE, path("p", "svg2ico", "tickets")).asString())),
+                        anchorTag(xhtmlText("raising a ticket")).withHref(href(HTTPS.urin(authority(SOURCE_FORGE), path("p", "svg2ico", "tickets")).asString())),
                         xhtmlText(".")
                 ),
                 paragraphTag(
                         xhtmlText("Finally, there is an "),
-                        anchorTag(xhtmlText("open discussion forum")).withHref(href(https(SOURCE_FORGE, path("p", "svg2ico", "discussion", "general")).asString())),
+                        anchorTag(xhtmlText("open discussion forum")).withHref(href(HTTPS.urin(authority(SOURCE_FORGE), path("p", "svg2ico", "discussion", "general")).asString())),
                         xhtmlText(" for anything else.")
                 )
         );

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Slater
+ * Copyright 2018 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -14,12 +14,10 @@ import net.sourceforge.xazzle.xhtml.HtmlTag;
 
 import static net.sourceforge.svg2ico.documentation.Svg2IcoPage.*;
 import static net.sourceforge.urin.Authority.authority;
-import static net.sourceforge.urin.HierarchicalPart.hierarchicalPart;
 import static net.sourceforge.urin.Host.registeredName;
 import static net.sourceforge.urin.Path.path;
 import static net.sourceforge.urin.Scheme.scheme;
-import static net.sourceforge.urin.Urin.urin;
-import static net.sourceforge.urin.scheme.Http.http;
+import static net.sourceforge.urin.scheme.http.Http.HTTP;
 import static net.sourceforge.xazzle.xhtml.Href.href;
 import static net.sourceforge.xazzle.xhtml.Tags.*;
 
@@ -30,12 +28,12 @@ final class DownloadsPage {
 
     static HtmlTag downloadsPage(final String version) {
         String standardJarUrl = jarSvg2Ico(version).asString();
-        String gitUri = urin(scheme("git"), hierarchicalPart(authority(registeredName("git.code.sf.net")), path("p", "svg2ico", "code"))).asString();
+        String gitUri = scheme("git").urin(authority(registeredName("git.code.sf.net")), path("p", "svg2ico", "code")).asString();
         return anSvg2IcoPage(
                 h2Tag(xhtmlText("Downloads")),
                 paragraphTag(
                         xhtmlText("svg2ico is available under the "),
-                        anchorTag(xhtmlText("Apache 2 license")).withHref(href(http(registeredName("www.apache.org"), path("licenses", "LICENSE-2.0")).asString())),
+                        anchorTag(xhtmlText("Apache 2 license")).withHref(href(HTTP.urin(authority(registeredName("www.apache.org")), path("licenses", "LICENSE-2.0")).asString())),
                         xhtmlText(".  It can be downloaded in three forms:")),
                 unorderedListTag(
                         listItemTag(
