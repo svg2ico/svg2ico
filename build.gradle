@@ -36,7 +36,7 @@ sourceSets {
 }
 
 configurations {
-    svg2ico
+//    svg2ico
     batik
 }
 
@@ -46,6 +46,7 @@ dependencies {
     compile group: 'commons-cli', name: 'commons-cli', version: '1.3.1'
     compile group: 'org.jclarion', name: 'image4j', version: '0.7'
     compile group: 'xml-apis', name: 'xml-apis-ext', version: '1.3.04'
+    compile group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.2'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.hamcrest', name: 'java-hamcrest', version: '2.0.0.0'
@@ -58,7 +59,6 @@ dependencies {
     documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
     documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '2.22'
 
-    svg2ico group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
     batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.8'
     batik group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0'
     batik group: 'org.apache.xmlgraphics', name: 'batik-codec', version: '1.8'
@@ -76,6 +76,7 @@ compileJava {
 shadowJar {
     relocate 'net.sf.image4j', 'net.sourceforge.svg2ico.jarjar.net.sf.image4j'
     relocate 'org.apache.batik', 'net.sourceforge.svg2ico.jarjar.org.apache.batik'
+    relocate 'org.apache.xmlgraphics', 'net.sourceforge.svg2ico.jarjar.org.apache.xmlgraphics'
     relocate 'org.w3c.dom.svg', 'net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg'
     relocate 'org.apache.commons.cli', 'net.sourceforge.svg2ico.jarjar.org.apache.commons.cli'
 }
@@ -109,10 +110,11 @@ task documentationDirectory << {
     mkdir("${project.buildDir}/documentation")
 }
 
-task ico(dependsOn: documentationDirectory) << {
+task ico(dependsOn: [documentationDirectory, shadowJar]) << {
     ant.taskdef(name: 'svg2ico',
             classname: 'net.sourceforge.svg2ico.Svg2IcoTask',
-            classpath: configurations.svg2ico.asPath)
+            classpath: sourceSets.main.runtimeClasspath.asPath
+    )
     ant.svg2ico(src: 'resources/favicon.svg',
             dest: "${project.buildDir}/documentation/favicon.ico",
             width: '32',
@@ -184,6 +186,10 @@ task updateSourceforgeDefaultDownload(type: org._10ne.gradle.rest.RestTask) {
     requestBody = "default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${version}%20with%20source&api_key=$sourceforgeApiKey"
 }
 
+signing {
+    sign configurations.archives
+}
+
 /*
  * Copyright 2018 Mark Slater
  *
@@ -193,11 +199,6 @@ task updateSourceforgeDefaultDownload(type: org._10ne.gradle.rest.RestTask) {
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-
-// Signature of artifacts
-signing {
-    sign configurations.archives
-}
 
 // OSSRH publication
 uploadArchives {
