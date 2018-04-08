@@ -95,12 +95,12 @@ public final class Svg2Ico {
     }
 
     private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height) throws FileNotFoundException, ImageConversionException {
-        setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
+        setCSSParserClassName(Parser.class.getCanonicalName());  // To help ShadowJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
         return loadImage(transcoderInput, width, height);
     }
 
     private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
-        setCSSParserClassName(Parser.class.getCanonicalName());  // To help JarJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
+        setCSSParserClassName(Parser.class.getCanonicalName());  // To help ShadowJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
         return loadImage(transcoderInput, width, height, userStylesheet);
     }
 

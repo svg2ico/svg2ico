@@ -80,11 +80,11 @@ jar {
 }
 
 shadowJar {
-    relocate 'net.sf.image4j', 'net.sourceforge.svg2ico.jarjar.net.sf.image4j'
-    relocate 'org.apache.batik', 'net.sourceforge.svg2ico.jarjar.org.apache.batik'
-    relocate 'org.apache.xmlgraphics', 'net.sourceforge.svg2ico.jarjar.org.apache.xmlgraphics'
-    relocate 'org.w3c.dom.svg', 'net.sourceforge.svg2ico.jarjar.org.w3c.dom.svg'
-    relocate 'org.apache.commons.cli', 'net.sourceforge.svg2ico.jarjar.org.apache.commons.cli'
+    relocate 'net.sf.image4j', 'net.sourceforge.svg2ico.shadowjar.net.sf.image4j'
+    relocate 'org.apache.batik', 'net.sourceforge.svg2ico.shadowjar.org.apache.batik'
+    relocate 'org.apache.xmlgraphics', 'net.sourceforge.svg2ico.shadowjar.org.apache.xmlgraphics'
+    relocate 'org.w3c.dom.svg', 'net.sourceforge.svg2ico.shadowjar.org.w3c.dom.svg'
+    relocate 'org.apache.commons.cli', 'net.sourceforge.svg2ico.shadowjar.org.apache.commons.cli'
     relocate 'org.w3c.css', 'org.w3c.css'
     relocate 'org.w3c.dom', 'org.w3c.dom'
     exclude '**/org/w3c/dom/xpath/**/*'

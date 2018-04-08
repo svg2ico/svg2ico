@@ -62,7 +62,7 @@ final class IndexPage {
                 paragraphTag(xhtmlText("svg2ico uses the excellent "), anchorTag(xhtmlText("Batik")).withHref(href("http://xmlgraphics.apache.org/batik/")),
                         xhtmlText(" and "), anchorTag(xhtmlText("image4j")).withHref(href("http://image4j.sourceforge.net/")),
                         xhtmlText(", but you don't need to worry about these dependencies because they're included in the distribution " +
-                                "using the equally excellent "), anchorTag(xhtmlText("Jar Jar Links")).withHref(href("http://code.google.com/p/jarjar/")),
+                                "using the equally excellent "), anchorTag(xhtmlText("Gradle Shadow")).withHref(href("https://github.com/johnrengelman/shadow")),
                         xhtmlText("."))
         );
     }
