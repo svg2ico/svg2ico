@@ -142,7 +142,7 @@ task png(type: JavaExec, dependsOn: iconsDirectory) {
 
 task buildDocumentation(type: JavaExec, dependsOn: documentationDirectory) {
     main = 'net.sourceforge.svg2ico.documentation.DocumentationGenerator'
-    args("${project.buildDir}/documentation")
+    args "${project.buildDir}/documentation"
     classpath = sourceSets.documentation.runtimeClasspath
 }
 
