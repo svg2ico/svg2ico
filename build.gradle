@@ -104,12 +104,6 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
-task combinedJar(type: Jar) {
-    classifier = 'combined'
-    from sourceSets.main.allSource
-    from sourceSets.main.output
-}
-
 artifacts {
     archives shadowJar, javadocJar, sourcesJar
 }
@@ -178,7 +172,7 @@ task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) << 
         session(remotes.sourceforgeWeb) {
             put from: "${project.buildDir}/distributions/documentation-${version}.tgz", into: '/home/project-web/svg2ico/'
             put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
-            put from: "${project.buildDir}/libs/svg2ico-${version}-combined.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
+            put from: "${project.buildDir}/libs/svg2ico-${version}-shadow.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
         }
         session(remotes.sourceforgeShell) {
             execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
