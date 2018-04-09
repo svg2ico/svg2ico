@@ -91,6 +91,7 @@ shadowJar {
 task myJavadoc(type: Javadoc) {
     source = sourceSets.main.allJava
     title = "svg2ico version ${version}"
+    classpath = project.sourceSets.main.compileClasspath
 }
 
 task javadocJar(type: Jar) {
