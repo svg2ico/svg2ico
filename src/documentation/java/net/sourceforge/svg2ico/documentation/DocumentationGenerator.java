@@ -42,7 +42,7 @@ public class DocumentationGenerator {
                 final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, UTF_8);
         ) {
             properties.load(inputStreamReader);
-            return properties.getProperty("svg2ico.version.major") + "." + properties.getProperty("svg2ico.version.minor");
+            return properties.getProperty("majorVersion") + "." + properties.getProperty("minorVersion");
         }
     }
 
