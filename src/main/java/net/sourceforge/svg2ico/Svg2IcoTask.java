@@ -32,9 +32,11 @@ public final class Svg2IcoTask extends Task {
     private Boolean compress;
 
     public void execute() {
-        try {
-            final FileInputStream inputStream = new FileInputStream(checkSet("src", src));
-            final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest));
+        try (
+                final FileInputStream inputStream = new FileInputStream(checkSet("src", src));
+                final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest))
+        ) {
+
             final Float width = checkSet("width", this.width);
             final Float height = checkSet("height", this.height);
             if (isSet(depth)) {
@@ -66,9 +68,7 @@ public final class Svg2IcoTask extends Task {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
-        } catch (ImageConversionException e) {
+        } catch (IOException | ImageConversionException e) {
             throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
         }
     }
