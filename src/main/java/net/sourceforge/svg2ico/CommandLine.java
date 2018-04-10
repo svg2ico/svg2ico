@@ -15,7 +15,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -40,72 +43,59 @@ public final class CommandLine {
             if (!commandLine.hasOption("src") || !commandLine.hasOption("dest") || !commandLine.hasOption("width") || !commandLine.hasOption("height")) {
                 printHelp();
             } else {
-                FileInputStream srcFileInputStream = null;
-                FileOutputStream destFileOutputStream = null;
                 try {
                     File src = new File(commandLine.getOptionValue("src"));
                     File dest = new File(commandLine.getOptionValue("dest"));
                     if (!src.exists()) {
                         System.err.println("src file not found " + src);
                     } else {
-                        srcFileInputStream = new FileInputStream(src);
-                        destFileOutputStream = new FileOutputStream(dest);
-                        float width = parseFloat(commandLine.getOptionValue("width"));
-                        float height = parseFloat(commandLine.getOptionValue("height"));
-                        if (commandLine.hasOption("depth")) {
-                            int depth = parseInt(commandLine.getOptionValue("depth"));
-                            if (commandLine.hasOption("userStylesheet")) {
-                                File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
-                                if (commandLine.hasOption("compress")) {
-                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                        try (
+                                FileInputStream srcFileInputStream = new FileInputStream(src);
+                                FileOutputStream destFileOutputStream = new FileOutputStream(dest)
+                        ) {
+                            float width = parseFloat(commandLine.getOptionValue("width"));
+                            float height = parseFloat(commandLine.getOptionValue("height"));
+                            if (commandLine.hasOption("depth")) {
+                                int depth = parseInt(commandLine.getOptionValue("depth"));
+                                if (commandLine.hasOption("userStylesheet")) {
+                                    File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
+                                    if (commandLine.hasOption("compress")) {
+                                        svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                                    } else {
+                                        svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                                    }
                                 } else {
-                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth, userStylesheet.toURI());
+                                    if (commandLine.hasOption("compress")) {
+                                        svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                    } else {
+                                        svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                    }
                                 }
                             } else {
-                                if (commandLine.hasOption("compress")) {
-                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, depth);
+                                if (commandLine.hasOption("userStylesheet")) {
+                                    File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
+                                    if (commandLine.hasOption("compress")) {
+                                        svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
+                                    } else {
+                                        svgToIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
+                                    }
                                 } else {
-                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, depth);
-                                }
-                            }
-                        } else {
-                            if (commandLine.hasOption("userStylesheet")) {
-                                File userStylesheet = new File(commandLine.getOptionValue("userStylesheet"));
-                                if (commandLine.hasOption("compress")) {
-                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
-                                } else {
-                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height, userStylesheet.toURI());
-                                }
-                            } else {
-                                if (commandLine.hasOption("compress")) {
-                                    svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height);
-                                } else {
-                                    svgToIco(srcFileInputStream, destFileOutputStream, width, height);
+                                    if (commandLine.hasOption("compress")) {
+                                        svgToCompressedIco(srcFileInputStream, destFileOutputStream, width, height);
+                                    } else {
+                                        svgToIco(srcFileInputStream, destFileOutputStream, width, height);
+                                    }
                                 }
                             }
                         }
                     }
-                } catch (FileNotFoundException e) {
+                } catch (ImageConversionException | IOException e) {
                     printFailure(e);
-                } catch (ImageConversionException e) {
-                    printFailure(e);
-                } catch (IOException e) {
-                    printFailure(e);
-                } finally {
-                    if (srcFileInputStream != null) {
-                        srcFileInputStream.close();
-                    }
-                    if (destFileOutputStream != null) {
-                        destFileOutputStream.close();
-                    }
                 }
             }
         } catch (ParseException e) {
             System.err.println(e.getMessage());
             printHelp();
-        } catch (IOException e) {
-            System.err.println("Failed to close files");
-            e.printStackTrace();
         }
     }
 
