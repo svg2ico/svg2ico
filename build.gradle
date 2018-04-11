@@ -175,7 +175,7 @@ remotes {
 
 task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
     doLast {
-        ssh.run {
+        ssh.runInOrder {
             session(remotes.sourceforgeShell) {
                 execute 'create'
                 execute "mkdir -p /home/frs/project/svg2ico/${version}"
@@ -185,7 +185,6 @@ task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
                 put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
                 put from: "${project.buildDir}/libs/svg2ico-${version}.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
             }
-            // sleep for a bit?? fails with tar: /home/project-web/svg2ico/documentation-1.8.tgz: Cannot open: No such file or directory
             session(remotes.sourceforgeShell) {
                 execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
             }
