@@ -37,6 +37,7 @@ sourceSets {
 
 configurations {
     batik
+    anttask
 }
 
 dependencies {
@@ -59,6 +60,8 @@ dependencies {
     batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.7'
     batik group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0'
     batik group: 'org.apache.xmlgraphics', name: 'batik-codec', version: '1.7'
+
+    anttask project(path: ':', configuration: 'shadow')
 }
 
 group = 'net.sourceforge.svg2ico'
@@ -115,7 +118,7 @@ task documentationDirectory << {
 task ico(dependsOn: [documentationDirectory, shadowJar]) << {
     ant.taskdef(name: 'svg2ico',
             classname: 'net.sourceforge.svg2ico.Svg2IcoTask',
-            classpath: sourceSets.main.runtimeClasspath.asPath
+            classpath: configurations.anttask.asPath
     )
     ant.svg2ico(src: 'resources/favicon.svg',
             dest: "${project.buildDir}/documentation/favicon.ico",
@@ -174,6 +177,7 @@ task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) << 
             put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
             put from: "${project.buildDir}/libs/svg2ico-${version}-all.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
         }
+        // sleep for a bit?? fails with tar: /home/project-web/svg2ico/documentation-1.8.tgz: Cannot open: No such file or directory
         session(remotes.sourceforgeShell) {
             execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
         }
