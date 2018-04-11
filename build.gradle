@@ -183,7 +183,7 @@ task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
             session(remotes.sourceforgeWeb) {
                 put from: "${project.buildDir}/distributions/documentation-${version}.tgz", into: '/home/project-web/svg2ico/'
                 put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
-                put from: "${project.buildDir}/libs/svg2ico-${version}-all.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
+                put from: "${project.buildDir}/libs/svg2ico-${version}.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
             }
             // sleep for a bit?? fails with tar: /home/project-web/svg2ico/documentation-1.8.tgz: Cannot open: No such file or directory
             session(remotes.sourceforgeShell) {
