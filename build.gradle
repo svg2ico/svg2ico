@@ -89,6 +89,7 @@ shadowJar {
     relocate 'org.w3c.dom', 'org.w3c.dom'
     exclude '**/org/w3c/dom/xpath/**/*'
     exclude '**/org/w3c/dom/events/**/*'
+    classifier = ''
 }
 
 task myJavadoc(type: Javadoc) {
@@ -215,7 +216,7 @@ signing {
  */
 
 // OSSRH publication
-uploadShadow {
+uploadArchives {
     repositories {
         mavenDeployer {
             // POM signature
