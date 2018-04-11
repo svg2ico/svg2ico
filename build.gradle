@@ -215,7 +215,7 @@ signing {
  */
 
 // OSSRH publication
-uploadArchives {
+uploadShadow {
     repositories {
         mavenDeployer {
             // POM signature
