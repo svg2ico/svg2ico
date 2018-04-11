@@ -111,24 +111,30 @@ artifacts {
     archives shadowJar, javadocJar, sourcesJar
 }
 
-task documentationDirectory << {
-    mkdir("${project.buildDir}/documentation")
+task documentationDirectory {
+    doLast {
+        mkdir("${project.buildDir}/documentation")
+    }
 }
 
-task ico(dependsOn: [documentationDirectory, shadowJar]) << {
-    ant.taskdef(name: 'svg2ico',
-            classname: 'net.sourceforge.svg2ico.Svg2IcoTask',
-            classpath: configurations.anttask.asPath
-    )
-    ant.svg2ico(src: 'resources/favicon.svg',
-            dest: "${project.buildDir}/documentation/favicon.ico",
-            width: '32',
-            height: '32'
-    )
+task ico(dependsOn: [documentationDirectory, shadowJar]) {
+    doLast {
+        ant.taskdef(name: 'svg2ico',
+                classname: 'net.sourceforge.svg2ico.Svg2IcoTask',
+                classpath: configurations.anttask.asPath
+        )
+        ant.svg2ico(src: 'resources/favicon.svg',
+                dest: "${project.buildDir}/documentation/favicon.ico",
+                width: '32',
+                height: '32'
+        )
+    }
 }
 
-task iconsDirectory << {
-    mkdir("${project.buildDir}/icons")
+task iconsDirectory {
+    doLast {
+        mkdir("${project.buildDir}/icons")
+    }
 }
 
 task png(type: JavaExec, dependsOn: iconsDirectory) {
@@ -166,20 +172,22 @@ remotes {
     }
 }
 
-task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) << {
-    ssh.run {
-        session(remotes.sourceforgeShell) {
-            execute 'create'
-            execute "mkdir -p /home/frs/project/svg2ico/${version}"
-        }
-        session(remotes.sourceforgeWeb) {
-            put from: "${project.buildDir}/distributions/documentation-${version}.tgz", into: '/home/project-web/svg2ico/'
-            put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
-            put from: "${project.buildDir}/libs/svg2ico-${version}-all.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
-        }
-        // sleep for a bit?? fails with tar: /home/project-web/svg2ico/documentation-1.8.tgz: Cannot open: No such file or directory
-        session(remotes.sourceforgeShell) {
-            execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
+task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
+    doLast {
+        ssh.run {
+            session(remotes.sourceforgeShell) {
+                execute 'create'
+                execute "mkdir -p /home/frs/project/svg2ico/${version}"
+            }
+            session(remotes.sourceforgeWeb) {
+                put from: "${project.buildDir}/distributions/documentation-${version}.tgz", into: '/home/project-web/svg2ico/'
+                put from: "${project.buildDir}/libs/svg2ico-${version}-javadoc.jar", into: '/home/project-web/svg2ico/'
+                put from: "${project.buildDir}/libs/svg2ico-${version}-all.jar", into: "/home/frs/project/svg2ico/${version}/svg2ico-${version}.jar"
+            }
+            // sleep for a bit?? fails with tar: /home/project-web/svg2ico/documentation-1.8.tgz: Cannot open: No such file or directory
+            session(remotes.sourceforgeShell) {
+                execute "mkdir -p /home/project-web/svg2ico/${version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${version}.tgz -C /home/project-web/svg2ico/${version} && unzip -d /home/project-web/svg2ico/${version}/javadoc /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${version}.tgz && rm /home/project-web/svg2ico/svg2ico-${version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${version} /home/project-web/svg2ico/htdocs"
+            }
         }
     }
 }
@@ -254,8 +262,10 @@ nexusStaging {
     password = ossrhPassword
 }
 
-task aMomentOfReflection() << {
-    sleep(30 * 1000)
+task aMomentOfReflection {
+    doLast {
+        sleep(30 * 1000)
+    }
 }
 
 build.mustRunAfter clean
@@ -265,18 +275,22 @@ aMomentOfReflection.mustRunAfter closeRepository
 promoteRepository.mustRunAfter aMomentOfReflection
 updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
 
-task performRelease(dependsOn: [clean, build, uploadArchives, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) << {
-    println 'Release complete :)'
-}
-
-task buildAndDeployCleanVersion(dependsOn: [clean, performRelease]) << {
-}
-
-task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) << {
-    ant.propertyfile(file: file('gradle.properties')) {
-        entry(key: 'minorVersion', type: 'int', operation: '+', value: 1)
+task performRelease(dependsOn: [clean, build, uploadArchives, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
+    doLast {
+        println 'Release complete :)'
     }
 }
 
-task deploy(dependsOn: incrementVersionNumber) << {}
+task buildAndDeployCleanVersion(dependsOn: [clean, performRelease]) {
+}
+
+task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) {
+    doLast {
+        ant.propertyfile(file: file('gradle.properties')) {
+            entry(key: 'minorVersion', type: 'int', operation: '+', value: 1)
+        }
+    }
+}
+
+task deploy(dependsOn: incrementVersionNumber) {}
 
