@@ -42,7 +42,10 @@ configurations {
 
 dependencies {
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.3'
-    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.7'
+    compile group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.8'
+    compile (group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0') {
+        because 'batik 1.8 needs this but forgot to declare the dependency'
+    }
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile group: 'org.jclarion', name: 'image4j', version: '0.7'
 
