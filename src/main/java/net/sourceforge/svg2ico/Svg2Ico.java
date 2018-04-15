@@ -12,12 +12,14 @@ package net.sourceforge.svg2ico;
 
 import net.sf.image4j.codec.ico.ICOEncoder;
 import org.apache.batik.css.parser.Parser;
+import org.apache.batik.gvt.renderer.ImageRenderer;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
@@ -146,8 +148,43 @@ public final class Svg2Ico {
             this.img = img;
         }
 
-        public BufferedImage getBufferedImage() {
+        BufferedImage getBufferedImage() {
             return img;
+        }
+
+        @Override
+        protected ImageRenderer createRenderer() {
+            ImageRenderer r = super.createRenderer();
+
+            RenderingHints rh = r.getRenderingHints();
+
+            rh.add(new RenderingHints(RenderingHints.KEY_ALPHA_INTERPOLATION,
+                    RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY));
+            rh.add(new RenderingHints(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC));
+
+            rh.add(new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON));
+
+            rh.add(new RenderingHints(RenderingHints.KEY_COLOR_RENDERING,
+                    RenderingHints.VALUE_COLOR_RENDER_QUALITY));
+            rh.add(new RenderingHints(RenderingHints.KEY_DITHERING,
+                    RenderingHints.VALUE_DITHER_DISABLE));
+
+            rh.add(new RenderingHints(RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY));
+
+            rh.add(new RenderingHints(RenderingHints.KEY_STROKE_CONTROL,
+                    RenderingHints.VALUE_STROKE_PURE));
+
+            rh.add(new RenderingHints(RenderingHints.KEY_FRACTIONALMETRICS,
+                    RenderingHints.VALUE_FRACTIONALMETRICS_ON));
+            rh.add(new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_OFF));
+
+            r.setRenderingHints(rh);
+
+            return r;
         }
     }
 }
