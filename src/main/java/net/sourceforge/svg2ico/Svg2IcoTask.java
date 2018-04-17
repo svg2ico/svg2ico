@@ -13,12 +13,13 @@ package net.sourceforge.svg2ico;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
-import static net.sourceforge.svg2ico.Svg2Ico.svgToCompressedIco;
+import static net.sourceforge.svg2ico.SourceImage.sourceImage;
+import static net.sourceforge.svg2ico.SourceImage.sourceImageToCompress;
 import static net.sourceforge.svg2ico.Svg2Ico.svgToIco;
 
 public final class Svg2IcoTask extends Task {
@@ -30,46 +31,67 @@ public final class Svg2IcoTask extends Task {
     private Float height;
     private Integer depth;
     private Boolean compress;
+    private List<SourceImage> sourceImages = new LinkedList<>();
 
     public void execute() {
-        try (
-                final FileInputStream inputStream = new FileInputStream(checkSet("src", src));
-                final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest))
-        ) {
-
-            final Float width = checkSet("width", this.width);
-            final Float height = checkSet("height", this.height);
-            if (isSet(depth)) {
-                if (isSet(userStylesheet)) {
-                    if (isSet(compress) && compress) {
-                        svgToCompressedIco(inputStream, outputStream, width, height, depth, userStylesheet.toURI());
-                    } else {
-                        svgToIco(inputStream, outputStream, width, height, depth, userStylesheet.toURI());
-                    }
-                } else {
-                    if (isSet(compress) && compress) {
-                        svgToCompressedIco(inputStream, outputStream, width, height, depth);
-                    } else {
-                        svgToIco(inputStream, outputStream, width, height, depth);
-                    }
-                }
-            } else {
-                if (isSet(userStylesheet)) {
-                    if (isSet(compress) && compress) {
-                        svgToCompressedIco(inputStream, outputStream, width, height, userStylesheet.toURI());
-                    } else {
-                        svgToIco(inputStream, outputStream, width, height, userStylesheet.toURI());
-                    }
-                } else {
-                    if (isSet(compress) && compress) {
-                        svgToCompressedIco(inputStream, outputStream, width, height);
-                    } else {
-                        svgToIco(inputStream, outputStream, width, height);
-                    }
-                }
+        if (sourceImages.isEmpty() && !(isSet(src) && isSet(width) && isSet(height))) {
+            throw new BuildException("Must set src, width and height attributes or supply at least one sourceImage nested element.");
+        } else {
+            if ((isSet(src) && isSet(width) && isSet(height))) {
+                sourceImages.add(0, new SourceImage(src, userStylesheet, width, height, depth, compress));
             }
-        } catch (IOException | ImageConversionException e) {
-            throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
+            try (
+                    final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest))
+            ) {
+                final List<Closeable> stuffToClose = new ArrayList<>(sourceImages.size());
+                final List<net.sourceforge.svg2ico.SourceImage> apiSourceImages = new ArrayList<>(sourceImages.size());
+                try {
+                    for (SourceImage sourceImage : sourceImages) {
+                        final FileInputStream inputStream = new FileInputStream(checkSet("src", sourceImage.src));
+                        stuffToClose.add(inputStream);
+                        final Float width = checkSet("width", sourceImage.width);
+                        final Float height = checkSet("height", sourceImage.height);
+                        final net.sourceforge.svg2ico.SourceImage apiSourceImage;
+                        if (isSet(sourceImage.depth)) {
+                            if (isSet(sourceImage.userStylesheet)) {
+                                if (isSet(sourceImage.compress) && sourceImage.compress) {
+                                    apiSourceImage = sourceImageToCompress(inputStream, width, height, sourceImage.depth, sourceImage.userStylesheet.toURI());
+                                } else {
+                                    apiSourceImage = sourceImage(inputStream, width, height, sourceImage.depth, sourceImage.userStylesheet.toURI());
+                                }
+                            } else {
+                                if (isSet(sourceImage.compress) && sourceImage.compress) {
+                                    apiSourceImage = sourceImageToCompress(inputStream, width, height, sourceImage.depth);
+                                } else {
+                                    apiSourceImage = sourceImage(inputStream, width, height, sourceImage.depth);
+                                }
+                            }
+                        } else {
+                            if (isSet(sourceImage.userStylesheet)) {
+                                if (isSet(sourceImage.compress) && sourceImage.compress) {
+                                    apiSourceImage = sourceImageToCompress(inputStream, width, height, sourceImage.userStylesheet.toURI());
+                                } else {
+                                    apiSourceImage = sourceImage(inputStream, width, height, sourceImage.userStylesheet.toURI());
+                                }
+                            } else {
+                                if (isSet(sourceImage.compress) && sourceImage.compress) {
+                                    apiSourceImage = sourceImageToCompress(inputStream, width, height);
+                                } else {
+                                    apiSourceImage = sourceImage(inputStream, width, height);
+                                }
+                            }
+                        }
+                        apiSourceImages.add(apiSourceImage);
+                    }
+                    svgToIco(outputStream, apiSourceImages);
+                } finally {
+                    for (Closeable closeable : stuffToClose) {
+                        closeable.close();
+                    }
+                }
+            } catch (IOException | ImageConversionException e) {
+                throw new BuildException("Failed converting SVG " + src + " to ICO " + dest + ".", e);
+            }
         }
     }
 
@@ -111,5 +133,54 @@ public final class Svg2IcoTask extends Task {
 
     public void setCompress(final boolean compress) {
         this.compress = compress;
+    }
+
+    public void addConfiguredSourceImage(SourceImage sourceImage) {
+        sourceImages.add(sourceImage);
+    }
+
+    public static final class SourceImage {
+        private File src;
+        private File userStylesheet;
+        private Float width;
+        private Float height;
+        private Integer depth;
+        private Boolean compress;
+
+        public SourceImage() {
+        }
+
+        public SourceImage(File src, File userStylesheet, Float width, Float height, Integer depth, Boolean compress) {
+            this.src = src;
+            this.userStylesheet = userStylesheet;
+            this.width = width;
+            this.height = height;
+            this.depth = depth;
+            this.compress = compress;
+        }
+
+        public void setSrc(final File src) {
+            this.src = src;
+        }
+
+        public void setUserStylesheet(final File userStylesheet) {
+            this.userStylesheet = userStylesheet;
+        }
+
+        public void setWidth(final float width) {
+            this.width = width;
+        }
+
+        public void setHeight(final float height) {
+            this.height = height;
+        }
+
+        public void setDepth(final int depth) {
+            this.depth = depth;
+        }
+
+        public void setCompress(final boolean compress) {
+            this.compress = compress;
+        }
     }
 }
