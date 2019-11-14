@@ -4,6 +4,12 @@
     <bytecodeTargetLevel>
       <module name="buildSrc_main" target="1.8" />
       <module name="buildSrc_test" target="1.8" />
+      <module name="svg2ico.buildSrc.main" target="1.8" />
+      <module name="svg2ico.buildSrc.test" target="1.8" />
+      <module name="svg2ico.documentation" target="1.8" />
+      <module name="svg2ico.main" target="1.7" />
+      <module name="svg2ico.plugin" target="1.8" />
+      <module name="svg2ico.test" target="1.8" />
       <module name="svg2ico_documentation" target="1.8" />
       <module name="svg2ico_main" target="1.7" />
       <module name="svg2ico_plugin" target="1.8" />
