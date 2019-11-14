@@ -18,16 +18,16 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'pmd'
-    id 'com.github.spotbugs' version '2.0.0'
     id 'signing'
     id 'maven'
-    id 'net.sourceforge.svg2ico'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id 'io.codearte.nexus-staging' version '0.20.0'
-    id 'org.unbroken-dome.test-sets' version '2.2.1'
+    id 'pmd'
+    id 'com.github.spotbugs' version '2.0.0'
     id 'org.hidetake.ssh' version '2.1.0'
     id 'org.tenne.rest' version '0.4.2'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'io.codearte.nexus-staging' version '0.20.0'
+    id 'net.sourceforge.svg2ico'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
 
 repositories {
@@ -112,12 +112,12 @@ task myJavadoc(type: Javadoc) {
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set 'javadoc'
     from myJavadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set 'sources'
     from sourceSets.main.allSource
 }
 
@@ -168,7 +168,7 @@ task buildDocumentation(type: JavaExec, dependsOn: documentationDirectory) {
     classpath = sourceSets.documentation.runtimeClasspath
 }
 
-task documentationJar(type: Tar, dependsOn: [ buildDocumentation, ico]) {
+task documentationJar(type: Tar, dependsOn: [buildDocumentation, ico]) {
     from "${project.buildDir}/documentation"
     from 'docs'
     baseName 'documentation'
@@ -182,7 +182,7 @@ remotes {
         password = "$sourceforgePassword"
 
     }
-        sourceforgeWeb {
+    sourceforgeWeb {
         host = 'web.sourceforge.net'
         user = "$sourceforgeUser,svg2ico"
         password = "$sourceforgePassword"
@@ -282,13 +282,6 @@ task aMomentOfReflection {
     }
 }
 
-build.mustRunAfter clean
-uploadArchives.mustRunAfter build
-closeRepository.mustRunAfter uploadArchives
-aMomentOfReflection.mustRunAfter closeRepository
-promoteRepository.mustRunAfter aMomentOfReflection
-updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
-
 task performRelease(dependsOn: [clean, build, uploadArchives, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
     doLast {
         println 'Release complete :)'
@@ -308,3 +301,9 @@ task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) {
 
 task deploy(dependsOn: incrementVersionNumber) {}
 
+build.mustRunAfter clean
+uploadArchives.mustRunAfter build
+closeRepository.mustRunAfter uploadArchives
+aMomentOfReflection.mustRunAfter closeRepository
+promoteRepository.mustRunAfter aMomentOfReflection
+updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
