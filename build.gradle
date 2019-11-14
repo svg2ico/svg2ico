@@ -10,12 +10,6 @@
 
 import net.sourceforge.svg2ico.Svg2IcoTask
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id 'java'
     id 'signing'
