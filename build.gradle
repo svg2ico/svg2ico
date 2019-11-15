@@ -74,6 +74,10 @@ compileJava {
     targetCompatibility = 1.7
 }
 
+pmd {
+    toolVersion = '6.16.0'
+}
+
 jar {
     manifest {
         attributes 'Main-Class': 'net.sourceforge.svg2ico.CommandLine'
