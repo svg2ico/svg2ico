@@ -8,8 +8,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-import net.sourceforge.svg2ico.Svg2IcoTask
-
 plugins {
     id 'java'
     id 'signing'
@@ -20,7 +18,6 @@ plugins {
     id 'org.tenne.rest' version '0.4.2'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'io.codearte.nexus-staging' version '0.20.0'
-    id 'net.sourceforge.svg2ico'
     id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
 
@@ -30,7 +27,6 @@ repositories {
 
 sourceSets {
     documentation
-    plugin
 }
 
 configurations {
@@ -61,8 +57,6 @@ dependencies {
     documentationCompile group: 'net.sourceforge.xazzle', name: 'xazzle', version: '0.39'
     documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
     documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '2.22'
-
-    pluginCompile gradleApi()
 
     batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.7'
     batik group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0'
@@ -182,13 +176,6 @@ remotes {
         password = "$sourceforgePassword"
 
     }
-}
-
-task foo(type: Svg2IcoTask) {
-    svgFile = 'resource/favicon.svg'
-    destination = "${project.buildDir}/documentation/favicon.ico"
-    width = 32
-    height = 32
 }
 
 task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
