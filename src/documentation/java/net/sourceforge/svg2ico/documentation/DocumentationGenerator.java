@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Mark Slater
+ * Copyright 2019 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -39,7 +39,7 @@ public class DocumentationGenerator {
         Properties properties = new Properties();
         try (
                 final FileInputStream fileInputStream = new FileInputStream("gradle.properties");
-                final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, UTF_8);
+                final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, UTF_8)
         ) {
             properties.load(inputStreamReader);
             return properties.getProperty("majorVersion") + "." + properties.getProperty("minorVersion");
@@ -47,10 +47,9 @@ public class DocumentationGenerator {
     }
 
     private static void writePage(final HtmlTag svg2IcoPage, final File destination, final String fileName) throws IOException, XmlWriteException {
-        final File file = new File(destination, fileName);
         try (
-                final FileOutputStream fileOutputStream = new FileOutputStream(file);
-                final OutputStreamWriter fileWriter = new OutputStreamWriter(fileOutputStream, UTF_8);
+                final FileOutputStream fileOutputStream = new FileOutputStream(new File(destination, fileName));
+                final OutputStreamWriter fileWriter = new OutputStreamWriter(fileOutputStream, UTF_8)
         ) {
             XML_FORMATTER.write(svg2IcoPage.asDocument(), fileWriter);
         }
