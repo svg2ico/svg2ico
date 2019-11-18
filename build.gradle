@@ -261,7 +261,7 @@ task aMomentOfReflection {
     }
 }
 
-task performRelease(dependsOn: [clean, build, uploadArchives, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
+task performRelease(dependsOn: [clean, build, publish, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
     doLast {
         println 'Release complete :)'
     }
@@ -281,8 +281,8 @@ task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) {
 task deploy(dependsOn: incrementVersionNumber) {}
 
 build.mustRunAfter clean
-uploadArchives.mustRunAfter build
-closeRepository.mustRunAfter uploadArchives
+publish.mustRunAfter build
+closeRepository.mustRunAfter publish
 aMomentOfReflection.mustRunAfter closeRepository
 promoteRepository.mustRunAfter aMomentOfReflection
 updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
