@@ -11,13 +11,14 @@
 plugins {
     id 'java'
     id 'signing'
-    id 'maven'
+    id 'maven-publish'
 //    id 'pmd'
     id 'com.github.spotbugs' version '2.0.0'
     id 'org.hidetake.ssh' version '2.10.1'
     id 'org.tenne.rest' version '0.4.2'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id 'io.codearte.nexus-staging' version '0.20.0'
+    id 'io.codearte.nexus-staging' version '0.21.1'
+    id 'de.marcphilipp.nexus-publish' version '0.4.0'
     id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
 
@@ -209,51 +210,44 @@ task updateSourceforgeDefaultDownload(type: org._10ne.gradle.rest.RestTask) {
     requestBody = "default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${version}%20with%20source&api_key=$sourceforgeApiKey"
 }
 
-signing {
-    sign configurations.archives
-}
-
-// OSSRH publication
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            // POM signature
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-            // Target repository
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUser, password: ossrhPassword)
-            }
-            pom.scopeMappings.with {
-                mappings.clear()
-            }
-            pom.project {
-                name 'svg2ico'
-                description project.description
-                packaging 'jar'
-                url 'http://svg2ico.sourceforge.net'
-
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(sourcesJar)
+            artifact(javadocJar)
+            from components.java
+            pom {
+                name = 'svg2ico'
+                description = project.description
+                url = 'http://svg2ico.sourceforge.net'
                 scm {
-                    url 'git://git.code.sf.net/p/svg2ico/code'
+                    url = 'git://git.code.sf.net/p/svg2ico/code'
                 }
-
                 developers {
                     developer {
                         id = 'mos20'
                         name = 'Mark Slater'
                     }
                 }
-
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
                     }
                 }
-
             }
         }
     }
+//    repositories {
+//        maven {
+//            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+//        }
+//    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
 
 nexusStaging {
