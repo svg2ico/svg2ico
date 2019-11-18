@@ -250,6 +250,12 @@ signing {
     sign publishing.publications.mavenJava
 }
 
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
+}
+
 nexusStaging {
     username = ossrhUser
     password = ossrhPassword
@@ -261,7 +267,7 @@ task aMomentOfReflection {
     }
 }
 
-task performRelease(dependsOn: [clean, build, publish, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
+task performRelease(dependsOn: [clean, build, publishToSonatype, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
     doLast {
         println 'Release complete :)'
     }
@@ -281,8 +287,8 @@ task incrementVersionNumber(dependsOn: buildAndDeployCleanVersion) {
 task deploy(dependsOn: incrementVersionNumber) {}
 
 build.mustRunAfter clean
-publish.mustRunAfter build
-closeRepository.mustRunAfter publish
+publishToSonatype.mustRunAfter build
+closeRepository.mustRunAfter publishToSonatype
 aMomentOfReflection.mustRunAfter closeRepository
 promoteRepository.mustRunAfter aMomentOfReflection
 updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
