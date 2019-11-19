@@ -50,7 +50,7 @@ dependencies {
     documentationCompile sourceSets.main.output
     documentationCompile group: 'net.sourceforge.writexml', name: 'writexml', version: '1.1'
     documentationCompile group: 'net.sourceforge.xazzle', name: 'xazzle', version: '0.39'
-    documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
+    documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.15'
     documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '2.22'
 
     batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.12'
