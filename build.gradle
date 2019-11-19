@@ -53,9 +53,7 @@ dependencies {
     documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.5'
     documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '2.22'
 
-    batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.7'
-    batik group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.0'
-    batik group: 'org.apache.xmlgraphics', name: 'batik-codec', version: '1.7'
+    batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.12'
 
     anttask project(path: ':', configuration: 'shadow')
 }
