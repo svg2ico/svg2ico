@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Mark Slater
+ * Copyright 2019 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -10,10 +10,10 @@
 
 package net.sourceforge.svg2ico;
 
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,10 +36,10 @@ public final class CommandLine {
             .addOption("compress", false, "optional flag to output compressed ICO")
             .addOption("userStylesheet", true, "optional user stylesheet file");
 
-    public static void main(String[] args) throws ParseException {
+    public static void main(String[] args) {
         org.apache.commons.cli.CommandLine commandLine;
         try {
-            commandLine = new PosixParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
             if (!commandLine.hasOption("src") || !commandLine.hasOption("dest") || !commandLine.hasOption("width") || !commandLine.hasOption("height")) {
                 printHelp();
             } else {
