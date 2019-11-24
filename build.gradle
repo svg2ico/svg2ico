@@ -82,7 +82,7 @@ shadowJar {
     relocate 'org.w3c.dom', 'org.w3c.dom'
     exclude '**/org/w3c/dom/xpath/**/*'
     exclude '**/org/w3c/dom/events/**/*'
-    classifier = ''
+    archiveClassifier.set ''
 }
 
 task myJavadoc(type: Javadoc) {
