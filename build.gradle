@@ -243,7 +243,7 @@ nexusStaging {
     password = ossrhPassword
 }
 
-task performRelease(dependsOn: [clean, build, publishToSonatype, copyToSourceforge, png, closeRepository, promoteRepository, updateSourceforgeDefaultDownload]) {
+task performRelease(dependsOn: [clean, build, publishToSonatype, copyToSourceforge, png, closeRepository, releaseRepository, updateSourceforgeDefaultDownload]) {
     doLast {
         println 'Release complete :)'
     }
@@ -265,6 +265,5 @@ task deploy(dependsOn: incrementVersionNumber) {}
 build.mustRunAfter clean
 publishToSonatype.mustRunAfter build
 closeRepository.mustRunAfter publishToSonatype
-aMomentOfReflection.mustRunAfter closeRepository
-promoteRepository.mustRunAfter aMomentOfReflection
+releaseRepository.mustRunAfter closeRepository
 updateSourceforgeDefaultDownload.mustRunAfter copyToSourceforge
