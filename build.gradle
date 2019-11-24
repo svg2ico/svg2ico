@@ -243,13 +243,7 @@ nexusStaging {
     password = ossrhPassword
 }
 
-task aMomentOfReflection {
-    doLast {
-        sleep(30 * 1000)
-    }
-}
-
-task performRelease(dependsOn: [clean, build, publishToSonatype, copyToSourceforge, png, closeRepository, aMomentOfReflection, promoteRepository, updateSourceforgeDefaultDownload]) {
+task performRelease(dependsOn: [clean, build, publishToSonatype, copyToSourceforge, png, closeRepository, promoteRepository, updateSourceforgeDefaultDownload]) {
     doLast {
         println 'Release complete :)'
     }
