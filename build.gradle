@@ -31,7 +31,6 @@ sourceSets {
 }
 
 configurations {
-    batik
     anttask
 }
 
@@ -47,8 +46,6 @@ dependencies {
     documentationCompile group: 'net.sourceforge.xazzle', name: 'xazzle', version: '0.39'
     documentationCompile group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.15'
     documentationCompile group: 'net.sourceforge.urin', name: 'urin', version: '3.5'
-
-    batik group: 'org.apache.xmlgraphics', name: 'batik-rasterizer', version: '1.12'
 
     anttask project(path: ':', configuration: 'shadow')
 }
@@ -135,10 +132,10 @@ task iconsDirectory {
     }
 }
 
-task png(type: JavaExec, dependsOn: iconsDirectory) {
-    main = 'org.apache.batik.apps.rasterizer.Main'
-    classpath = configurations.batik
-    args '-d', "${project.buildDir}/icons/", '-scriptSecurityOff', '-m', 'image/png', '-w', '48', '-h', '48', 'resources/favicon.svg'
+task png(type: JavaExec, dependsOn: [iconsDirectory, documentationDirectory, shadowJar]) {
+    main = 'net.sourceforge.svg2ico.Svg2Png'
+    classpath = configurations.anttask
+    args "${project.buildDir}/icons/favicon.png", 'resources/favicon.svg', '48', '48'
 }
 
 
