@@ -45,7 +45,7 @@ dependencies {
     documentationImplementation group: 'net.sourceforge.writexml', name: 'writexml', version: '1.3'
     documentationImplementation group: 'net.sourceforge.xazzle', name: 'xazzle', version: '0.39'
     documentationImplementation group: 'net.sourceforge.svg2ico', name: 'svg2ico', version: '1.15'
-    documentationImplementation group: 'net.sourceforge.urin', name: 'urin', version: '3.5'
+    documentationImplementation group: 'net.sourceforge.urin', name: 'urin', version: '3.12'
 
     anttask project(path: ':', configuration: 'shadow')
 }
