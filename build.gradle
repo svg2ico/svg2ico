@@ -15,7 +15,6 @@ plugins {
 //    id 'pmd'
     id 'com.github.spotbugs' version '5.0.4'
     id 'org.hidetake.ssh' version '2.10.1'
-    id 'org.tenne.rest' version '0.4.2'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'io.codearte.nexus-staging' version '0.30.0'
     id 'de.marcphilipp.nexus-publish' version '0.4.0'
@@ -185,12 +184,18 @@ task copyToSourceforge(dependsOn: [documentationJar, javadocJar, shadowJar]) {
     }
 }
 
-task updateSourceforgeDefaultDownload(type: org._10ne.gradle.rest.RestTask) {
-    httpMethod = 'put'
-    uri = "https://sourceforge.net/projects/svg2ico/files/${version}//svg2ico-${version}.jar"
-    requestContentType = groovyx.net.http.ContentType.URLENC
-    contentType = groovyx.net.http.ContentType.JSON
-    requestBody = "default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${version}%20with%20source&api_key=$sourceforgeApiKey"
+task updateSourceforgeDefaultDownload {
+    doLast {
+        def request = new URL("https://sourceforge.net/projects/svg2ico/files/${version}//svg2ico-${version}.jar").openConnection()
+        request.setRequestMethod('PUT')
+        request.setRequestProperty('Content-Type', 'application/x-www-form-urlencoded')
+        request.setDoOutput(true)
+        request.getOutputStream().write("default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${version}%20with%20source&api_key=$sourceforgeApiKey".getBytes('UTF-8'))
+        def statusCode = request.getResponseCode()
+        if (statusCode != 200) {
+            throw new GradleException("Update SourceForge default download failed with status code ${statusCode} and body ${request.getInputStream().getText('UTF-8')}")
+        }
+    }
 }
 
 publishing {
