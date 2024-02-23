@@ -206,7 +206,7 @@ signing {
 nexusPublishing {
     repositories {
         sonatype {
-            stagingProfileId = "12462889504a1e"
+//            stagingProfileId = "12462889504a1e"
             username.set(project.findProperty("ossrhUser").toString())
             password.set(project.findProperty("ossrhPassword").toString())
         }

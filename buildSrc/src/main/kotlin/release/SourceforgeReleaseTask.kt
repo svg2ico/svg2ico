@@ -23,25 +23,24 @@ open class SourceforgeReleaseTask : DefaultTask() {
 
     @TaskAction
     fun release() {
-        val username = "${project.property("sourceforgeUser")},argo"
+        val username = "${project.property("sourceforgeUser")},svg2ico"
         val password = project.property("sourceforgePassword").toString().toCharArray()
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
             logger.info(it.executeCommand("create"))
-            logger.info(it.executeCommand("execute \"mkdir -p /home/frs/project/argo/argo/${project.version}\""))
+            logger.info(it.executeCommand("execute \"mkdir -p /home/frs/project/svg2ico/svg2ico/${project.version}\""))
         }
         retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
-            it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/argo/")
-            it.putFile(project.layout.buildDirectory.file("libs/argo-${project.version}-javadoc.jar").get().asFile, "/home/project-web/argo/")
-            it.putFile(project.layout.buildDirectory.file("libs/argo-${project.version}-combined.jar").get().asFile, "/home/frs/project/argo/argo/${project.version}/argo-${project.version}.jar")
-            it.putFile(project.layout.buildDirectory.file("libs/argo-${project.version}-tiny.jar").get().asFile, "/home/frs/project/argo/argo/${project.version}/argo-small-${project.version}.jar")
+            it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/svg2ico/")
+            it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}-javadoc.jar").get().asFile, "/home/project-web/svg2ico/")
+            it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}.jar").get().asFile, "/home/frs/project/svg2ico/svg2ico/")
         }
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
-            logger.info(it.executeCommand("mkdir -p /home/project-web/argo/${project.version}/javadoc && tar -xvf /home/project-web/argo/documentation-${project.version}.tgz -C /home/project-web/argo/${project.version} && unzip -d /home/project-web/argo/${project.version}/javadoc /home/project-web/argo/argo-${project.version}-javadoc.jar && rm /home/project-web/argo/documentation-${project.version}.tgz && rm /home/project-web/argo/argo-${project.version}-javadoc.jar && rm /home/project-web/argo/htdocs ; ln -s /home/project-web/argo/${project.version} /home/project-web/argo/htdocs"))
+            logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && unzip -d /home/project-web/svg2ico/${project.version}/javadoc /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
         }
 
         val response = HttpClient.newHttpClient()
                 .send(
-                        HttpRequest.newBuilder(URI.create("https://sourceforge.net/projects/argo/files/argo/${project.version}//argo-${project.version}.jar"))
+                        HttpRequest.newBuilder(URI.create("https://sourceforge.net/projects/svg2ico/files/svg2ico/${project.version}//svg2ico-${project.version}.jar"))
                                 .PUT(HttpRequest.BodyPublishers.ofString("default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${project.version}%20with%20source&api_key=${project.property("sourceforgeApiKey")}"))
                                 .setHeader("content-type", "application/x-www-form-urlencoded")
                                 .build(),
