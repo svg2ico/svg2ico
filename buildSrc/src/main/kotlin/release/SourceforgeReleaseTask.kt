@@ -38,16 +38,18 @@ open class SourceforgeReleaseTask : DefaultTask() {
             logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && unzip -d /home/project-web/svg2ico/${project.version}/javadoc /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
         }
 
+        val defaultDownloadUri =
+            URI.create("https://sourceforge.net/projects/svg2ico/files/${project.version}//svg2ico-${project.version}.jar")
         val response = HttpClient.newHttpClient()
                 .send(
-                        HttpRequest.newBuilder(URI.create("https://sourceforge.net/projects/svg2ico/files/${project.version}/svg2ico-${project.version}.jar"))
+                        HttpRequest.newBuilder(defaultDownloadUri)
                                 .PUT(HttpRequest.BodyPublishers.ofString("default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${project.version}%20with%20source&api_key=${project.property("sourceforgeApiKey")}"))
                                 .setHeader("content-type", "application/x-www-form-urlencoded")
                                 .build(),
                         HttpResponse.BodyHandlers.ofString()
                 )
         if (response.statusCode() < 200 || response.statusCode() >= 400) {
-            throw GradleException("updating SourceForge default download resulted in response code ${response.statusCode()} with body\n${response.body()}")
+            throw GradleException("updating SourceForge default download to {$defaultDownloadUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
         }
 
     }
