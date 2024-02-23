@@ -27,12 +27,12 @@ open class SourceforgeReleaseTask : DefaultTask() {
         val password = project.property("sourceforgePassword").toString().toCharArray()
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
             logger.info(it.executeCommand("create"))
-            logger.info(it.executeCommand("execute \"mkdir -p /home/frs/project/svg2ico/svg2ico/${project.version}\""))
+            logger.info(it.executeCommand("execute \"mkdir -p /home/frs/project/svg2ico/${project.version}\""))
         }
         retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
             it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/svg2ico/")
             it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}-javadoc.jar").get().asFile, "/home/project-web/svg2ico/")
-            it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}.jar").get().asFile, "/home/frs/project/svg2ico/svg2ico/")
+            it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}.jar").get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
             logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && unzip -d /home/project-web/svg2ico/${project.version}/javadoc /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
