@@ -40,7 +40,7 @@ open class SourceforgeReleaseTask : DefaultTask() {
 
         val response = HttpClient.newHttpClient()
                 .send(
-                        HttpRequest.newBuilder(URI.create("https://sourceforge.net/projects/svg2ico/files/svg2ico/${project.version}//svg2ico-${project.version}.jar"))
+                        HttpRequest.newBuilder(URI.create("https://sourceforge.net/projects/svg2ico/files/${project.version}/svg2ico-${project.version}.jar"))
                                 .PUT(HttpRequest.BodyPublishers.ofString("default=windows&default=mac&default=linux&default=bsd&default=solaris&default=others&download_label=${project.version}%20with%20source&api_key=${project.property("sourceforgeApiKey")}"))
                                 .setHeader("content-type", "application/x-www-form-urlencoded")
                                 .build(),
