@@ -27,25 +27,13 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("com.gitlab.svg2ico") version "1.0"
-//    id("org.asciidoctor.jvm.convert") version "4.0.2"
+    id("org.asciidoctor.jvm.convert") version "4.0.2"
 
     id("release.sourceforge")
 }
 
 repositories {
     mavenCentral()
-}
-
-val documentationDirectory = project.layout.buildDirectory.dir("documentation")
-
-val makeDocumentationDirectory by tasks.registering(Task::class) {
-    doLast {
-        mkdir(documentationDirectory.get().asFile)
-    }
-}
-
-sourceSets {
-    create("documentation")
 }
 
 java {
@@ -57,14 +45,8 @@ java {
 dependencies {
     implementation(group = "org.apache.ant", name = "ant", version = "1.10.12")
     implementation(group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17")
-
     implementation(group = "commons-cli", name = "commons-cli", version = "1.5.0")
     implementation(group = "org.jclarion", name = "image4j", version = "0.7")
-
-    "documentationImplementation"(sourceSets.main.get().output)
-    "documentationImplementation"(group = "net.sourceforge.writexml", name = "writexml", version = "1.3")
-    "documentationImplementation"(group = "net.sourceforge.xazzle", name = "xazzle", version = "0.39")
-    "documentationImplementation"(group = "net.sourceforge.urin", name = "urin", version = "3.12")
 
     spotbugs(group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3")
 }
@@ -148,19 +130,11 @@ val png by tasks.registering(com.gitlab.svg2ico.Svg2PngTask::class) {
     destination = project.layout.buildDirectory.file("icons/favicon.png")
 }
 
-val buildDocumentation by tasks.registering(JavaExec::class) {
-    dependsOn(makeDocumentationDirectory)
-    mainClass.set("net.sourceforge.svg2ico.documentation.DocumentationGenerator")
-    args = listOf("${project.layout.buildDirectory.get()}/documentation")
-    classpath = sourceSets["documentation"].runtimeClasspath
-}
-
 val documentationJar by tasks.registering(Tar::class) {
-    dependsOn(buildDocumentation, ico, png)
-//    from(project.layout.buildDirectory.dir("docs/asciidoc"))
-    from(project.layout.buildDirectory.dir("documentation"))
-    from(project.layout.buildDirectory.dir("icons"))
-    from("docs")
+    from(ico)
+    from(png)
+//    from(myJavadoc)
+    from(tasks["asciidoctor"])
     archiveBaseName.set("documentation")
     compression = Compression.GZIP
 }

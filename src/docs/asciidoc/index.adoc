@@ -1,0 +1,63 @@
+= svg2ico
+:favicon:
+:source-highlighter: rouge
+:icons: font
+:description: svg2ico is a Java library for converting SVG images to ICO images.  It is free to download and use in your project.
+
+svg2ico converts SVG images into ICO images. It is written in Java, and is available as an Ant task. It is open source, and free for you to use.
+
+The latest version of svg2ico available for download is https://sourceforge.net/projects/svg2ico/files/latest[{revnumber}]. The https://svg2ico.sourceforge.net/javadoc/[javadoc] is also available online.
+
+https://sourceforge.net/projects/svg2ico/[The project] is hosted on SourceForge.
+
+== Downloads
+
+Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2 license]. It can be downloaded in three forms:
+
+- a https://sourceforge.net/projects/svg2ico/files/{revnumber}/argo-{revnumber}.jar/download[jar], with source code and shadowed dependencies included,
+- as a Maven dependency from central, using
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>net.sourceforge.svg2ico</groupId>
+    <artifactId>svg2ico</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+- or as the full source code including tests etc. using Git from link:git://git.code.sf.net/p/svg2ico/code[].
+
+https://sourceforge.net/projects/svg2ico/files/[Previous versions] are also available.
+
+== Command Line Example
+
+svg2ico can be used from the command line to convert `resources/favicon.svg` to an ICO like this:
+
+[source,,subs="+attributes"]
+----
+./svg2ico-{revnumber}.jar -src resources/favicon.svg -dest favicon.ico -width 32 -height 32
+----
+Three additional optional arguments are supported. `-depth` specifies the colour depth in bits per pixel, e.g. `-depth 8` outputs eight bits per pixel. The `-compress` flag causes the output to be compressed ICO format. The `-userStylesheet` allows a user stylesheet file to use during rendering to be provided, for example `-userStylesheet ./my-style.css`.
+
+== Ant Example
+
+svg2ico can be used as an Ant task to convert `resources/favicon.svg` to an ICO like this:
+
+[source,xml,subs="+attributes"]
+----
+<target name="Convert SVG to ICO">
+    <taskdef name="svg2ico"
+        classname="net.sourceforge.svg2ico.Svg2IcoTask"
+        classpath="lib/build/svg2ico-{revnumber}.jar"
+    />
+    <svg2ico src="resources/favicon.svg"
+        dest="resources/favicon.ico"
+        width="32"
+        height="32"
+    />
+</target>
+----
+where `lib/build/svg2ico-{revnumber}.jar` points to where the svg2ico jar can be found. As with the command line, three optional attributes are supported. `depth` specifies the colour depth in bits per pixel, e.g. `depth="8"` outputs eight bits per pixel. `compress` causes the output to be compressed ICO, e.g. `compressed="true"`. `userStylesheet` specifies a user stylesheet to use for rendering, e.g. `userStylesheet="resources/favicon.css"`.
+
+== Credits
+svg2ico uses the excellent https://xmlgraphics.apache.org/batik/[Batik] and https://image4j.sourceforge.net/[image4j], included in the distribution using the equally excellent https://github.com/johnrengelman/shadow[Gradle Shadow plugin].
