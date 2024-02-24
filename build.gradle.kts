@@ -8,7 +8,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.util.Properties
 
 buildscript {
@@ -63,20 +62,15 @@ version = Properties().apply {
 }
 description = "svg2ico converts images in SVG format to ICO."
 
-val myJavadoc by tasks.registering(Javadoc::class) {
-    source = sourceSets["main"].allJava
-    title = "svg2ico version $version"
-}
-
-tasks.jar {
-    from(sourceSets["main"].output)
-    manifest {
-        attributes["Main-Class"] = "net.sourceforge.svg2ico.CommandLine"
-    }
-}
-
 tasks {
-    named<ShadowJar>("shadowJar") {
+    jar {
+        from(sourceSets["main"].output)
+        manifest {
+            attributes["Main-Class"] = "net.sourceforge.svg2ico.CommandLine"
+        }
+    }
+
+    shadowJar {
         relocate("net.sf.image4j", "net.sourceforge.svg2ico.shadowjar.net.sf.image4j")
         relocate("org.apache.batik", "net.sourceforge.svg2ico.shadowjar.org.apache.batik")
         relocate("org.apache.xmlgraphics", "net.sourceforge.svg2ico.shadowjar.org.apache.xmlgraphics")
@@ -87,6 +81,10 @@ tasks {
         exclude("**/org/w3c/dom/xpath/**/*")
         exclude("**/org/w3c/dom/events/**/*")
         archiveClassifier.set("")
+    }
+
+    javadoc {
+        title = "svg2ico version $version"
     }
 }
 
@@ -103,7 +101,7 @@ tasks {
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier = "javadoc"
-    from(myJavadoc)
+    from(tasks.javadoc)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
@@ -133,7 +131,6 @@ val png by tasks.registering(com.gitlab.svg2ico.Svg2PngTask::class) {
 val documentationJar by tasks.registering(Tar::class) {
     from(ico)
     from(png)
-//    from(myJavadoc)
     from(tasks["asciidoctor"])
     archiveBaseName.set("documentation")
     compression = Compression.GZIP
