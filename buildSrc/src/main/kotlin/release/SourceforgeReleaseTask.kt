@@ -27,7 +27,7 @@ open class SourceforgeReleaseTask : DefaultTask() {
         val password = project.property("sourceforgePassword").toString().toCharArray()
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
             logger.info(it.executeCommand("create"))
-            logger.info(it.executeCommand("execute \"mkdir -p /home/frs/project/svg2ico/${project.version}\""))
+            logger.info(it.executeCommand("mkdir -p /home/frs/project/svg2ico/${project.version}"))
         }
         retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
             it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/svg2ico/")
