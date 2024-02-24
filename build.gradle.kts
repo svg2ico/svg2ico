@@ -157,7 +157,8 @@ val buildDocumentation by tasks.registering(JavaExec::class) {
 
 val documentationJar by tasks.registering(Tar::class) {
     dependsOn(buildDocumentation, ico, png)
-    from(project.layout.buildDirectory.dir("docs/asciidoc"))
+//    from(project.layout.buildDirectory.dir("docs/asciidoc"))
+    from(project.layout.buildDirectory.dir("documentation"))
     from(project.layout.buildDirectory.dir("icons"))
     from("docs")
     archiveBaseName.set("documentation")
