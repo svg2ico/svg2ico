@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Mark Slater
+ * Copyright 2024 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -31,26 +31,24 @@ public final class Svg2IcoTask extends Task {
     private Float height;
     private Integer depth;
     private Boolean compress;
-    private List<SourceImage> sourceImages = new LinkedList<>();
+    private final List<SourceImage> sourceImages = new LinkedList<>();
 
     public void execute() {
         if (sourceImages.isEmpty() && !(isSet(src) && isSet(width) && isSet(height))) {
             throw new BuildException("Must set src, width and height attributes or supply at least one sourceImage nested element.");
         } else {
-            if ((isSet(src) && isSet(width) && isSet(height))) {
+            if (isSet(src) && isSet(width) && isSet(height)) {
                 sourceImages.add(0, new SourceImage(src, userStylesheet, width, height, depth, compress));
             }
-            try (
-                    final FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest))
-            ) {
+            try (FileOutputStream outputStream = new FileOutputStream(checkSet("dest", dest))) {
                 final List<Closeable> stuffToClose = new ArrayList<>(sourceImages.size());
                 final List<net.sourceforge.svg2ico.SourceImage> apiSourceImages = new ArrayList<>(sourceImages.size());
                 try {
                     for (SourceImage sourceImage : sourceImages) {
                         final FileInputStream inputStream = new FileInputStream(checkSet("src", sourceImage.src));
                         stuffToClose.add(inputStream);
-                        final Float width = checkSet("width", sourceImage.width);
-                        final Float height = checkSet("height", sourceImage.height);
+                        final float width = checkSet("width", sourceImage.width);
+                        final float height = checkSet("height", sourceImage.height);
                         final net.sourceforge.svg2ico.SourceImage apiSourceImage;
                         if (isSet(sourceImage.depth)) {
                             if (isSet(sourceImage.userStylesheet)) {
@@ -104,7 +102,7 @@ public final class Svg2IcoTask extends Task {
     }
 
     private static boolean isSet(Object value) {
-        return !(value == null);
+        return value != null;
     }
 
     public void setDest(final File dest) {
