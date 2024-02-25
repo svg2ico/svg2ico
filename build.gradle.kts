@@ -52,7 +52,7 @@ java {
 }
 
 dependencies {
-    implementation(group = "org.apache.ant", name = "ant", version = "1.10.12")
+    implementation(group = "org.apache.ant", name = "ant", version = "1.10.14")
     implementation(group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17")
     implementation(group = "commons-cli", name = "commons-cli", version = "1.5.0")
     implementation(group = "org.jclarion", name = "image4j", version = "0.7")
