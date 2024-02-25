@@ -54,7 +54,7 @@ java {
 dependencies {
     implementation(group = "org.apache.ant", name = "ant", version = "1.10.14")
     implementation(group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17")
-    implementation(group = "commons-cli", name = "commons-cli", version = "1.5.0")
+    implementation(group = "commons-cli", name = "commons-cli", version = "1.6.0")
     implementation(group = "org.jclarion", name = "image4j", version = "0.7")
 
     spotbugs(group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3")
