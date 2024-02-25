@@ -35,6 +35,17 @@ repositories {
     mavenCentral()
 }
 
+group = "net.sourceforge.svg2ico"
+base.archivesName = "svg2ico"
+version = Properties().apply {
+    file("version.properties").reader().use {
+        load(it)
+    }
+}.let {
+    "${it.getProperty("majorVersion")}.${it.getProperty("minorVersion")}"
+}
+description = "svg2ico converts images in SVG format to ICO."
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(8)
@@ -49,18 +60,6 @@ dependencies {
 
     spotbugs(group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3")
 }
-
-
-group = "net.sourceforge.svg2ico"
-base.archivesName = "svg2ico"
-version = Properties().apply {
-    file("version.properties").reader().use {
-        load(it)
-    }
-}.let {
-    "${it.getProperty("majorVersion")}.${it.getProperty("minorVersion")}"
-}
-description = "svg2ico converts images in SVG format to ICO."
 
 tasks {
     jar {
@@ -178,7 +177,6 @@ signing {
 nexusPublishing {
     repositories {
         sonatype {
-//            stagingProfileId = "12462889504a1e"
             username.set(project.findProperty("ossrhUser").toString())
             password.set(project.findProperty("ossrhPassword").toString())
         }
