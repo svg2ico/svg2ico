@@ -20,7 +20,6 @@ plugins {
     java
     signing
     `maven-publish`
-//    pmd
     `jvm-test-suite`
     id("com.github.spotbugs") version "6.0.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -86,17 +85,6 @@ tasks {
         title = "svg2ico version $version"
     }
 }
-
-//pmd {
-//    toolVersion = "6.29.0"
-//    ruleSetFiles = files("tools/pmd-ruleset.xml")
-//    ruleSets = emptyList()
-//}
-//
-//tasks.pmdMain {
-//    ruleSetFiles = files("tools/pmd-ruleset.xml", "tools/pmd-main-extra-ruleset.xml")
-//    ruleSets = emptyList()
-//}
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier = "javadoc"
