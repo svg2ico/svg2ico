@@ -124,7 +124,7 @@ val documentationTar by tasks.registering(Tar::class) {
 }
 
 release {
-    jar = tasks.jar.get().archiveFile
+    jar = tasks.shadowJar.get().archiveFile
     javadocJar = tasks.named<Jar>("javadocJar").get().archiveFile
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
