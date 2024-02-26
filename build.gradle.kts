@@ -115,7 +115,7 @@ val png by tasks.registering(com.gitlab.svg2ico.Svg2PngTask::class) {
     destination = project.layout.buildDirectory.file("icons/favicon.png")
 }
 
-val documentationJar by tasks.registering(Tar::class) {
+val documentationTar by tasks.registering(Tar::class) {
     from(ico)
     from(png)
     from(tasks["asciidoctor"])
@@ -123,8 +123,10 @@ val documentationJar by tasks.registering(Tar::class) {
     compression = Compression.GZIP
 }
 
-tasks.getByName("release") {
-    dependsOn(tasks.jar, documentationJar, javadocJar)
+release {
+    jar = tasks.jar.get().archiveFile
+    javadocJar = tasks.named<Jar>("javadocJar").get().archiveFile
+    documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
 
 publishing {

@@ -10,16 +10,11 @@
 
 package release
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
 
-class SourceforgeReleasePlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        val extension = target.extensions.create("release", SourceforgeReleasePluginExtension::class.java)
-        target.tasks.register("release", SourceforgeReleaseTask::class.java) {
-            jar.set(extension.jar)
-            javadocJar.set(extension.javadocJar)
-            documentationTar.set(extension.documentationTar)
-        }
-    }
+interface SourceforgeReleasePluginExtension {
+    val jar: RegularFileProperty
+    val javadocJar: RegularFileProperty
+    val documentationTar: RegularFileProperty
 }
