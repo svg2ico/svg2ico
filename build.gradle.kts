@@ -127,9 +127,11 @@ release {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
+            artifact(tasks.shadowJar) {
+                classifier = ""
+            }
             artifact(sourcesJar)
             artifact(javadocJar)
-            artifact(tasks.shadowJar)
             pom {
                 name = "svg2ico"
                 description = project.description
