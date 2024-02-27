@@ -69,7 +69,6 @@ tasks {
         relocate("org.w3c.dom", "org.w3c.dom")
         exclude("**/org/w3c/dom/xpath/**/*")
         exclude("**/org/w3c/dom/events/**/*")
-        archiveClassifier.set("")
     }
 
     javadoc {
