@@ -8,8 +8,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-import java.util.Properties
-
 buildscript {
     repositories {
         mavenCentral()
@@ -36,13 +34,6 @@ repositories {
 
 group = "net.sourceforge.svg2ico"
 base.archivesName = "svg2ico"
-version = Properties().apply {
-    file("version.properties").reader().use {
-        load(it)
-    }
-}.let {
-    "${it.getProperty("majorVersion")}.${it.getProperty("minorVersion")}"
-}
 description = "svg2ico converts images in SVG format to ICO."
 
 java {
@@ -178,25 +169,16 @@ nexusPublishing {
 }
 
 val performRelease by tasks.registering {
-    dependsOn(tasks.clean, tasks.build, "publishToSonatype", png, "closeAndReleaseStagingRepository", "release")
+    dependsOn(tasks.clean, tasks.build, "publishToSonatype", png, tasks.closeAndReleaseStagingRepository, tasks.release)
     doLast {
         println("Release complete :)")
     }
 }
 
-val incrementVersionNumber by tasks.registering {
+tasks.incrementVersionNumber {
     dependsOn(performRelease)
-    doLast {
-        Properties().apply {
-            load(file("version.properties").reader())
-            setProperty("minorVersion", (getProperty("minorVersion").toInt() + 1).toString())
-            file("version.properties").writer().use {
-                store(it, null)
-            }
-        }
-    }
 }
 
 tasks.register("deploy") {
-    dependsOn(incrementVersionNumber)
+    dependsOn(tasks.incrementVersionNumber)
 }
