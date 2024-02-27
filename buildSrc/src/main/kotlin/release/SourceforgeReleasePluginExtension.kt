@@ -11,7 +11,6 @@
 package release
 
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFile
 
 interface SourceforgeReleasePluginExtension {
     val jar: RegularFileProperty
