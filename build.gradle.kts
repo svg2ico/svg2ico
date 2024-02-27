@@ -90,9 +90,12 @@ tasks {
     }
 
     asciidoctor {
-        dependsOn(ico, png) // doesn't seem to infer dependencies properly from the resources CopySpec
+        dependsOn(ico, png, javadoc) // doesn't seem to infer dependencies properly from the resources CopySpec
         resources {
             from(ico, png)
+            from(javadoc) {
+                into("javadoc")
+            }
         }
     }
 }
@@ -120,7 +123,6 @@ val documentationTar by tasks.registering(Tar::class) {
 
 release {
     jar = tasks.shadowJar.get().archiveFile
-    javadocJar = tasks.named<Jar>("javadocJar").get().archiveFile
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
 

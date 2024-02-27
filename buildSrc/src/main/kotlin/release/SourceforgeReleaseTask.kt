@@ -27,9 +27,6 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
     abstract val jar: RegularFileProperty
 
     @get:InputFile
-    abstract val javadocJar: RegularFileProperty
-
-    @get:InputFile
     abstract val documentationTar: RegularFileProperty
 
     @TaskAction
@@ -42,11 +39,10 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
         }
         retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
             it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/svg2ico/")
-            it.putFile(project.layout.buildDirectory.file("libs/svg2ico-${project.version}-javadoc.jar").get().asFile, "/home/project-web/svg2ico/")
             it.putFile(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
-            logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version}/javadoc && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && unzip -d /home/project-web/svg2ico/${project.version}/javadoc /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/svg2ico-${project.version}-javadoc.jar && rm -rf /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
+            logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version} && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
         }
 
         val defaultDownloadUri =

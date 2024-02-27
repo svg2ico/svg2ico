@@ -14,6 +14,5 @@ import org.gradle.api.file.RegularFileProperty
 
 interface SourceforgeReleasePluginExtension {
     val jar: RegularFileProperty
-    val javadocJar: RegularFileProperty
     val documentationTar: RegularFileProperty
 }

@@ -26,7 +26,6 @@ class SourceforgeReleasePlugin : Plugin<Project> {
         val extension = target.extensions.create("release", SourceforgeReleasePluginExtension::class.java)
         target.tasks.register("release", SourceforgeReleaseTask::class.java) {
             jar.set(extension.jar)
-            javadocJar.set(extension.javadocJar)
             documentationTar.set(extension.documentationTar)
         }
         target.tasks.register("incrementVersionNumber", IncrementVersionNumberTask::class.java)
