@@ -9,38 +9,48 @@
   - Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
   -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" version="1.1">
-  <g transform="translate(-96.109932,-92.857155)">
-    <path
+  <style>
+    .green {
+      fill: #00ff00;
+    }
+    .orange {
+      fill: #ff8f44;
+    }
+    .yellow {
+      fill: #ffff00;
+    }
+    .blue {
+      fill: #0000ff;
+    }
+    .pink {
+      fill: #ff3bd3;
+    }
+  </style>
+  <g transform="translate(-96.109932,-92.857155)" stroke="#000000">
+    <path class="green"
        transform="matrix(1.056686,0,0,1.056686,83.495952,87.68469)"
        d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#00ff00;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827)"/>
-    <path
+       />
+    <path class="orange"
        transform="matrix(1.056686,0,0,1.056686,97.679147,87.68469)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#ff8f44;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-4)"/>
-    <path
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
+    <path class="yellow"
        transform="matrix(1.056686,0,0,1.056686,83.495952,101.86788)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#ffff00;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-4-5)"/>
-    <path
-       style="fill:#0000ff;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-3-9)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       transform="matrix(1.056686,0,0,1.056686,104.77074,94.776288)" />
-    <path
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
+    <path class="blue"
+       transform="matrix(1.056686,0,0,1.056686,104.77074,94.776288)"
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z" />
+    <path class="pink"
        transform="matrix(1.056686,0,0,1.056686,90.587549,94.776288)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#ff3bd3;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-4-8-0)"/>
-    <path
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
+    <path class="green"
        transform="matrix(1.056686,0,0,1.056686,97.679147,101.86788)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#00ff00;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-36)"/>
-    <path
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
+    <path class="orange"
        transform="matrix(1.056686,0,0,1.056686,90.587549,108.95948)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#ff8f44;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-4-88-7)"/>
-    <path
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
+    <path class="pink"
        transform="matrix(1.056686,0,0,1.056686,104.77074,108.95948)"
-       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"
-       style="fill:#ff3bd3;fill-opacity:1;stroke:#000000;stroke-opacity:1;filter:url(#filter3827-4-8-03)"/>
+       d="m 19.44777,9.8001871 a 2.6052673,2.6052673 0 1 1 -5.210535,0 2.6052673,2.6052673 0 1 1 5.210535,0 z"/>
   </g>
 </svg>
