@@ -120,7 +120,7 @@ release {
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
 
-tasks.named("release") {
+tasks.release {
     dependsOn("jar")
 }
 
