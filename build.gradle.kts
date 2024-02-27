@@ -96,11 +96,6 @@ tasks {
             from(ico, png)
         }
     }
-
-    this.release {
-        dependsOn(jar)
-    }
-
 }
 
 val javadocJar by tasks.registering(Jar::class) {
@@ -128,6 +123,10 @@ release {
     jar = tasks.shadowJar.get().archiveFile
     javadocJar = tasks.named<Jar>("javadocJar").get().archiveFile
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
+}
+
+tasks.release {
+    dependsOn(jar)
 }
 
 publishing {
