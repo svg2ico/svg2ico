@@ -134,7 +134,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             artifact(sourcesJar)
             artifact(javadocJar)
-            from(components["java"])
+            artifact(tasks.shadowJar)
             pom {
                 name = "svg2ico"
                 description = project.description
