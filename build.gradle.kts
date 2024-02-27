@@ -28,12 +28,12 @@ plugins {
     id("release.sourceforge")
 }
 
+group = "net.sourceforge.svg2ico"
+description = "svg2ico converts images in SVG format to ICO."
+
 repositories {
     mavenCentral()
 }
-
-group = "net.sourceforge.svg2ico"
-description = "svg2ico converts images in SVG format to ICO."
 
 java {
     toolchain {
@@ -96,6 +96,18 @@ tasks {
                 into("javadoc")
             }
         }
+    }
+
+    val performRelease by registering {
+        dependsOn(clean, build, "publishToSonatype", closeAndReleaseStagingRepository, release)
+    }
+
+    incrementVersionNumber {
+        dependsOn(performRelease)
+    }
+
+    register("deploy") {
+        dependsOn(incrementVersionNumber)
     }
 }
 
@@ -169,16 +181,4 @@ nexusPublishing {
             password.set(project.findProperty("ossrhPassword").toString())
         }
     }
-}
-
-val performRelease by tasks.registering {
-    dependsOn(tasks.clean, tasks.build, "publishToSonatype", tasks.closeAndReleaseStagingRepository, tasks.release)
-}
-
-tasks.incrementVersionNumber {
-    dependsOn(performRelease)
-}
-
-tasks.register("deploy") {
-    dependsOn(tasks.incrementVersionNumber)
 }
