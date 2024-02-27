@@ -76,6 +76,27 @@ tasks {
         title = "svg2ico version $version"
     }
 
+    val ico by registering(com.gitlab.svg2ico.Svg2IcoTask::class) {
+        source {
+            sourcePath = file("resources/favicon.svg")
+        }
+        destination = project.layout.buildDirectory.file("icons/favicon.ico")
+    }
+
+    val png by registering(com.gitlab.svg2ico.Svg2PngTask::class) {
+        source = file("resources/favicon.svg")
+        width = 128
+        height = 128
+        destination = project.layout.buildDirectory.file("icons/favicon.png")
+    }
+
+    asciidoctor {
+        dependsOn(ico, png) // doesn't seem to infer dependencies properly from the resources CopySpec
+        resources {
+            from(ico, png)
+        }
+    }
+
     this.release {
         dependsOn(jar)
     }
@@ -97,24 +118,8 @@ artifacts {
     archives(sourcesJar)
 }
 
-val ico by tasks.registering(com.gitlab.svg2ico.Svg2IcoTask::class) {
-    source {
-        sourcePath = file("resources/favicon.svg")
-    }
-    destination = project.layout.buildDirectory.file("icons/favicon.ico")
-}
-
-val png by tasks.registering(com.gitlab.svg2ico.Svg2PngTask::class) {
-    source = file("resources/favicon.svg")
-    width = 128
-    height = 128
-    destination = project.layout.buildDirectory.file("icons/favicon.png")
-}
-
 val documentationTar by tasks.registering(Tar::class) {
-    from(ico)
-    from(png)
-    from(tasks["asciidoctor"])
+    from(tasks.asciidoctor)
     archiveBaseName.set("documentation")
     compression = Compression.GZIP
 }
@@ -170,10 +175,7 @@ nexusPublishing {
 }
 
 val performRelease by tasks.registering {
-    dependsOn(tasks.clean, tasks.build, "publishToSonatype", png, tasks.closeAndReleaseStagingRepository, tasks.release)
-    doLast {
-        println("Release complete :)")
-    }
+    dependsOn(tasks.clean, tasks.build, "publishToSonatype", tasks.closeAndReleaseStagingRepository, tasks.release)
 }
 
 tasks.incrementVersionNumber {
