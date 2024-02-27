@@ -124,10 +124,6 @@ release {
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
 
-tasks.named("release") {
-    dependsOn("jar")
-}
-
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
