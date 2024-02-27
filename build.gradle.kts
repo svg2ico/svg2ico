@@ -33,7 +33,6 @@ repositories {
 }
 
 group = "net.sourceforge.svg2ico"
-base.archivesName = "svg2ico"
 description = "svg2ico converts images in SVG format to ICO."
 
 java {
