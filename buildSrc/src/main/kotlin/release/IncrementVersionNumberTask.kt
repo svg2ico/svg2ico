@@ -15,9 +15,11 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
 import java.util.*
 import javax.inject.Inject
 
+@UntrackedTask(because = "Reads from and writes to version.properties, so it invalidates itself")
 abstract class IncrementVersionNumberTask @Inject constructor(objectFactory: ObjectFactory) : DefaultTask() {
 
     @get:InputFile
