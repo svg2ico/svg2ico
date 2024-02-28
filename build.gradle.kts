@@ -75,6 +75,7 @@ tasks {
     }
 
     val ico by registering(com.gitlab.svg2ico.Svg2IcoTask::class) {
+        group = "documentation"
         source {
             sourcePath = file("resources/favicon.svg")
         }
@@ -82,6 +83,7 @@ tasks {
     }
 
     val png by registering(com.gitlab.svg2ico.Svg2PngTask::class) {
+        group = "documentation"
         source = file("resources/favicon.svg")
         width = 128
         height = 128
@@ -98,25 +100,24 @@ tasks {
         }
     }
 
-    val performRelease by registering {
-        dependsOn(clean, build, "publishToSonatype", closeAndReleaseStagingRepository, release)
+    val release by registering {
+        group = "publishing"
+        dependsOn(clean, build, "publishToSonatype", closeAndReleaseStagingRepository, sourceforgeRelease, incrementVersionNumber)
     }
 
     incrementVersionNumber {
-        dependsOn(performRelease)
-    }
-
-    register("deploy") {
-        dependsOn(incrementVersionNumber)
+        mustRunAfter(release)
     }
 }
 
 val javadocJar by tasks.registering(Jar::class) {
+    group = "documentation"
     archiveClassifier = "javadoc"
     from(tasks.javadoc)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
+    group = "documentation"
     archiveClassifier = "sources"
     from(sourceSets["main"].allSource)
 }
@@ -127,6 +128,7 @@ artifacts {
 }
 
 val documentationTar by tasks.registering(Tar::class) {
+    group = "documentation"
     from(tasks.asciidoctor)
     archiveBaseName.set("documentation")
     compression = Compression.GZIP
