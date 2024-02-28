@@ -6,7 +6,8 @@
 
 svg2ico converts SVG images into ICO images. It is written in Java, and is available as an Ant task. It is open source, and free for you to use.
 
-The latest version of svg2ico available for download is https://sourceforge.net/projects/svg2ico/files/latest[{revnumber}]. The https://svg2ico.sourceforge.net/javadoc/[javadoc] is also available online.
+// suppress inspection "AsciiDocLinkResolve"
+The latest version of svg2ico available for download is https://sourceforge.net/projects/svg2ico/files/latest[{revnumber}]. The link:javadoc[javadoc] is also available online.
 
 https://sourceforge.net/projects/svg2ico/[The project] is hosted on SourceForge.
 
