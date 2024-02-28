@@ -62,7 +62,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
     }
 
     private fun <T> retrying(block: () -> T) = generateSequence { runCatching(block) }
-            .filterIndexed { index, result -> index >= 3 || result.isSuccess }
+            .filterIndexed { index, result -> index >= 5 || result.isSuccess }
             .first()
             .getOrThrow()
 }
