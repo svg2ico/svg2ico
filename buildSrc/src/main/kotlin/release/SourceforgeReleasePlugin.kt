@@ -23,7 +23,7 @@ class SourceforgeReleasePlugin : Plugin<Project> {
         }.let {
             "${it.getProperty("majorVersion")}.${it.getProperty("minorVersion")}"
         }
-        val extension = target.extensions.create("release", SourceforgeReleasePluginExtension::class.java)
+        val extension = target.extensions.create("releasing", SourceforgeReleasePluginExtension::class.java)
         target.tasks.register("sourceforgeRelease", SourceforgeReleaseTask::class.java) {
             group = "publishing"
             jar.set(extension.jar)

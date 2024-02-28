@@ -133,7 +133,7 @@ val documentationTar by tasks.registering(Tar::class) {
     compression = Compression.GZIP
 }
 
-release {
+releasing {
     jar = tasks.shadowJar.get().archiveFile
     documentationTar = tasks.named<Tar>("documentationTar").get().archiveFile
 }
