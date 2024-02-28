@@ -10,10 +10,10 @@
   -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" version="1.1">
   <g stroke="#000000" stroke-width="3">
-    <circle fill="#00ff00" cx="32" cy="14" r="8"/>
-    <circle fill="#ff8f44" cx="32" cy="14" r="8" transform="rotate(72,32,32)"/>
-    <circle fill="#0000ff" cx="32" cy="14" r="8" transform="rotate(144,32,32)"/>
-    <circle fill="#ffff00" cx="32" cy="14" r="8" transform="rotate(216,32,32)"/>
-    <circle fill="#ff3bd3" cx="32" cy="14" r="8" transform="rotate(288,32,32)"/>
+    <circle fill="#00ff00" cx="32" cy="12" r="8"/>
+    <circle fill="#ff8f44" cx="32" cy="12" r="8" transform="rotate(72,32,32)"/>
+    <circle fill="#0000ff" cx="32" cy="12" r="8" transform="rotate(144,32,32)"/>
+    <circle fill="#ffff00" cx="32" cy="12" r="8" transform="rotate(216,32,32)"/>
+    <circle fill="#ff3bd3" cx="32" cy="12" r="8" transform="rotate(288,32,32)"/>
   </g>
 </svg>
