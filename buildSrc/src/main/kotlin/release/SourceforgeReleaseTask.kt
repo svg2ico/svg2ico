@@ -38,7 +38,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             logger.info(it.executeCommand("mkdir -p /home/frs/project/svg2ico/${project.version}"))
         }
         retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
-            it.putFile(project.layout.buildDirectory.file("distributions/documentation-${project.version}.tgz").get().asFile, "/home/project-web/svg2ico/")
+            it.putFile(documentationTar.get().asFile, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
             it.putFile(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
         retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
