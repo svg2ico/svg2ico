@@ -46,7 +46,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
         }
 
         val defaultDownloadUri =
-            URI.create("https://sourceforge.net/projects/svg2ico/files/${project.version}//svg2ico-${project.version}.jar")
+            URI.create("https://sourceforge.net/projects/svg2ico/files/${project.version}/svg2ico-${project.version}.jar")
         val response = HttpClient.newHttpClient()
                 .send(
                         HttpRequest.newBuilder(defaultDownloadUri)
