@@ -105,7 +105,7 @@ tasks {
     }
 
     incrementVersionNumber {
-        mustRunAfter(release)
+        mustRunAfter(closeAndReleaseStagingRepository, sourceforgeRelease)
     }
 }
 
