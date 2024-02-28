@@ -52,7 +52,6 @@ dependencies {
 
 tasks {
     jar {
-        from(sourceSets["main"].output)
         manifest {
             attributes["Main-Class"] = "net.sourceforge.svg2ico.CommandLine"
         }
