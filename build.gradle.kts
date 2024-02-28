@@ -22,7 +22,7 @@ plugins {
     id("com.github.spotbugs") version "6.0.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("com.gitlab.svg2ico") version "1.1"
+    id("com.gitlab.svg2ico") version "1.2"
     id("org.asciidoctor.jvm.convert") version "4.0.2"
 
     id("release.sourceforge")
