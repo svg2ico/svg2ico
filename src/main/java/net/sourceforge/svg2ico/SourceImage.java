@@ -41,7 +41,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height);
             }
 
@@ -60,7 +60,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height);
             }
 
@@ -79,7 +79,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet);
             }
 
@@ -98,7 +98,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet);
             }
 
@@ -117,7 +117,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height);
             }
 
@@ -136,7 +136,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height);
             }
 
@@ -155,7 +155,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet);
             }
 
@@ -174,7 +174,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet);
             }
 
@@ -193,7 +193,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height);
             }
 
@@ -212,7 +212,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height);
             }
 
@@ -231,7 +231,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet);
             }
 
@@ -250,7 +250,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet);
             }
 
@@ -269,7 +269,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height);
             }
 
@@ -288,7 +288,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height);
             }
 
@@ -307,7 +307,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(inputStream), width, height, userStylesheet);
             }
 
@@ -326,7 +326,7 @@ public abstract class SourceImage {
             }
 
             @Override
-            BufferedImage toBufferedImage() throws FileNotFoundException, ImageConversionException {
+            BufferedImage toBufferedImage() throws ImageConversionException {
                 return SourceImage.loadBufferedImage(new TranscoderInput(reader), width, height, userStylesheet);
             }
 
@@ -343,17 +343,17 @@ public abstract class SourceImage {
 
     abstract boolean compress();
 
-    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height) throws ImageConversionException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help ShadowJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
         return loadImage(transcoderInput, width, height);
     }
 
-    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadBufferedImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws ImageConversionException {
         setCSSParserClassName(Parser.class.getCanonicalName());  // To help ShadowJar; if this isn't specified, Batik looks up the fully qualified class name in an XML file.
         return loadImage(transcoderInput, width, height, userStylesheet);
     }
 
-    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height) throws ImageConversionException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
@@ -362,7 +362,7 @@ public abstract class SourceImage {
         return loadImage(transcoderInput, imageTranscoder);
     }
 
-    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws FileNotFoundException, ImageConversionException {
+    private static BufferedImage loadImage(TranscoderInput transcoderInput, final float width, final float height, final URI userStylesheet) throws ImageConversionException {
         BufferedImageTranscoder imageTranscoder = new BufferedImageTranscoder();
 
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
