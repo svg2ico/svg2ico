@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Mark Slater
+ * Copyright 2024 Mark Slater
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.net.URI;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.batik.util.XMLResourceDescriptor.setCSSParserClassName;
 
 public abstract class SourceImage {
@@ -367,6 +368,7 @@ public abstract class SourceImage {
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
         imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_USER_STYLESHEET_URI, userStylesheet.toASCIIString());
+        imageTranscoder.addTranscodingHint(PNGTranscoder.KEY_ALLOW_EXTERNAL_RESOURCES, TRUE);
 
         return loadImage(transcoderInput, imageTranscoder);
     }
