@@ -12,11 +12,13 @@ package release
 
 import com.sshtools.client.SshClient
 import com.sshtools.client.tasks.CommandTask.CommandTaskBuilder
+import com.sshtools.client.tasks.UploadFileTask.UploadFileTaskBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -53,8 +55,8 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
                 .withPassword(password)
                 .build()
         }.use {
-            it.putFile(documentationTar.get().asFile, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
-            it.putFile(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
+            it.executePut(documentationTar.get().asFile, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
+            it.executePut(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
         retrying {
             SshClient.SshClientBuilder.create()
@@ -88,6 +90,16 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             CommandTaskBuilder.create()
                 .withClient(this)
                 .withCommand(command)
+                .build()
+        )
+    }
+
+    private fun SshClient.executePut(localFile: File, remotePath: String) {
+        runTask(
+            UploadFileTaskBuilder.create()
+                .withClient(this)
+                .withLocalFile(localFile)
+                .withRemotePath(remotePath)
                 .build()
         )
     }
