@@ -33,15 +33,36 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
     fun release() {
         val username = "${project.property("sourceforgeUser")},svg2ico"
         val password = project.property("sourceforgePassword").toString().toCharArray()
-        retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
+        retrying {
+            SshClient.SshClientBuilder.create()
+                .withHostname("shell.sourceforge.net")
+                .withPort(22)
+                .withUsername(username)
+                .withPassword(password)
+                .build()
+        }.use {
             logger.info(it.executeCommand("create"))
             logger.info(it.executeCommand("mkdir -p /home/frs/project/svg2ico/${project.version}"))
         }
-        retrying { SshClient("web.sourceforge.net", 22, username, password) }.use {
+        retrying {
+            SshClient.SshClientBuilder.create()
+                .withHostname("web.sourceforge.net")
+                .withPort(22)
+                .withUsername(username)
+                .withPassword(password)
+                .build()
+        }.use {
             it.putFile(documentationTar.get().asFile, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
             it.putFile(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
-        retrying { SshClient("shell.sourceforge.net", 22, username, password) }.use {
+        retrying {
+            SshClient.SshClientBuilder.create()
+                .withHostname("shell.sourceforge.net")
+                .withPort(22)
+                .withUsername(username)
+                .withPassword(password)
+                .build()
+        }.use {
             logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version} && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
         }
 
