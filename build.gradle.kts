@@ -19,7 +19,7 @@ plugins {
     signing
     `maven-publish`
     `jvm-test-suite`
-    id("com.github.spotbugs") version "6.0.7"
+    id("com.github.spotbugs") version "6.0.9"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-2"
     id("com.gitlab.svg2ico") version "1.2"
