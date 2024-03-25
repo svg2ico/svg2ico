@@ -101,11 +101,11 @@ tasks {
 
     val release by registering {
         group = "publishing"
-        dependsOn(clean, build, "publishToSonatype", closeAndReleaseStagingRepositories, sourceforgeRelease, incrementVersionNumber)
+        dependsOn(clean, build, "publishToSonatype", "closeAndReleaseSonatypeStagingRepository", sourceforgeRelease, incrementVersionNumber)
     }
 
     incrementVersionNumber {
-        mustRunAfter(closeAndReleaseStagingRepositories, sourceforgeRelease)
+        mustRunAfter("closeAndReleaseSonatypeStagingRepository", sourceforgeRelease)
     }
 }
 
