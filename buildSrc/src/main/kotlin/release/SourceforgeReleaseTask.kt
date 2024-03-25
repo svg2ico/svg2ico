@@ -10,8 +10,9 @@
 
 package release
 
+import com.sshtools.client.SessionChannelNG
 import com.sshtools.client.SshClient
-import com.sshtools.client.tasks.CommandTask.CommandTaskBuilder
+import com.sshtools.client.tasks.AbstractCommandTask
 import com.sshtools.client.tasks.UploadFileTask.UploadFileTaskBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -23,6 +24,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.charset.StandardCharsets
 
 abstract class SourceforgeReleaseTask : DefaultTask() {
 
@@ -86,12 +88,23 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
     }
 
     private fun SshClient.execute(command: String) {
-        runTask(
-            CommandTaskBuilder.create()
-                .withClient(this)
-                .withCommand(command)
-                .build()
-        )
+        this.runTask(object: AbstractCommandTask(this.connection, command) {
+            override fun onOpenSession(session: SessionChannelNG) {
+                val stderr = session.stderrStream.reader(StandardCharsets.UTF_8).readText()
+                logger.warn(stderr)
+            }
+        })
+//
+//
+//        CommandTaskBuilder.create()
+//            .withClient(this)
+//            .withCommand(command)
+//            .build()
+//            .use {
+//                runTask(it)
+//                logger.info("${if(it.isSuccess) {"Succeeded"} else {"Failed"}}: ${it.command}")
+//            }
+
     }
 
     private fun SshClient.executePut(localFile: File, remotePath: String) {
