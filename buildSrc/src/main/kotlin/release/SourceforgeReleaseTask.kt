@@ -11,6 +11,7 @@
 package release
 
 import com.sshtools.client.SshClient
+import com.sshtools.client.tasks.CommandTask.CommandTaskBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
@@ -41,8 +42,8 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
                 .withPassword(password)
                 .build()
         }.use {
-            logger.info(it.executeCommand("create"))
-            logger.info(it.executeCommand("mkdir -p /home/frs/project/svg2ico/${project.version}"))
+            it.execute("create")
+            it.execute("mkdir -p /home/frs/project/svg2ico/${project.version}")
         }
         retrying {
             SshClient.SshClientBuilder.create()
@@ -63,7 +64,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
                 .withPassword(password)
                 .build()
         }.use {
-            logger.info(it.executeCommand("mkdir -p /home/project-web/svg2ico/${project.version} && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"))
+            it.execute("mkdir -p /home/project-web/svg2ico/${project.version} && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs")
         }
 
         val defaultDownloadUri =
@@ -80,6 +81,15 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             throw GradleException("updating SourceForge default download to {$defaultDownloadUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
         }
 
+    }
+
+    private fun SshClient.execute(command: String) {
+        runTask(
+            CommandTaskBuilder.create()
+                .withClient(this)
+                .withCommand(command)
+                .build()
+        )
     }
 
     private fun <T> retrying(block: () -> T) = generateSequence { runCatching(block) }
