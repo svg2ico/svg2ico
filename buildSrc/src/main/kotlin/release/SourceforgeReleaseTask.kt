@@ -10,21 +10,21 @@
 
 package release
 
-import com.sshtools.client.SessionChannelNG
 import com.sshtools.client.SshClient
-import com.sshtools.client.tasks.AbstractCommandTask
+import com.sshtools.client.shell.ExpectShell
+import com.sshtools.client.tasks.ShellTask.ShellTaskBuilder
 import com.sshtools.client.tasks.UploadFileTask.UploadFileTaskBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.nio.charset.StandardCharsets
 
 abstract class SourceforgeReleaseTask : DefaultTask() {
 
@@ -36,39 +36,26 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
 
     @TaskAction
     fun release() {
-        val username = "${project.property("sourceforgeUser")},svg2ico"
-        val password = project.property("sourceforgePassword").toString().toCharArray()
-        retrying {
-            SshClient.SshClientBuilder.create()
-                .withHostname("shell.sourceforge.net")
-                .withPort(22)
-                .withUsername(username)
-                .withPassword(password)
-                .build()
-        }.use {
-            it.execute("create")
+        val sshClientBuilder = SshClient.SshClientBuilder.create()
+            .withPort(22)
+            .withUsername("${project.property("sourceforgeUser")},svg2ico")
+            .withPassword(project.property("sourceforgePassword").toString().toCharArray())
+
+        retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
             it.execute("mkdir -p /home/frs/project/svg2ico/${project.version}")
         }
-        retrying {
-            SshClient.SshClientBuilder.create()
-                .withHostname("web.sourceforge.net")
-                .withPort(22)
-                .withUsername(username)
-                .withPassword(password)
-                .build()
-        }.use {
-            it.executePut(documentationTar.get().asFile, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
-            it.executePut(jar.get().asFile, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
+        retrying { sshClientBuilder.withHostname("web.sourceforge.net").build() }.use {
+            it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
+            it.executePut(jar, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
         }
-        retrying {
-            SshClient.SshClientBuilder.create()
-                .withHostname("shell.sourceforge.net")
-                .withPort(22)
-                .withUsername(username)
-                .withPassword(password)
-                .build()
-        }.use {
-            it.execute("mkdir -p /home/project-web/svg2ico/${project.version} && tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version} && rm /home/project-web/svg2ico/documentation-${project.version}.tgz && rm /home/project-web/svg2ico/htdocs ; ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs")
+        retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
+            it.execute(
+                "mkdir -p /home/project-web/svg2ico/${project.version}",
+                "tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version}",
+                "rm /home/project-web/svg2ico/documentation-${project.version}.tgz",
+                "rm /home/project-web/svg2ico/htdocs",
+                "ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"
+            )
         }
 
         val defaultDownloadUri =
@@ -87,31 +74,37 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
 
     }
 
-    private fun SshClient.execute(command: String) {
-        this.runTask(object: AbstractCommandTask(this.connection, command) {
-            override fun onOpenSession(session: SessionChannelNG) {
-                val stderr = session.stderrStream.reader(StandardCharsets.UTF_8).readText()
-                logger.warn(stderr)
-            }
-        })
-//
-//
-//        CommandTaskBuilder.create()
-//            .withClient(this)
-//            .withCommand(command)
-//            .build()
-//            .use {
-//                runTask(it)
-//                logger.info("${if(it.isSuccess) {"Succeeded"} else {"Failed"}}: ${it.command}")
-//            }
-
+    private fun SshClient.execute(vararg commands: String) {
+        runTask(
+            ShellTaskBuilder.create()
+                .withClient(this)
+                .onBeforeOpen { _, session ->
+                    if (!session.executeCommand("create").waitFor(60_000).isDoneAndSuccess) {
+                        throw IllegalStateException("Failed to create shell")
+                    }
+                }
+                .onTask { task, _ ->
+                    val expectShell = ExpectShell(task)
+                    commands.forEach { command ->
+                        val shellProcess = expectShell.executeCommand(command)
+                        shellProcess.drain()
+                        when (val exitCode = shellProcess.exitCode) {
+                            ExpectShell.EXIT_CODE_PROCESS_ACTIVE -> throw java.lang.Exception("Process active")
+                            ExpectShell.EXIT_CODE_UNKNOWN -> throw java.lang.Exception("Exit code unknown")
+                            0 -> Unit
+                            else -> throw java.lang.Exception("Command $command failed with exit code $exitCode")
+                        }
+                    }
+                }
+                .build()
+        )
     }
 
-    private fun SshClient.executePut(localFile: File, remotePath: String) {
+    private fun SshClient.executePut(localFile: Provider<RegularFile>, remotePath: String) {
         runTask(
             UploadFileTaskBuilder.create()
                 .withClient(this)
-                .withLocalFile(localFile)
+                .withLocalFile(localFile.get().asFile)
                 .withRemotePath(remotePath)
                 .build()
         )
