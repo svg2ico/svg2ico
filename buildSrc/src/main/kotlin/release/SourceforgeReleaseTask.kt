@@ -14,6 +14,8 @@ import com.sshtools.client.SshClient
 import com.sshtools.client.shell.ExpectShell
 import com.sshtools.client.tasks.ShellTask.ShellTaskBuilder
 import com.sshtools.client.tasks.UploadFileTask.UploadFileTaskBuilder
+import com.sshtools.common.ssh.Channel
+import com.sshtools.common.ssh.ChannelEventListener
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFile
@@ -25,6 +27,8 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets.US_ASCII
 
 abstract class SourceforgeReleaseTask : DefaultTask() {
 
@@ -41,21 +45,32 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             .withUsername("${project.property("sourceforgeUser")},svg2ico")
             .withPassword(project.property("sourceforgePassword").toString().toCharArray())
 
-        retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
-            it.execute("mkdir --parents /home/frs/project/svg2ico/${project.version}")
-        }
-        retrying { sshClientBuilder.withHostname("web.sourceforge.net").build() }.use {
-            it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
-            it.executePut(jar, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
-        }
-        retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
-            it.execute(
-                "mkdir --parents /home/project-web/svg2ico/${project.version}",
-                "tar --extract --verbose --file=/home/project-web/svg2ico/documentation-${project.version}.tgz --directory=/home/project-web/svg2ico/${project.version}",
-                "rm /home/project-web/svg2ico/documentation-${project.version}.tgz",
-                "rm /home/project-web/svg2ico/htdocs",
-                "ln --symbolic /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"
-            )
+        try {
+            retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
+                it.execute("mkdir --parents /home/frs/project/svg2ico/${project.version}")
+            }
+            retrying { sshClientBuilder.withHostname("web.sourceforge.net").build() }.use {
+                it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
+                it.executePut(jar, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
+            }
+            retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
+                it.execute(
+                    "mkdir --parents /home/project-web/svg2ico/${project.version}",
+                    "tar --extract --verbose --file=/home/project-web/svg2ico/documentation-${project.version}.tgz --directory=/home/project-web/svg2ico/${project.version}",
+                    "rm /home/project-web/svg2ico/documentation-${project.version}.tgz",
+                    "rm /home/project-web/svg2ico/htdocs",
+                    "ln --symbolic /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"
+                )
+            }
+        } catch (e: SshExecuteRuntimeException) {
+            logger.error("Remote command execution failed", e)
+            e.commandOutput?.also {
+                logger.error("Command output:")
+                logger.error(it)
+            }
+            logger.error("Full session output:")
+            logger.error(e.sessionOutput)
+            throw e
         }
 
         val defaultDownloadUri =
@@ -75,29 +90,39 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
     }
 
     private fun SshClient.execute(vararg commands: String) {
-        runTask(
-            ShellTaskBuilder.create()
-                .withClient(this)
-                .onBeforeOpen { _, session ->
-                    if (!session.executeCommand("create").waitFor(60_000).isDoneAndSuccess) {
-                        throw IllegalStateException("Failed to create shell")
-                    }
-                }
-                .onTask { task, _ ->
-                    val expectShell = ExpectShell(task)
-                    commands.forEach { command ->
-                        val shellProcess = expectShell.executeCommand(command)
-                        shellProcess.drain()
-                        when (val exitCode = shellProcess.exitCode) {
-                            ExpectShell.EXIT_CODE_PROCESS_ACTIVE -> throw java.lang.Exception("Process active")
-                            ExpectShell.EXIT_CODE_UNKNOWN -> throw java.lang.Exception("Exit code unknown")
-                            0 -> Unit
-                            else -> throw java.lang.Exception("Command $command failed with exit code $exitCode")
+        class SshExecuteInnerRuntimeException(message: String, val commandOutput: String? = null) : RuntimeException(message)
+        val recordingChannelEventListener = RecordingChannelEventListener()
+        try {
+            runTask(
+                ShellTaskBuilder.create()
+                    .withClient(this)
+                    .onBeforeOpen { _, session ->
+                        session.addEventListener(recordingChannelEventListener)
+                        if (!session.executeCommand("create").waitFor(60_000).isDoneAndSuccess) {
+                            throw SshExecuteInnerRuntimeException("Failed to create shell")
                         }
                     }
-                }
-                .build()
-        )
+                    .onTask { task, _ ->
+                        val expectShell = ExpectShell(task)
+                        commands.forEach { command ->
+                            val shellProcess = expectShell.executeCommand(command, US_ASCII.name())
+                            shellProcess.drain()
+                            if (shellProcess.exitCode != 0) {
+                                val cause = when (val exitCode = shellProcess.exitCode) {
+                                    ExpectShell.EXIT_CODE_PROCESS_ACTIVE -> "process active"
+                                    ExpectShell.EXIT_CODE_UNKNOWN -> "exit code unknown"
+                                    else -> "exit code $exitCode"
+                                }
+                                throw SshExecuteInnerRuntimeException("Command $command failed with $cause", shellProcess.commandOutput)
+                            }
+                            logger.info(shellProcess.commandOutput)
+                        }
+                    }
+                    .build()
+            )
+        } catch (e: SshExecuteInnerRuntimeException) {
+            throw SshExecuteRuntimeException(e, e.commandOutput, recordingChannelEventListener.stdOut())
+        }
     }
 
     private fun SshClient.executePut(localFile: Provider<RegularFile>, remotePath: String) {
@@ -114,4 +139,19 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             .filterIndexed { index, result -> index >= 5 || result.isSuccess }
             .first()
             .getOrThrow()
+
+    private class RecordingChannelEventListener : ChannelEventListener {
+        private val standardStringBuilder = StringBuilder()
+
+        override fun onChannelDataIn(channel: Channel, buffer: ByteBuffer) {
+            standardStringBuilder.append(US_ASCII.decode(buffer.asReadOnlyBuffer()))
+        }
+
+        fun stdOut(): String {
+            return standardStringBuilder.toString()
+        }
+    }
+
+    private class SshExecuteRuntimeException(cause: Exception, val commandOutput: String?, val sessionOutput: String) : RuntimeException(cause.message, cause)
+
 }
