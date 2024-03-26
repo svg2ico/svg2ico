@@ -40,20 +40,38 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
 
     @TaskAction
     fun release() {
-        val sshClientBuilder = SshClient.SshClientBuilder.create()
-            .withPort(22)
-            .withUsername("${project.property("sourceforgeUser")},svg2ico")
-            .withPassword(project.property("sourceforgePassword").toString().toCharArray())
-
+        val username = "${project.property("sourceforgeUser")},svg2ico"
+        val password = project.property("sourceforgePassword").toString().toCharArray()
         try {
-            retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
+            retrying {
+                SshClient.SshClientBuilder.create()
+                    .withHostname("shell.sourceforge.net")
+                    .withPort(22)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .build()
+            }.use {
                 it.execute("mkdir --parents /home/frs/project/svg2ico/${project.version}")
             }
-            retrying { sshClientBuilder.withHostname("web.sourceforge.net").build() }.use {
+            retrying {
+                SshClient.SshClientBuilder.create()
+                    .withHostname("web.sourceforge.net")
+                    .withPort(22)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .build()
+            }.use {
                 it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
                 it.executePut(jar, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
             }
-            retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
+            retrying {
+                SshClient.SshClientBuilder.create()
+                    .withHostname("shell.sourceforge.net")
+                    .withPort(22)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .build()
+            }.use {
                 it.execute(
                     "mkdir --parents /home/project-web/svg2ico/${project.version}",
                     "tar --extract --verbose --file=/home/project-web/svg2ico/documentation-${project.version}.tgz --directory=/home/project-web/svg2ico/${project.version}",
