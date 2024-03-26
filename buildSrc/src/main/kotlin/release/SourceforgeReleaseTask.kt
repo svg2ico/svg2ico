@@ -42,7 +42,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
             .withPassword(project.property("sourceforgePassword").toString().toCharArray())
 
         retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
-            it.execute("mkdir -p /home/frs/project/svg2ico/${project.version}")
+            it.execute("mkdir --parents /home/frs/project/svg2ico/${project.version}")
         }
         retrying { sshClientBuilder.withHostname("web.sourceforge.net").build() }.use {
             it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
@@ -50,11 +50,11 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
         }
         retrying { sshClientBuilder.withHostname("shell.sourceforge.net").build() }.use {
             it.execute(
-                "mkdir -p /home/project-web/svg2ico/${project.version}",
-                "tar -xvf /home/project-web/svg2ico/documentation-${project.version}.tgz -C /home/project-web/svg2ico/${project.version}",
+                "mkdir --parents /home/project-web/svg2ico/${project.version}",
+                "tar --extract --verbose --file=/home/project-web/svg2ico/documentation-${project.version}.tgz --directory=/home/project-web/svg2ico/${project.version}",
                 "rm /home/project-web/svg2ico/documentation-${project.version}.tgz",
                 "rm /home/project-web/svg2ico/htdocs",
-                "ln -s /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"
+                "ln --symbolic /home/project-web/svg2ico/${project.version} /home/project-web/svg2ico/htdocs"
             )
         }
 
