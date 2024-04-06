@@ -21,7 +21,7 @@ plugins {
     `jvm-test-suite`
     id("com.github.spotbugs") version "6.0.9"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-2"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("com.gitlab.svg2ico") version "1.4"
     id("org.asciidoctor.jvm.convert") version "4.0.2"
 
