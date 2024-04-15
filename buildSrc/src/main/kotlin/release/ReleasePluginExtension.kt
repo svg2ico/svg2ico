@@ -12,7 +12,7 @@ package release
 
 import org.gradle.api.file.RegularFileProperty
 
-interface SourceforgeReleasePluginExtension {
+interface ReleasePluginExtension {
     val jar: RegularFileProperty
     val documentationTar: RegularFileProperty
 }

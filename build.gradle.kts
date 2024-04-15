@@ -25,7 +25,7 @@ plugins {
     id("com.gitlab.svg2ico") version "1.4"
     id("org.asciidoctor.jvm.convert") version "4.0.2"
 
-    id("release.sourceforge")
+    id("release")
 }
 
 group = "net.sourceforge.svg2ico"
@@ -101,11 +101,11 @@ tasks {
 
     val release by registering {
         group = "publishing"
-        dependsOn(clean, build, publish, closeAndReleaseStagingRepositories, sourceforgeRelease, incrementVersionNumber)
+        dependsOn(clean, build, publish, closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease, incrementVersionNumber)
     }
 
     incrementVersionNumber {
-        mustRunAfter(closeAndReleaseStagingRepositories, sourceforgeRelease)
+        mustRunAfter(closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease)
     }
 }
 

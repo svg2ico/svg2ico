@@ -14,7 +14,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.util.*
 
-class SourceforgeReleasePlugin : Plugin<Project> {
+class ReleasePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.version = Properties().apply {
             target.layout.projectDirectory.file("version.properties").asFile.reader().use {
@@ -23,11 +23,14 @@ class SourceforgeReleasePlugin : Plugin<Project> {
         }.let {
             "${it.getProperty("majorVersion")}.${it.getProperty("minorVersion")}"
         }
-        val extension = target.extensions.create("releasing", SourceforgeReleasePluginExtension::class.java)
+        val extension = target.extensions.create("releasing", ReleasePluginExtension::class.java)
         target.tasks.register("sourceforgeRelease", SourceforgeReleaseTask::class.java) {
             group = "publishing"
             jar.set(extension.jar)
             documentationTar.set(extension.documentationTar)
+        }
+        target.tasks.register("gitHubRelease", GitHubReleaseTask::class.java) {
+            group = "publishing"
         }
         target.tasks.register("incrementVersionNumber", IncrementVersionNumberTask::class.java) {
             group = "publishing"

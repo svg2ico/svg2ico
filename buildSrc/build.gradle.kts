@@ -20,13 +20,14 @@ repositories {
 dependencies {
     implementation(gradleApi())
     implementation(group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.0")
+    implementation(group = "net.sourceforge.argo", name = "argo", version = "7.3")
 }
 
 gradlePlugin {
     plugins {
-        create("sourceforgeReleasePlugin") {
-            id = "release.sourceforge"
-            implementationClass = "release.SourceforgeReleasePlugin"
+        create("releasePlugin") {
+            id = "release"
+            implementationClass = "release.ReleasePlugin"
         }
     }
 }
