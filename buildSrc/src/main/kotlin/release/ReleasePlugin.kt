@@ -31,6 +31,7 @@ class ReleasePlugin : Plugin<Project> {
         }
         target.tasks.register("gitHubRelease", GitHubReleaseTask::class.java) {
             group = "publishing"
+            jar.set(extension.jar)
         }
         target.tasks.register("incrementVersionNumber", IncrementVersionNumberTask::class.java) {
             group = "publishing"

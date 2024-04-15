@@ -11,9 +11,18 @@
 package release
 
 import argo.JsonGenerator
+import argo.JsonParser
 import argo.jdom.JsonNodeFactories.*
+import net.sourceforge.urin.Authority.authority
+import net.sourceforge.urin.Host.registeredName
+import net.sourceforge.urin.Path.path
+import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
+import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
+import net.sourceforge.urin.scheme.http.Https.https
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.net.URI
 import java.net.http.HttpClient
@@ -22,15 +31,18 @@ import java.net.http.HttpResponse
 
 abstract class GitHubReleaseTask : DefaultTask() {
 
+    @get:InputFile
+    abstract val jar: RegularFileProperty
+
     @TaskAction
     fun release() {
         val gitHubToken = project.property("gitHubToken").toString()
 
-        val getReleasesUri = URI("https://api.github.com/repos/svg2ico/svg2ico/releases")
+        val releasesUri = URI("https://api.github.com/repos/svg2ico/svg2ico/releases")
 
         val response = HttpClient.newHttpClient()
             .send(
-                HttpRequest.newBuilder(getReleasesUri)
+                HttpRequest.newBuilder(releasesUri)
                     .POST(HttpRequest.BodyPublishers.ofString(JsonGenerator().generate(`object`(
                         field("tag_name", string(project.version.toString()))
                     ))))
@@ -41,11 +53,39 @@ abstract class GitHubReleaseTask : DefaultTask() {
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
             )
-        if (response.statusCode() < 200 || response.statusCode() >= 400) {
-            throw GradleException("Retrieving GitHub releases via {$getReleasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
+        if (response.statusCode() != 201) {
+            throw GradleException("Creating GitHub release via {$releasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
         } else {
             logger.info("GitHub responded with status code {}", response.statusCode())
             logger.info(response.body())
+        }
+
+        val releaseId = JsonParser().parse(response.body()).getStringValue("id")
+
+        val uploadUri = https(
+            authority(registeredName("uploads.github.com")),
+            path("repos", "svg2ico", "svg2ico", "releases", releaseId, "assets"),
+            queryParameters(
+                queryParameter("name", "svg2ico-${project.version}"),
+                queryParameter("label", "Jar")
+            )
+        ).asUri()
+        val uploadResponse = HttpClient.newHttpClient()
+            .send(
+                HttpRequest.newBuilder(uploadUri)
+                    .POST(HttpRequest.BodyPublishers.ofFile(jar.get().asFile.toPath()))
+                    .setHeader("content-type", "application/java-archive")
+                    .setHeader("accept", "application/vnd.github+json")
+                    .setHeader("authorization", "Bearer $gitHubToken")
+                    .setHeader("x-github-api-version", "2022-11-28")
+                    .build(),
+                HttpResponse.BodyHandlers.ofString()
+            )
+        if (uploadResponse.statusCode() != 201) {
+            throw GradleException("Adding jar to GitHub release via {$uploadUri} resulted in response code ${uploadResponse.statusCode()} with body\n${uploadResponse.body()}")
+        } else {
+            logger.info("GitHub responded with status code {}", uploadResponse.statusCode())
+            logger.info(uploadResponse.body())
         }
     }
 
