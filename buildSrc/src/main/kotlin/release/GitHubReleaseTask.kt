@@ -60,7 +60,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
             logger.info(response.body())
         }
 
-        val releaseId = JsonParser().parse(response.body()).getStringValue("id")
+        val releaseId = JsonParser().parse(response.body()).getNumberValue("id")
 
         val uploadUri = https(
             authority(registeredName("uploads.github.com")),
