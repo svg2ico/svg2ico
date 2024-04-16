@@ -149,7 +149,7 @@ publishing {
             pom {
                 name = "svg2ico"
                 description = project.description
-                url = "http://svg2ico.sourceforge.net"
+                url = "https://svg2ico.sourceforge.net"
                 scm {
                     url = "git://git.code.sf.net/p/svg2ico/git"
                 }
