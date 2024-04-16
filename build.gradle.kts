@@ -151,7 +151,7 @@ publishing {
                 description = project.description
                 url = "https://svg2ico.sourceforge.net"
                 scm {
-                    url = "git://git.code.sf.net/p/svg2ico/git"
+                    url = "https://github.com/svg2ico/svg2ico.git"
                 }
                 developers {
                     developer {

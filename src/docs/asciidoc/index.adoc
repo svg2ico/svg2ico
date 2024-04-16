@@ -7,16 +7,16 @@
 svg2ico converts SVG images into ICO images. It is written in Java, and is available as an Ant task. It is open source, and free for you to use.
 
 // suppress inspection "AsciiDocLinkResolve"
-The latest version of svg2ico available for download is https://sourceforge.net/projects/svg2ico/files/latest[{revnumber}]. The link:javadoc[javadoc] is also available online.
+The latest version of svg2ico available for download is https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[{revnumber}]. The link:javadoc[javadoc] is also available online.
 
-https://sourceforge.net/projects/svg2ico/[The project] is hosted on SourceForge.
+https://github.com/svg2ico/svg2ico[The project] is hosted on GitHub.
 
 == Downloads
 
 Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2 license]. It can be downloaded in three forms:
 
-- a https://sourceforge.net/projects/svg2ico/files/{revnumber}/argo-{revnumber}.jar/download[jar], with source code and shadowed dependencies included,
-- as a Maven dependency from central, using
+- a https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[jar], with source code and shadowed dependencies included,
+- as a Maven dependency from https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico[Maven Central], using
 
 [source,xml,subs="+attributes"]
 ----
@@ -26,9 +26,9 @@ Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2
     <version>{revnumber}</version>
 </dependency>
 ----
-- or as the full source code including tests etc. using Git from link:git://git.code.sf.net/p/svg2ico/code[].
+- or as the full source code including tests etc. using Git from link:https://github.com/svg2ico/svg2ico.git[].
 
-https://sourceforge.net/projects/svg2ico/files/[Previous versions] are also available.
+https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico/versions[Previous versions] are also available.
 
 == Command Line Example
 
