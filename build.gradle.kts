@@ -84,8 +84,8 @@ tasks {
     val png by registering(com.gitlab.svg2ico.Svg2PngTask::class) {
         group = "documentation"
         source = file("resources/favicon.svg")
-        width = 128
-        height = 128
+        width = 500
+        height = 500
         destination = project.layout.buildDirectory.file("icons/favicon.png")
     }
 
