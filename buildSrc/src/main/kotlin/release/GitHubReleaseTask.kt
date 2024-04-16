@@ -66,7 +66,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
             authority(registeredName("uploads.github.com")),
             path("repos", "svg2ico", "svg2ico", "releases", releaseId, "assets"),
             queryParameters(
-                queryParameter("name", "svg2ico-${project.version}"),
+                queryParameter("name", "svg2ico-${project.version}.jar"),
                 queryParameter("label", "Jar")
             )
         ).asUri()
