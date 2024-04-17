@@ -2,6 +2,8 @@ on: [push]
 jobs:
   build-and-test:
     runs-on: ubuntu-22.04
+    container:
+      image: eclipse-temurin:11.0.22_7-jdk-jammy@sha256:f9448d966a2c2aae6997696f445e64cdc29cbbf85e248bca63f1854be4c86d88
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - run: ./gradlew clean check
