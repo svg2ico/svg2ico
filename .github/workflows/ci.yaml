@@ -1,4 +1,5 @@
 on: [push]
+name: CI
 jobs:
   build-and-test:
     runs-on: ubuntu-22.04
