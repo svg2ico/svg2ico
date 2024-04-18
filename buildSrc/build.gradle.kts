@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
-    implementation(group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.0")
+    implementation(group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1")
     implementation(group = "net.sourceforge.argo", name = "argo", version = "7.3")
     implementation(group = "net.sourceforge.urin", name = "urin", version = "4.9")
 }
