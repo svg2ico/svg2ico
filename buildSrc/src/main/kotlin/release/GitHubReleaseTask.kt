@@ -36,6 +36,10 @@ abstract class GitHubReleaseTask : DefaultTask() {
 
     @TaskAction
     fun release() {
+        if (project.version == VersionNumber.DevelopmentVersion) {
+            throw GradleException("Cannot release development version")
+        }
+
         val gitHubToken = project.property("gitHubToken").toString()
 
         val releasesUri = URI("https://api.github.com/repos/svg2ico/svg2ico/releases")

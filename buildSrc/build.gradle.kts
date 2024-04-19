@@ -9,6 +9,7 @@
  */
 
 plugins {
+    `jvm-test-suite`
     `kotlin-dsl`
     kotlin("jvm") version "1.9.22"
 }
@@ -22,6 +23,18 @@ dependencies {
     implementation(group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1")
     implementation(group = "net.sourceforge.argo", name = "argo", version = "7.3")
     implementation(group = "net.sourceforge.urin", name = "urin", version = "4.9")
+}
+
+testing {
+    @Suppress("UnstableApiUsage")
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+            dependencies {
+                implementation("io.kotest:kotest-assertions-core:5.8.1")
+            }
+        }
+    }
 }
 
 gradlePlugin {
