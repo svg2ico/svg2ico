@@ -19,11 +19,11 @@ plugins {
     signing
     `maven-publish`
     `jvm-test-suite`
-    id("com.github.spotbugs") version "6.0.9"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("com.gitlab.svg2ico") version "1.4"
-    id("org.asciidoctor.jvm.convert") version "4.0.2"
+    alias(libs.plugins.spotbugs)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.nexusPublish)
+    alias(libs.plugins.svg2ico)
+    alias(libs.plugins.asciidoctorConvert)
 
     id("release")
 }
@@ -42,12 +42,12 @@ java {
 }
 
 dependencies {
-    implementation(group = "org.apache.ant", name = "ant", version = "1.10.14")
-    implementation(group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17")
-    implementation(group = "commons-cli", name = "commons-cli", version = "1.6.0")
-    implementation(group = "org.jclarion", name = "image4j", version = "0.7")
+    implementation(libs.ant)
+    implementation(libs.batikRasterizer)
+    implementation(libs.commonsCli)
+    implementation(libs.image4j)
 
-    spotbugs(group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3")
+    spotbugs(libs.spotbugs)
 }
 
 tasks {
