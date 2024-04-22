@@ -29,7 +29,7 @@ testing {
     @Suppress("UnstableApiUsage")
     suites {
         val test by getting(JvmTestSuite::class) {
-            useJUnitJupiter()
+            useJUnitJupiter("5.10.2")
             dependencies {
                 implementation("io.kotest:kotest-assertions-core:5.8.1")
             }
