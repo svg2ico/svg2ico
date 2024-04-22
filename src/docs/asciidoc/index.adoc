@@ -9,7 +9,7 @@ svg2ico converts SVG images into ICO images. It is written in Java, and is avail
 // suppress inspection "AsciiDocLinkResolve"
 The latest version of svg2ico available for download is https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[{revnumber}]. The link:javadoc[javadoc] is also available online.
 
-https://github.com/svg2ico/svg2ico[The project] is hosted on GitHub.
+The project is https://github.com/svg2ico/svg2ico[hosted on GitHub].
 
 == Downloads
 
