@@ -15,5 +15,5 @@ See https://svg2ico.sourceforge.net/
 ## Build
 
 ```shell
-./gradlew clean check
+./gradlew build
 ```
