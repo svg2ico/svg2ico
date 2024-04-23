@@ -13,22 +13,3 @@ plugins {
 }
 
 rootProject.name = "svg2ico"
-
-dependencyResolutionManagement {
-    versionCatalogs {
-        create("libs") {
-            plugin("spotbugs", "com.github.spotbugs").version("6.0.9")
-            plugin("shadow", "com.github.johnrengelman.shadow").version("8.1.1")
-            plugin("nexusPublish", "io.github.gradle-nexus.publish-plugin").version("2.0.0")
-            plugin("svg2ico", "com.gitlab.svg2ico").version("1.4")
-            plugin("asciidoctorConvert", "org.asciidoctor.jvm.convert").version("4.0.2")
-
-            library("ant", "org.apache.ant", "ant").version("1.10.14")
-            library("batikRasterizer", "org.apache.xmlgraphics", "batik-rasterizer").version("1.17")
-            library("commonsCli", "commons-cli", "commons-cli").version("1.6.0")
-            library("image4j", "org.jclarion", "image4j").version("0.7")
-
-            library("spotbugs", "com.github.spotbugs", "spotbugs").version("4.8.3")
-        }
-    }
-}

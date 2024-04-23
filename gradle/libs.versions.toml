@@ -1,0 +1,24 @@
+[versions]
+junit = "5.10.2"
+
+[plugins]
+spotbugs = { id = "com.github.spotbugs", version = "6.0.9" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+svg2ico = { id = "com.gitlab.svg2ico", version = "1.4" }
+asciidoctorConvert = { id = "org.asciidoctor.jvm.convert", version = "4.0.2" }
+jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
+
+
+[libraries]
+ant = { group = "org.apache.ant", name = "ant", version = "1.10.14" }
+batikRasterizer = { group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17" }
+commonsCli = { group = "commons-cli", name = "commons-cli", version = "1.6.0" }
+image4j = { group = "org.jclarion", name = "image4j", version = "0.7" }
+
+spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3" }
+
+maverickSynergyClient = { group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1" }
+argo = { group = "net.sourceforge.argo", name = "argo", version = "7.3" }
+urin = { group = "net.sourceforge.urin", name = "urin", version = "4.9" }
+kotest = { group = "io.kotest", name = "kotest-assertions-core", version = "5.8.1" }

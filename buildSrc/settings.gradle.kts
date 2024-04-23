@@ -11,12 +11,7 @@
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
-            plugin("jvm", "org.jetbrains.kotlin.jvm").version("1.9.22")
-            version("junit", "5.10.2")
-            library("maverickSynergyClient", "com.sshtools", "maverick-synergy-client").version("3.1.1")
-            library("argo", "net.sourceforge.argo", "argo").version("7.3")
-            library("urin", "net.sourceforge.urin", "urin").version("4.9")
-            library("kotest", "io.kotest", "kotest-assertions-core").version("5.8.1")
+            from(files("../gradle/libs.versions.toml"))
         }
     }
 }
