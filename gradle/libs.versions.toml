@@ -7,7 +7,7 @@ shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 svg2ico = { id = "com.gitlab.svg2ico", version = "1.4" }
 asciidoctorConvert = { id = "org.asciidoctor.jvm.convert", version = "4.0.2" }
-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
 
 
 [libraries]
