@@ -1,6 +1,7 @@
 # svg2ico
 
-[![CI](https://github.com/svg2ico/svg2ico/actions/workflows/ci.yaml/badge.svg)](https://github.com/svg2ico/svg2ico/actions/workflows/ci.yaml) ![Maven Central Version](https://img.shields.io/maven-central/v/net.sourceforge.svg2ico/svg2ico?label=Maven%20Central)
+[![CI](https://github.com/svg2ico/svg2ico/actions/workflows/ci.yaml/badge.svg)](https://github.com/svg2ico/svg2ico/actions/workflows/ci.yaml)
+[![Maven Central Version](https://img.shields.io/maven-central/v/net.sourceforge.svg2ico/svg2ico?label=Maven%20Central)](https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico)
 
 svg2ico is a Java library and Ant task for converting SVG images to ICO and PNG format.
 
