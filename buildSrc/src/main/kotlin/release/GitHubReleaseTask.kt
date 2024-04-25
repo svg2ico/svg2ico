@@ -94,7 +94,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
             throw GradleException("Adding jar to GitHub release via {$uploadUri} resulted in response code ${uploadResponse.statusCode()} with body\n${uploadResponse.body()}")
         } else {
             logger.info("GitHub responded with status code {}", uploadResponse.statusCode())
-            response.headers().map().forEach { (name, values) ->
+            uploadResponse.headers().map().forEach { (name, values) ->
                 values.forEach { value ->
                     logger.info("$name -> $value")
                 }
