@@ -23,10 +23,11 @@ import net.sourceforge.urin.Port.port
 import net.sourceforge.urin.scheme.http.Https.https
 import org.junit.jupiter.api.Test
 import release.VersionNumber
+import release.github.GitHub.ReleaseVersionOutcome
+import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import java.net.InetSocketAddress
-import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
@@ -53,7 +54,7 @@ class GitHubHttpTest {
             start()
         }
         val authority = authority(LOCAL_HOST, port(httpsServer.address.port))
-        val recordingAuditor = RecordingAuditor()
+        val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
         val releaseVersionOutcome = try {
             GitHubHttp(
                 GitHubApiAuthority(authority),
@@ -63,21 +64,10 @@ class GitHubHttpTest {
         } finally {
             httpsServer.stop(0)
         }
-        releaseVersionOutcome.shouldBeInstanceOf<GitHub.ReleaseVersionOutcome.Success>()
-            .versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
+        releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
         recordingAuditor.auditEvents() shouldContainExactly listOf(
-            GitHubHttp.Auditor.AuditEvent.RequestCompleted(https(authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri())
+            RequestCompleted(https(authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri())
         )
     }
 
-    private class RecordingAuditor : GitHubHttp.Auditor {
-
-        private val auditEvents = mutableListOf<GitHubHttp.Auditor.AuditEvent>()
-
-        override fun event(auditEvent: GitHubHttp.Auditor.AuditEvent) {
-            auditEvents.add(auditEvent)
-        }
-
-        fun auditEvents() = auditEvents.toList()
-    }
 }

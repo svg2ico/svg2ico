@@ -14,6 +14,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import release.github.GitHub
 import release.github.GitHubHttp
+import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.pki.ReleaseTrustStore
 
 class ReleasePlugin : Plugin<Project> {
@@ -38,9 +39,11 @@ class ReleasePlugin : Plugin<Project> {
             GitHubHttp(
                 GitHubHttp.GitHubApiAuthority.productionGitHubApi,
                 ReleaseTrustStore.defaultReleaseTrustStore
-            ) { auditEvent -> when(auditEvent) {
-                is GitHubHttp.Auditor.AuditEvent.RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri}")
-            } }.latestReleaseVersion()) {
+            ) { auditEvent ->
+                when (auditEvent) {
+                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri}")
+                }
+            }.latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {
                 target.logger.warn("Defaulting to development version: getting latest GitHub release failed with ${latestReleaseVersionOutcome.failureMessage}")
                 VersionNumber.DevelopmentVersion

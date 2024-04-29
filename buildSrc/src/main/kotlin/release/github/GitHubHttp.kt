@@ -17,14 +17,14 @@ import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.scheme.http.Https.https
 import release.VersionNumber
-import release.github.GitHubHttp.Auditor.AuditEvent.RequestCompleted
+import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.pki.ReleaseTrustStore
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor) : GitHub {
+class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor<AuditEvent>) : GitHub {
 
     private val releasesUri = https(gitHubApiAuthority.authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri()
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).build()
@@ -58,10 +58,8 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
         }
     }
 
-    fun interface Auditor {
-        fun event(auditEvent: AuditEvent)
-        sealed interface AuditEvent {
-            data class RequestCompleted(val uri: URI) : AuditEvent
-        }
+    sealed interface AuditEvent {
+        data class RequestCompleted(val uri: URI) : AuditEvent
     }
+
 }
