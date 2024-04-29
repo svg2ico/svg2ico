@@ -13,16 +13,20 @@ package release.github
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpsConfigurator
 import com.sun.net.httpserver.HttpsServer
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.LOCAL_HOST
+import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.Port.port
+import net.sourceforge.urin.scheme.http.Https.https
 import org.junit.jupiter.api.Test
 import release.VersionNumber
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import java.net.InetSocketAddress
+import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
@@ -48,15 +52,32 @@ class GitHubHttpTest {
             }
             start()
         }
+        val authority = authority(LOCAL_HOST, port(httpsServer.address.port))
+        val recordingAuditor = RecordingAuditor()
         val releaseVersionOutcome = try {
             GitHubHttp(
-                GitHubApiAuthority(authority(LOCAL_HOST, port(httpsServer.address.port))),
+                GitHubApiAuthority(authority),
                 publicKeyInfrastructure.releaseTrustStore,
+                recordingAuditor
             ).latestReleaseVersion()
         } finally {
             httpsServer.stop(0)
         }
         releaseVersionOutcome.shouldBeInstanceOf<GitHub.ReleaseVersionOutcome.Success>()
             .versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
+        recordingAuditor.auditEvents() shouldContainExactly listOf(
+            GitHubHttp.Auditor.AuditEvent.RequestCompleted(https(authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri())
+        )
+    }
+
+    private class RecordingAuditor : GitHubHttp.Auditor {
+
+        private val auditEvents = mutableListOf<GitHubHttp.Auditor.AuditEvent>()
+
+        override fun event(auditEvent: GitHubHttp.Auditor.AuditEvent) {
+            auditEvents.add(auditEvent)
+        }
+
+        fun auditEvents() = auditEvents.toList()
     }
 }

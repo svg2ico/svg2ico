@@ -35,7 +35,12 @@ class ReleasePlugin : Plugin<Project> {
 
     private fun determineVersion(target: Project) = when (val versionFromEnvironment = System.getenv("SVG2ICO_VERSION")) {
         null -> when (val latestReleaseVersionOutcome =
-            GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore).latestReleaseVersion()) {
+            GitHubHttp(
+                GitHubHttp.GitHubApiAuthority.productionGitHubApi,
+                ReleaseTrustStore.defaultReleaseTrustStore
+            ) { auditEvent -> when(auditEvent) {
+                is GitHubHttp.Auditor.AuditEvent.RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri}")
+            } }.latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {
                 target.logger.warn("Defaulting to development version: getting latest GitHub release failed with ${latestReleaseVersionOutcome.failureMessage}")
                 VersionNumber.DevelopmentVersion
