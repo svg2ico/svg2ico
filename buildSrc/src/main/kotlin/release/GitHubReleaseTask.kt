@@ -40,7 +40,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
                         val uploadArtifactOutcome =
                             gitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())
                         when(uploadArtifactOutcome) {
-                            GitHub.UploadArtifactOutcome.Success -> TODO()
+                            GitHub.UploadArtifactOutcome.Success -> Unit
                             is GitHub.UploadArtifactOutcome.Failure -> throw GradleException(uploadArtifactOutcome.failureMessage)
                         }
                     }
