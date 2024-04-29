@@ -10,6 +10,7 @@
 
 plugins {
     `jvm-test-suite`
+    `java-test-fixtures`
     `kotlin-dsl`
     alias(libs.plugins.kotlinJvm)
 }
@@ -23,6 +24,9 @@ dependencies {
     implementation(libs.maverickSynergyClient)
     implementation(libs.argo)
     implementation(libs.urin)
+
+    testFixturesImplementation(libs.bouncycastleProvider)
+    testFixturesImplementation(libs.bouncycastlePkix)
 }
 
 testing {
