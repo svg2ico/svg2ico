@@ -10,22 +10,14 @@
 
 package release.github
 
-import release.VersionNumber.ReleaseVersion
-import java.nio.file.Path
+import release.VersionNumber
 
 interface GitHub {
+    fun latestReleaseVersion(): ReleaseVersionOutcome
 
-    fun release(versionNumber: ReleaseVersion): ReleaseOutcome
-    fun uploadArtifact(versionNumber: ReleaseVersion, releaseId: ReleaseId, path: Path): UploadArtifactOutcome
-
-    data class ReleaseId(val value: String)
-    sealed interface ReleaseOutcome {
-        data class Success(val releaseId: ReleaseId): ReleaseOutcome
-        data class Failure(val failureMessage: String): ReleaseOutcome
+    sealed interface ReleaseVersionOutcome {
+        data class Success(val versionNumber: VersionNumber.ReleaseVersion): ReleaseVersionOutcome
+        data class Failure(val failureMessage: String): ReleaseVersionOutcome
     }
 
-    sealed interface UploadArtifactOutcome {
-        object Success : UploadArtifactOutcome
-        data class Failure(val failureMessage: String) : UploadArtifactOutcome
-    }
 }

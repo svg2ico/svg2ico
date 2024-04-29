@@ -15,12 +15,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
-import release.github.GitHub
-import release.github.GitHub.ReleaseOutcome
-import release.github.GitHubHttp
 import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubApi
-import release.github.GitHubHttp.GitHubToken
-import release.github.GitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
+import release.github.PrivilegedGitHub.ReleaseOutcome
+import release.github.PrivilegedGitHub.UploadArtifactOutcome
+import release.github.PrivilegedGitHubHttp
+import release.github.PrivilegedGitHubHttp.GitHubToken
+import release.github.PrivilegedGitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
 abstract class GitHubReleaseTask : DefaultTask() {
@@ -30,18 +30,16 @@ abstract class GitHubReleaseTask : DefaultTask() {
 
     @TaskAction
     fun release() { // TODO logging
-        when(val version = project.version) {
+        when (val version = project.version) {
             is VersionNumber.DevelopmentVersion -> throw GradleException("Cannot release development version")
             is VersionNumber.ReleaseVersion -> {
                 val gitHubToken = project.property("gitHubToken").toString()
-                val gitHub = GitHubHttp(productionGitHubApi, productionGitHubUpload, defaultReleaseTrustStore, GitHubToken(gitHubToken))
-                when(val releaseOutcome = gitHub.release(version)) {
+                val privilegedGitHub = PrivilegedGitHubHttp(productionGitHubApi, productionGitHubUpload, defaultReleaseTrustStore, GitHubToken(gitHubToken))
+                when (val releaseOutcome = privilegedGitHub.release(version)) {
                     is ReleaseOutcome.Success -> {
-                        val uploadArtifactOutcome =
-                            gitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())
-                        when(uploadArtifactOutcome) {
-                            GitHub.UploadArtifactOutcome.Success -> Unit
-                            is GitHub.UploadArtifactOutcome.Failure -> throw GradleException(uploadArtifactOutcome.failureMessage)
+                        when (val uploadArtifactOutcome = privilegedGitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())) {
+                            UploadArtifactOutcome.Success -> Unit
+                            is UploadArtifactOutcome.Failure -> throw GradleException(uploadArtifactOutcome.failureMessage)
                         }
                     }
                     is ReleaseOutcome.Failure -> throw GradleException(releaseOutcome.failureMessage)

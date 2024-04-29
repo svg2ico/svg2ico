@@ -12,7 +12,7 @@ package release
 
 sealed interface VersionNumber : Comparable<VersionNumber> {
     companion object {
-        fun fromString(value: String): VersionNumber {
+        fun fromString(value: String): ReleaseVersion {
             return if (value.count { it == '.' } == 1) {
                 try {
                     val (major, minor) = value.split(".").map { Integer.parseInt(it) }
