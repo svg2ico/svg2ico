@@ -15,6 +15,8 @@ import net.sourceforge.urin.Authority
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
+import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
+import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
 import release.VersionNumber
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
@@ -26,7 +28,11 @@ import java.net.http.HttpResponse
 
 class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor<AuditEvent>) : GitHub {
 
-    private val releasesUri = https(gitHubApiAuthority.authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri()
+    private val releasesUri = https(
+        gitHubApiAuthority.authority,
+        path("repos", "svg2ico", "svg2ico", "releases"),
+        queryParameters(queryParameter("per_page", "1"))
+    ).asUri()
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).build()
 
     override fun latestReleaseVersion() = httpClient.send(
