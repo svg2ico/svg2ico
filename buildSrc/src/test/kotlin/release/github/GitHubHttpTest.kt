@@ -66,7 +66,7 @@ class GitHubHttpTest {
         }
         releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
         recordingAuditor.auditEvents() shouldContainExactly listOf(
-            RequestCompleted(https(authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri())
+            RequestCompleted(https(authority, path("repos", "svg2ico", "svg2ico", "releases")).asUri(), 200)
         )
     }
 
