@@ -38,7 +38,7 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
             .build(),
         HttpResponse.BodyHandlers.ofString()
     ).let { response ->
-        auditor.event(RequestCompleted(releasesUri, response.statusCode()))
+        auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
         if (response.statusCode() != 200) {
             GitHub.ReleaseVersionOutcome.Failure("Creating GitHub release via {$releasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
         } else {
@@ -59,7 +59,7 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
     }
 
     sealed interface AuditEvent {
-        data class RequestCompleted(val uri: URI, val statusCode: Int) : AuditEvent
+        data class RequestCompleted(val uri: URI, val statusCode: Int, val responseBody: String) : AuditEvent
     }
 
 }

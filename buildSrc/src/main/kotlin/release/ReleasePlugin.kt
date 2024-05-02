@@ -41,7 +41,7 @@ class ReleasePlugin : Plugin<Project> {
                 ReleaseTrustStore.defaultReleaseTrustStore
             ) { auditEvent ->
                 when (auditEvent) {
-                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with status code ${auditEvent.statusCode}")
+                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with status code ${auditEvent.statusCode} and body ${auditEvent.responseBody}")
                 }
             }.latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {
