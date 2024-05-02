@@ -10,14 +10,8 @@
 
 package release.github
 
-import release.VersionNumber
-
-interface GitHub {
-    fun latestReleaseVersion(): ReleaseVersionOutcome
-
-    sealed interface ReleaseVersionOutcome {
-        data class Success(val versionNumber: VersionNumber.ReleaseVersion): ReleaseVersionOutcome
-        data class Failure(val failure: release.github.Failure): ReleaseVersionOutcome
-    }
-
+fun formatFailure(failure: Failure) = when (failure) {
+    is Failure.InvalidResponseCode -> "Expected request to ${failure.uri} to respond with status code ${failure.expectedResponseCode} but got ${failure.responseCode} with body ${failure.responseBody}"
+    is Failure.RequestSubmittingException -> "Failed submitting request to ${failure.uri} with ${failure.exception}"
+    is Failure.ResponseHandlingException -> "Request to ${failure.uri} responded with status code ${failure.responseCode} and body ${failure.responseBody} which caused ${failure.exception}"
 }

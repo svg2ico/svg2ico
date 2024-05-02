@@ -35,28 +35,34 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
     ).asUri()
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).build()
 
-    override fun latestReleaseVersion() = httpClient.send(
-        HttpRequest.newBuilder(releasesUri)
-            .GET()
-            .setHeader("content-type", "application/json")
-            .setHeader("accept", "application/vnd.github+json")
-            .setHeader("x-github-api-version", "2022-11-28")
-            .build(),
-        HttpResponse.BodyHandlers.ofString()
-    ).let { response ->
-        auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
-        if (response.statusCode() != 200) {
-            GitHub.ReleaseVersionOutcome.Failure("Creating GitHub release via {$releasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
-        } else {
-            GitHub.ReleaseVersionOutcome.Success(
-                JsonParser().parse(response.body()).getArrayNode().map { release ->
-                    release.getStringValue("tag_name")
-                }.map { releaseString ->
-                    VersionNumber.fromString(releaseString)
-                }.maxOf { it }
-            )
+    override fun latestReleaseVersion() = kotlin.runCatching {
+        httpClient.send(
+            HttpRequest.newBuilder(releasesUri)
+                .GET()
+                .setHeader("content-type", "application/json")
+                .setHeader("accept", "application/vnd.github+json")
+                .setHeader("x-github-api-version", "2022-11-28")
+                .build(),
+            HttpResponse.BodyHandlers.ofString()
+        ).let { response ->
+            runCatching {
+                auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
+                if (response.statusCode() != 200) {
+                    GitHub.ReleaseVersionOutcome.Failure(Failure.InvalidResponseCode(releasesUri, response.statusCode(), 200, response.body()))
+                } else {
+                    GitHub.ReleaseVersionOutcome.Success(
+                        JsonParser().parse(response.body()).getArrayNode().map { release ->
+                            release.getStringValue("tag_name")
+                        }.map { releaseString ->
+                            VersionNumber.fromString(releaseString)
+                        }.maxOf { it }
+                    )
+                }
+            }.getOrElse {
+                    exception -> GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
+            }
         }
-    }
+    }.getOrElse { exception -> GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception)) }
 
     data class GitHubApiAuthority(val authority: Authority) {
         companion object {

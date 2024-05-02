@@ -10,14 +10,10 @@
 
 package release.github
 
-import release.VersionNumber
+import java.net.URI
 
-interface GitHub {
-    fun latestReleaseVersion(): ReleaseVersionOutcome
-
-    sealed interface ReleaseVersionOutcome {
-        data class Success(val versionNumber: VersionNumber.ReleaseVersion): ReleaseVersionOutcome
-        data class Failure(val failure: release.github.Failure): ReleaseVersionOutcome
-    }
-
+sealed interface Failure {
+    data class InvalidResponseCode(val uri: URI, val responseCode: Int, val expectedResponseCode: Int, val responseBody: String) : Failure
+    data class ResponseHandlingException(val uri: URI, val responseCode: Int, val responseBody: String, val exception: Throwable) : Failure
+    data class RequestSubmittingException(val uri: URI, val exception: Throwable) : Failure
 }

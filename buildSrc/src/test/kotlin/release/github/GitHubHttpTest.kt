@@ -13,6 +13,7 @@ package release.github
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpsConfigurator
 import com.sun.net.httpserver.HttpsServer
+import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -69,6 +70,55 @@ class GitHubHttpTest {
             httpsServer.stop(0)
         }
         releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
+        recordingAuditor.auditEvents() shouldContainExactly listOf(
+            RequestCompleted(
+                https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri(),
+                200,
+                responseBody
+            )
+        )
+    }
+
+    @Test
+    fun `handles unexpectedly-shaped json response`() {
+        val publicKeyInfrastructure = aPublicKeyInfrastructure()
+        val responseBody =
+            """{}"""
+        val httpsServer = HttpsServer.create(InetSocketAddress(0), 0).apply {
+            httpsConfigurator = HttpsConfigurator(SSLContext.getInstance("TLS").apply {
+                init(publicKeyInfrastructure.keyManagers.toTypedArray(), null, SecureRandom())
+            })
+            createContext("/repos/svg2ico/svg2ico/releases") { exchange: HttpExchange ->
+                exchange.sendResponseHeaders(200, 0) // TODO maybe need to specify length with shorter response
+                exchange.responseBody.use {
+                    it.write(
+                        responseBody.toByteArray(
+                            UTF_8
+                        )
+                    )
+                }
+            }
+            start()
+        }
+        val authority = authority(LOCAL_HOST, port(httpsServer.address.port))
+        val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+        val releaseVersionOutcome = try {
+            GitHubHttp(
+                GitHubApiAuthority(authority),
+                publicKeyInfrastructure.releaseTrustStore,
+                recordingAuditor
+            ).latestReleaseVersion()
+        } finally {
+            httpsServer.stop(0)
+        }
+        releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ResponseHandlingException>().also { failure ->
+            assertSoftly(failure) {
+                it.uri shouldBe https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+                it.responseCode shouldBe 200
+                it.responseBody shouldBe responseBody
+                it.exception.shouldBeInstanceOf<IllegalArgumentException>()
+            }
+        }
         recordingAuditor.auditEvents() shouldContainExactly listOf(
             RequestCompleted(
                 https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri(),
