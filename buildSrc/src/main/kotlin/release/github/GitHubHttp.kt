@@ -62,7 +62,10 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
                     exception -> GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
             }
         }
-    }.getOrElse { exception -> GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception)) }
+    }.getOrElse { exception ->
+        auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
+        GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception))
+    }
 
     data class GitHubApiAuthority(val authority: Authority) {
         companion object {
@@ -72,6 +75,7 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
 
     sealed interface AuditEvent {
         data class RequestCompleted(val uri: URI, val statusCode: Int, val responseBody: String) : AuditEvent
+        data class RequestFailed(val uri: URI, val cause: Throwable) : AuditEvent
     }
 
 }

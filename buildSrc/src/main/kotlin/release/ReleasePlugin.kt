@@ -15,6 +15,7 @@ import org.gradle.api.Project
 import release.github.GitHub
 import release.github.GitHubHttp
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
+import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.formatFailure
 import release.pki.ReleaseTrustStore
 
@@ -40,6 +41,7 @@ class ReleasePlugin : Plugin<Project> {
             GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore) { auditEvent ->
                 when (auditEvent) {
                     is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with status code ${auditEvent.statusCode} and body ${auditEvent.responseBody}")
+                    is RequestFailed -> target.logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
                 }
             }.latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {

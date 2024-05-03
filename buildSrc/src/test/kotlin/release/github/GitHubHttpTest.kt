@@ -13,6 +13,7 @@ package release.github
 import argo.InvalidSyntaxException
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldExistInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.sourceforge.urin.Path.path
@@ -24,8 +25,10 @@ import release.VersionNumber
 import release.github.FakeHttpServer.Companion.fakeHttpServer
 import release.github.GitHub.ReleaseVersionOutcome
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
+import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
+import java.io.IOException
 import java.nio.charset.StandardCharsets.UTF_8
 
 class GitHubHttpTest {
@@ -136,6 +139,33 @@ class GitHubHttpTest {
             }
             recordingAuditor.auditEvents() shouldContainExactly listOf(
                 RequestCompleted(expectedRequestUri, responseCode, responseBody)
+            )
+        }
+    }
+
+
+    @Test
+    fun `handles IOException processing response`() {
+        val publicKeyInfrastructure = aPublicKeyInfrastructure()
+        val responseBody = """"something short""""
+        val responseCode = 200
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            exchange.sendResponseHeaders(responseCode, 1000)
+            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+        }.use { fakeGitHubServer ->
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
+                .latestReleaseVersion()
+            val expectedRequestUri =
+                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+                assertSoftly(failure) {
+                    it.uri shouldBe expectedRequestUri
+                    it.exception.shouldBeInstanceOf<IOException>()
+                }
+            }
+            recordingAuditor.auditEvents().shouldExistInOrder(
+                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
             )
         }
     }
