@@ -111,4 +111,33 @@ class GitHubHttpTest {
         }
     }
 
+
+    @Test
+    fun `handles unexpected response code`() {
+        val publicKeyInfrastructure = aPublicKeyInfrastructure()
+        val responseBody = """"you're not allowed to see this""""
+        val responseCode = 403
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            exchange.sendResponseHeaders(responseCode, 32)
+            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+        }.use { fakeGitHubServer ->
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
+                .latestReleaseVersion()
+            val expectedRequestUri =
+                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.InvalidResponseCode>().also { failure ->
+                assertSoftly(failure) {
+                    it.uri shouldBe expectedRequestUri
+                    it.expectedResponseCode shouldBe 200
+                    it.responseCode shouldBe responseCode
+                    it.responseBody shouldBe responseBody
+                }
+            }
+            recordingAuditor.auditEvents() shouldContainExactly listOf(
+                RequestCompleted(expectedRequestUri, responseCode, responseBody)
+            )
+        }
+    }
+
 }
