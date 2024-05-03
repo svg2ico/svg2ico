@@ -10,6 +10,7 @@
 
 package release.github
 
+import argo.InvalidSyntaxException
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -73,6 +74,35 @@ class GitHubHttpTest {
                     it.responseCode shouldBe responseCode
                     it.responseBody shouldBe responseBody
                     it.exception.shouldBeInstanceOf<IllegalArgumentException>()
+                }
+            }
+            recordingAuditor.auditEvents() shouldContainExactly listOf(
+                RequestCompleted(expectedRequestUri, responseCode, responseBody)
+            )
+        }
+    }
+
+
+    @Test
+    fun `handles non-json response`() {
+        val publicKeyInfrastructure = aPublicKeyInfrastructure()
+        val responseBody = """not json"""
+        val responseCode = 200
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            exchange.sendResponseHeaders(responseCode, 8)
+            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+        }.use { fakeGitHubServer ->
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
+                .latestReleaseVersion()
+            val expectedRequestUri =
+                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ResponseHandlingException>().also { failure ->
+                assertSoftly(failure) {
+                    it.uri shouldBe expectedRequestUri
+                    it.responseCode shouldBe responseCode
+                    it.responseBody shouldBe responseBody
+                    it.exception.shouldBeInstanceOf<InvalidSyntaxException>()
                 }
             }
             recordingAuditor.auditEvents() shouldContainExactly listOf(
