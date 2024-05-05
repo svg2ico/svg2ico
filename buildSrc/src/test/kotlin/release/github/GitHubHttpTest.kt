@@ -16,6 +16,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldExistInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import net.sourceforge.urin.Authority.authority
+import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
@@ -28,6 +30,7 @@ import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
+import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 import java.io.IOException
 import java.nio.charset.StandardCharsets.UTF_8
 
@@ -168,6 +171,25 @@ class GitHubHttpTest {
                 { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
             )
         }
+    }
+
+
+    @Test
+    fun `handles unresolvable address`() {
+        val authority = authority(registeredName("something.invalid"))
+        val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+        val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(authority), defaultReleaseTrustStore, recordingAuditor).latestReleaseVersion()
+        val expectedRequestUri =
+            https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+        releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+            assertSoftly(failure) {
+                it.uri shouldBe expectedRequestUri
+                it.exception.shouldBeInstanceOf<IOException>()
+            }
+        }
+        recordingAuditor.auditEvents().shouldExistInOrder(
+            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+        )
     }
 
 }
