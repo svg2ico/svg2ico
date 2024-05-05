@@ -29,6 +29,7 @@ import release.github.GitHub.ReleaseVersionOutcome
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.GitHubHttp.GitHubApiAuthority
+import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubApi
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 import java.io.IOException
@@ -181,6 +182,24 @@ class GitHubHttpTest {
         val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(authority), defaultReleaseTrustStore, recordingAuditor).latestReleaseVersion()
         val expectedRequestUri =
             https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+        releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+            assertSoftly(failure) {
+                it.uri shouldBe expectedRequestUri
+                it.exception.shouldBeInstanceOf<IOException>()
+            }
+        }
+        recordingAuditor.auditEvents().shouldExistInOrder(
+            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+        )
+    }
+
+
+    @Test
+    fun `handles ssl failure`() {
+        val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+        val releaseVersionOutcome = GitHubHttp(productionGitHubApi, aPublicKeyInfrastructure().releaseTrustStore, recordingAuditor).latestReleaseVersion()
+        val expectedRequestUri =
+            https(productionGitHubApi.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
         releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
             assertSoftly(failure) {
                 it.uri shouldBe expectedRequestUri
