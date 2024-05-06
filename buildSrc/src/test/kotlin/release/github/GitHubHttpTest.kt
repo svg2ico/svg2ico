@@ -16,6 +16,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldExistInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldNotBeInstanceOf
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
@@ -23,6 +24,7 @@ import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import release.VersionNumber
 import release.github.FakeHttpServer.Companion.fakeHttpServer
 import release.github.GitHub.ReleaseVersionOutcome
@@ -37,6 +39,7 @@ import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.time.Duration.Companion.milliseconds
 
 class GitHubHttpTest {
@@ -215,6 +218,7 @@ class GitHubHttpTest {
 
 
     @Test
+    @Timeout(value = 2, unit = SECONDS)
     fun `handles timeout awaiting first response byte`() {
         val responseCode = 200
         val countDownLatch = CountDownLatch(1)
@@ -232,7 +236,7 @@ class GitHubHttpTest {
                 releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
                     assertSoftly(failure) {
                         it.uri shouldBe expectedRequestUri
-                        it.exception.shouldBeInstanceOf<IOException>()
+                        it.exception.shouldBeInstanceOf<HttpTimeoutException>().shouldNotBeInstanceOf<HttpConnectTimeoutException>()
                     }
                 }
                 recordingAuditor.auditEvents().shouldExistInOrder(
