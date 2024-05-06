@@ -221,7 +221,7 @@ class GitHubHttpTest {
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
             countDownLatch.await()
             exchange.sendResponseHeaders(responseCode, 2)
-            exchange.responseBody.use { it.write("[]]".toByteArray(UTF_8)) }
+            exchange.responseBody.use { it.write("[]".toByteArray(UTF_8)) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             try {
