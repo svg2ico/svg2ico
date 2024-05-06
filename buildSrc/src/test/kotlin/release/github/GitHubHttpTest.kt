@@ -40,9 +40,11 @@ import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.milliseconds
 
 class GitHubHttpTest {
+
+    private val publicKeyInfrastructure = aPublicKeyInfrastructure()
+
     @Test
     fun `can get latest release version`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         @Suppress("SpellCheckingInspection")
         val responseBody =
             """[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162","assets_url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162/assets","upload_url":"https://uploads.github.com/repos/svg2ico/svg2ico/releases/152871162/assets{?name,label}","html_url":"https://github.com/svg2ico/svg2ico/releases/tag/1.82","id":152871162,"author":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"node_id":"RE_kwDOLuWgG84JHKD6","tag_name":"1.82","target_commitish":"master","name":null,"draft":false,"prerelease":false,"created_at":"2024-04-25T19:15:30Z","published_at":"2024-04-25T19:17:40Z","assets":[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/assets/164247312","id":164247312,"node_id":"RA_kwDOLuWgG84JyjcQ","name":"svg2ico-1.82.jar","label":"Jar","uploader":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"content_type":"application/java-archive","state":"uploaded","size":7275600,"download_count":4,"created_at":"2024-04-25T19:17:41Z","updated_at":"2024-04-25T19:17:42Z","browser_download_url":"https://github.com/svg2ico/svg2ico/releases/download/1.82/svg2ico-1.82.jar"}],"tarball_url":"https://api.github.com/repos/svg2ico/svg2ico/tarball/1.82","zipball_url":"https://api.github.com/repos/svg2ico/svg2ico/zipball/1.82","body":null}]"""
@@ -67,7 +69,6 @@ class GitHubHttpTest {
 
     @Test
     fun `handles unexpectedly-shaped json response`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         val responseBody = """{}"""
         val responseCode = 200
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
@@ -96,7 +97,6 @@ class GitHubHttpTest {
 
     @Test
     fun `handles non-json response`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         val responseBody = """not json"""
         val responseCode = 200
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
@@ -125,7 +125,6 @@ class GitHubHttpTest {
 
     @Test
     fun `handles unexpected response code`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         val responseBody = """"you're not allowed to see this""""
         val responseCode = 403
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
@@ -154,7 +153,6 @@ class GitHubHttpTest {
 
     @Test
     fun `handles IOException processing response`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         val responseBody = """"something short""""
         val responseCode = 200
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
@@ -201,7 +199,7 @@ class GitHubHttpTest {
     @Test
     fun `handles ssl failure`() {
         val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-        val releaseVersionOutcome = GitHubHttp(productionGitHubApi, aPublicKeyInfrastructure().releaseTrustStore, recordingAuditor).latestReleaseVersion()
+        val releaseVersionOutcome = GitHubHttp(productionGitHubApi, publicKeyInfrastructure.releaseTrustStore, recordingAuditor).latestReleaseVersion()
         val expectedRequestUri =
             https(productionGitHubApi.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
         releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
@@ -218,7 +216,6 @@ class GitHubHttpTest {
 
     @Test
     fun `handles timeout awaiting first response byte`() {
-        val publicKeyInfrastructure = aPublicKeyInfrastructure()
         val responseCode = 200
         val countDownLatch = CountDownLatch(1)
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
