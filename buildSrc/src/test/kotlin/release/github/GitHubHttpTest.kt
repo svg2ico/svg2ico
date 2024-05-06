@@ -33,7 +33,11 @@ import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubAp
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 import java.io.IOException
+import java.net.http.HttpConnectTimeoutException
+import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets.UTF_8
+import java.util.concurrent.CountDownLatch
+import kotlin.time.Duration.Companion.milliseconds
 
 class GitHubHttpTest {
     @Test
@@ -209,6 +213,38 @@ class GitHubHttpTest {
         recordingAuditor.auditEvents().shouldExistInOrder(
             { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
         )
+    }
+
+
+    @Test
+    fun `handles timeout awaiting first response byte`() {
+        val publicKeyInfrastructure = aPublicKeyInfrastructure()
+        val responseCode = 200
+        val countDownLatch = CountDownLatch(1)
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            countDownLatch.await()
+            exchange.sendResponseHeaders(responseCode, 2)
+            exchange.responseBody.use { it.write("[]]".toByteArray(UTF_8)) }
+        }.use { fakeGitHubServer ->
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            try {
+                val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor, 100.milliseconds)
+                    .latestReleaseVersion()
+                val expectedRequestUri =
+                    https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+                    assertSoftly(failure) {
+                        it.uri shouldBe expectedRequestUri
+                        it.exception.shouldBeInstanceOf<IOException>()
+                    }
+                }
+                recordingAuditor.auditEvents().shouldExistInOrder(
+                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpTimeoutException && it.cause !is HttpConnectTimeoutException }
+                )
+            } finally {
+                countDownLatch.countDown()
+            }
+        }
     }
 
 }

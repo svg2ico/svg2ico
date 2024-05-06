@@ -25,8 +25,11 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
-class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor<AuditEvent>) : GitHub {
+class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor<AuditEvent>, private val firstByteTimeout: Duration = 1.seconds) : GitHub {
 
     private val releasesUri = https(
         gitHubApiAuthority.authority,
@@ -42,6 +45,7 @@ class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: Rele
                 .setHeader("content-type", "application/json")
                 .setHeader("accept", "application/vnd.github+json")
                 .setHeader("x-github-api-version", "2022-11-28")
+                .timeout(firstByteTimeout.toJavaDuration())
                 .build(),
             HttpResponse.BodyHandlers.ofString()
         ).let { response ->

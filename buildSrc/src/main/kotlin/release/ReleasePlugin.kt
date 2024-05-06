@@ -38,12 +38,12 @@ class ReleasePlugin : Plugin<Project> {
 
     private fun determineVersion(target: Project) = when (val versionFromEnvironment = System.getenv("SVG2ICO_VERSION")) {
         null -> when (val latestReleaseVersionOutcome =
-            GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore) { auditEvent ->
+            GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore, { auditEvent ->
                 when (auditEvent) {
                     is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with status code ${auditEvent.statusCode} and body ${auditEvent.responseBody}")
                     is RequestFailed -> target.logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
                 }
-            }.latestReleaseVersion()) {
+            }).latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {
                 target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(latestReleaseVersionOutcome.failure))
                 VersionNumber.DevelopmentVersion
