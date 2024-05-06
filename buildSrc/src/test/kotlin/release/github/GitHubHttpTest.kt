@@ -23,6 +23,7 @@ import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import release.VersionNumber
@@ -237,6 +238,42 @@ class GitHubHttpTest {
                     assertSoftly(failure) {
                         it.uri shouldBe expectedRequestUri
                         it.exception.shouldBeInstanceOf<HttpTimeoutException>().shouldNotBeInstanceOf<HttpConnectTimeoutException>()
+                    }
+                }
+                recordingAuditor.auditEvents().shouldExistInOrder(
+                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpTimeoutException && it.cause !is HttpConnectTimeoutException }
+                )
+            } finally {
+                countDownLatch.countDown()
+            }
+        }
+    }
+
+
+    @Test
+    @Timeout(value = 2, unit = SECONDS)
+    @Disabled("Needs some implementation work")
+    fun `handles timeout during slow response`() {
+        val responseCode = 200
+        val countDownLatch = CountDownLatch(1)
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            exchange.sendResponseHeaders(responseCode, 23)
+            exchange.responseBody.use {
+                it.write("\"first part".toByteArray(UTF_8))
+                countDownLatch.await()
+                it.write("second part/".toByteArray(UTF_8))
+            }
+        }.use { fakeGitHubServer ->
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            try {
+                val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor, 100.milliseconds)
+                    .latestReleaseVersion()
+                val expectedRequestUri =
+                    https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+                    assertSoftly(failure) {
+                        it.uri shouldBe expectedRequestUri
+                        it.exception.shouldBeInstanceOf<IOException>()
                     }
                 }
                 recordingAuditor.auditEvents().shouldExistInOrder(
