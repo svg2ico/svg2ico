@@ -18,10 +18,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldNotBeInstanceOf
 import net.sourceforge.urin.Authority.authority
-import net.sourceforge.urin.Host.LOCAL_HOST
 import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
-import net.sourceforge.urin.Port.port
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
@@ -42,10 +40,8 @@ import java.io.IOException
 import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets.UTF_8
-import java.security.SecureRandom
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
-import javax.net.ssl.SSLContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
