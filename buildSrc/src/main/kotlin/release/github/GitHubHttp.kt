@@ -29,14 +29,20 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-class GitHubHttp(gitHubApiAuthority: GitHubApiAuthority, releaseTrustStore: ReleaseTrustStore, private val auditor: Auditor<AuditEvent>, private val firstByteTimeout: Duration = 1.seconds) : GitHub {
+class GitHubHttp(
+    gitHubApiAuthority: GitHubApiAuthority,
+    releaseTrustStore: ReleaseTrustStore,
+    private val auditor: Auditor<AuditEvent>,
+    connectTimeout: Duration = 1.seconds,
+    private val firstByteTimeout: Duration = 1.seconds,
+) : GitHub {
 
     private val releasesUri = https(
         gitHubApiAuthority.authority,
         path("repos", "svg2ico", "svg2ico", "releases"),
         queryParameters(queryParameter("per_page", "1"))
     ).asUri()
-    private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).build()
+    private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).connectTimeout(connectTimeout.toJavaDuration()).build()
 
     override fun latestReleaseVersion() = kotlin.runCatching {
         httpClient.send(

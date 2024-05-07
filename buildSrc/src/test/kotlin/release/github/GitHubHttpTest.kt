@@ -18,8 +18,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldNotBeInstanceOf
 import net.sourceforge.urin.Authority.authority
+import net.sourceforge.urin.Host.LOCAL_HOST
 import net.sourceforge.urin.Host.registeredName
 import net.sourceforge.urin.Path.path
+import net.sourceforge.urin.Port.port
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
@@ -39,9 +41,12 @@ import java.io.IOException
 import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets.UTF_8
+import java.security.SecureRandom
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
+import javax.net.ssl.SSLContext
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class GitHubHttpTest {
 
@@ -136,7 +141,12 @@ class GitHubHttpTest {
             exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
+            val releaseVersionOutcome = GitHubHttp(
+                GitHubApiAuthority(fakeGitHubServer.authority),
+                publicKeyInfrastructure.releaseTrustStore,
+                recordingAuditor,
+                connectTimeout = 1.seconds
+            )
                 .latestReleaseVersion()
             val expectedRequestUri =
                 https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
@@ -220,6 +230,61 @@ class GitHubHttpTest {
 
     @Test
     @Timeout(value = 2, unit = SECONDS)
+    fun `handles connect timeout`() {
+        val readyCountDownLatch = CountDownLatch(1)
+        val disposeCountDownLatch = CountDownLatch(1)
+        SSLContext.getInstance("TLS").apply {
+            init(publicKeyInfrastructure.keyManagers.toTypedArray(), null, SecureRandom())
+        }.serverSocketFactory.createServerSocket(0).use { serverSocket ->
+            val serverThread = Thread {
+                serverSocket.accept().use { _ ->
+                    readyCountDownLatch.countDown()
+                    disposeCountDownLatch.await()
+                }
+            }.apply {
+                start()
+            }
+            val clientThread = Thread {
+                publicKeyInfrastructure.releaseTrustStore.sslContext.socketFactory.createSocket("localhost", serverSocket.localPort).use { _ ->
+                    disposeCountDownLatch.await()
+                }
+            }.apply {
+                start()
+            }
+            readyCountDownLatch.await()
+            val authority = authority(LOCAL_HOST, port(serverSocket.localPort))
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            try {
+                val releaseVersionOutcome = GitHubHttp(
+                    GitHubApiAuthority(authority),
+                    publicKeyInfrastructure.releaseTrustStore,
+                    recordingAuditor,
+                    100.milliseconds,
+                    10.seconds
+                )
+                    .latestReleaseVersion()
+                val expectedRequestUri =
+                    https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+                    assertSoftly(failure) {
+                        it.uri shouldBe expectedRequestUri
+                        it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
+                    }
+                }
+                recordingAuditor.auditEvents().shouldExistInOrder(
+                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpConnectTimeoutException }
+                )
+            } finally {
+                disposeCountDownLatch.countDown()
+            }
+            serverThread.join()
+            clientThread.join()
+        }
+    }
+
+
+    @Test
+    @Timeout(value = 2, unit = SECONDS)
     fun `handles timeout awaiting first response byte`() {
         val responseCode = 200
         val countDownLatch = CountDownLatch(1)
@@ -230,7 +295,13 @@ class GitHubHttpTest {
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             try {
-                val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor, 100.milliseconds)
+                val releaseVersionOutcome = GitHubHttp(
+                    GitHubApiAuthority(fakeGitHubServer.authority),
+                    publicKeyInfrastructure.releaseTrustStore,
+                    recordingAuditor,
+                    10.seconds,
+                    100.milliseconds
+                )
                     .latestReleaseVersion()
                 val expectedRequestUri =
                     https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
@@ -266,7 +337,13 @@ class GitHubHttpTest {
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             try {
-                val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor, 100.milliseconds)
+                val releaseVersionOutcome = GitHubHttp(
+                    GitHubApiAuthority(fakeGitHubServer.authority),
+                    publicKeyInfrastructure.releaseTrustStore,
+                    recordingAuditor,
+                    1.seconds,
+                    100.milliseconds
+                )
                     .latestReleaseVersion()
                 val expectedRequestUri =
                     https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
