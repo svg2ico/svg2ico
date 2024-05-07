@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import release.VersionNumber
+import release.github.ConnectionRefusingServer.Companion.connectionRefusingServer
 import release.github.FakeHttpServer.Companion.fakeHttpServer
 import release.github.GitHub.ReleaseVersionOutcome
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
@@ -231,54 +232,26 @@ class GitHubHttpTest {
     @Test
     @Timeout(value = 2, unit = SECONDS)
     fun `handles connect timeout`() {
-        val readyCountDownLatch = CountDownLatch(1)
-        val disposeCountDownLatch = CountDownLatch(1)
-        SSLContext.getInstance("TLS").apply {
-            init(publicKeyInfrastructure.keyManagers.toTypedArray(), null, SecureRandom())
-        }.serverSocketFactory.createServerSocket(0).use { serverSocket ->
-            val serverThread = Thread {
-                serverSocket.accept().use { _ ->
-                    readyCountDownLatch.countDown()
-                    disposeCountDownLatch.await()
-                }
-            }.apply {
-                start()
-            }
-            val clientThread = Thread {
-                publicKeyInfrastructure.releaseTrustStore.sslContext.socketFactory.createSocket("localhost", serverSocket.localPort).use { _ ->
-                    disposeCountDownLatch.await()
-                }
-            }.apply {
-                start()
-            }
-            readyCountDownLatch.await()
-            val authority = authority(LOCAL_HOST, port(serverSocket.localPort))
+        connectionRefusingServer(publicKeyInfrastructure).use { connectionRefusingServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            try {
-                val releaseVersionOutcome = GitHubHttp(
-                    GitHubApiAuthority(authority),
-                    publicKeyInfrastructure.releaseTrustStore,
-                    recordingAuditor,
-                    100.milliseconds,
-                    10.seconds
-                )
-                    .latestReleaseVersion()
-                val expectedRequestUri =
-                    https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
-                    }
+            val releaseVersionOutcome = GitHubHttp(
+                GitHubApiAuthority(connectionRefusingServer.authority),
+                publicKeyInfrastructure.releaseTrustStore,
+                recordingAuditor,
+                100.milliseconds,
+                10.seconds
+            ).latestReleaseVersion()
+            val expectedRequestUri =
+                https(connectionRefusingServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
+            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>().also { failure ->
+                assertSoftly(failure) {
+                    it.uri shouldBe expectedRequestUri
+                    it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
                 }
-                recordingAuditor.auditEvents().shouldExistInOrder(
-                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpConnectTimeoutException }
-                )
-            } finally {
-                disposeCountDownLatch.countDown()
             }
-            serverThread.join()
-            clientThread.join()
+            recordingAuditor.auditEvents().shouldExistInOrder(
+                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpConnectTimeoutException }
+            )
         }
     }
 
