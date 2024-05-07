@@ -40,7 +40,7 @@ class ReleasePlugin : Plugin<Project> {
         null -> when (val latestReleaseVersionOutcome =
             GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore, { auditEvent ->
                 when (auditEvent) {
-                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with status code ${auditEvent.statusCode} and body ${auditEvent.responseBody}")
+                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with response status code ${auditEvent.statusCode} and response body ${auditEvent.responseBody}")
                     is RequestFailed -> target.logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
                 }
             }).latestReleaseVersion()) {
