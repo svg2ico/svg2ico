@@ -13,6 +13,10 @@ package release.github
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.net.URI
+import java.net.http.HttpConnectTimeoutException
+import java.net.http.HttpTimeoutException
+import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.seconds
 
 class FailureFormatterKtTest {
 
@@ -48,6 +52,39 @@ class FailureFormatterKtTest {
                 IllegalArgumentException("whoops")
             )
         ) shouldBe "Request to http://example.com responded with status code 200 and body whoops which caused java.lang.IllegalArgumentException: whoops"
+    }
+
+    @Test
+    fun `formats ConnectTimeoutException`() {
+        formatFailure(
+            Failure.ConnectTimeout(
+                URI("http://example.com"),
+                1.seconds,
+                HttpConnectTimeoutException("whoops")
+            )
+        ) shouldBe "Request to http://example.com exceeded connect timeout of 1s"
+    }
+
+    @Test
+    fun `formats FirstByteTimeoutException`() {
+        formatFailure(
+            Failure.FirstByteTimeout(
+                URI("http://example.com"),
+                1.seconds,
+                HttpTimeoutException("whoops")
+            )
+        ) shouldBe "Request to http://example.com exceeded first byte timeout of 1s"
+    }
+
+    @Test
+    fun `formats EndToEndTimeoutException`() {
+        formatFailure(
+            Failure.EndToEndTimeout(
+                URI("http://example.com"),
+                1.seconds,
+                TimeoutException("whoops")
+            )
+        ) shouldBe "Request to http://example.com exceeded end to end timeout of 1s"
     }
 
 }

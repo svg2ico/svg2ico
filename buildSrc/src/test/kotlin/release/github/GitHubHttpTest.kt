@@ -252,12 +252,14 @@ class GitHubHttpTest {
     fun `handles connect timeout`() {
         connectionRefusingServer(publicKeyInfrastructure).use { connectionRefusingServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            val connectTimeout = 100.milliseconds
             val releaseVersionOutcome = GitHubHttp(
                 GitHubApiAuthority(connectionRefusingServer.authority),
                 publicKeyInfrastructure.releaseTrustStore,
                 recordingAuditor,
-                100.milliseconds,
-                10.seconds
+                connectTimeout = connectTimeout,
+                firstByteTimeout = 10.seconds,
+                endToEndTimeout = 10.seconds,
             ).latestReleaseVersion()
             val expectedRequestUri =
                 https(
@@ -265,10 +267,11 @@ class GitHubHttpTest {
                     path("repos", "svg2ico", "svg2ico", "releases"),
                     queryParameters(queryParameter("per_page", "1"))
                 ).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
+            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ConnectTimeout>()
                 .also { failure ->
                     assertSoftly(failure) {
                         it.uri shouldBe expectedRequestUri
+                        it.connectTimeout shouldBe connectTimeout
                         it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
                     }
                 }
@@ -291,20 +294,23 @@ class GitHubHttpTest {
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             try {
+                val firstByteTimeout = 100.milliseconds
                 val releaseVersionOutcome = GitHubHttp(
                     GitHubApiAuthority(fakeGitHubServer.authority),
                     publicKeyInfrastructure.releaseTrustStore,
                     recordingAuditor,
-                    10.seconds,
-                    100.milliseconds
+                    connectTimeout = 10.seconds,
+                    firstByteTimeout = firstByteTimeout,
+                    endToEndTimeout = 10.seconds
                 )
                     .latestReleaseVersion()
                 val expectedRequestUri =
                     https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
+                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.FirstByteTimeout>()
                     .also { failure ->
                         assertSoftly(failure) {
                             it.uri shouldBe expectedRequestUri
+                            it.firstByteTimeout shouldBe firstByteTimeout
                             it.exception.shouldBeInstanceOf<HttpTimeoutException>().shouldNotBeInstanceOf<HttpConnectTimeoutException>()
                         }
                     }
@@ -333,21 +339,23 @@ class GitHubHttpTest {
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             try {
+                val endToEndTimeout = 100.milliseconds
                 val releaseVersionOutcome = GitHubHttp(
                     GitHubApiAuthority(fakeGitHubServer.authority),
                     publicKeyInfrastructure.releaseTrustStore,
                     recordingAuditor,
-                    10.seconds,
-                    10.seconds,
-                    100.milliseconds
+                    connectTimeout = 10.seconds,
+                    firstByteTimeout = 10.seconds,
+                    endToEndTimeout = endToEndTimeout
                 )
                     .latestReleaseVersion()
                 val expectedRequestUri =
                     https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
+                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.EndToEndTimeout>()
                     .also { failure ->
                         assertSoftly(failure) {
                             it.uri shouldBe expectedRequestUri
+                            it.endToEndTimeout shouldBe endToEndTimeout
                             it.exception.shouldBeInstanceOf<TimeoutException>()
                         }
                     }

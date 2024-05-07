@@ -14,4 +14,7 @@ fun formatFailure(failure: Failure) = when (failure) {
     is Failure.InvalidResponseCode -> "Expected request to ${failure.uri} to respond with status code ${failure.expectedResponseCode} but got ${failure.responseCode} with body ${failure.responseBody}"
     is Failure.RequestSubmittingException -> "Failed submitting request to ${failure.uri} with ${failure.exception}"
     is Failure.ResponseHandlingException -> "Request to ${failure.uri} responded with status code ${failure.responseCode} and body ${failure.responseBody} which caused ${failure.exception}"
+    is Failure.ConnectTimeout -> "Request to ${failure.uri} exceeded connect timeout of ${failure.connectTimeout}"
+    is Failure.FirstByteTimeout -> "Request to ${failure.uri} exceeded first byte timeout of ${failure.firstByteTimeout}"
+    is Failure.EndToEndTimeout -> "Request to ${failure.uri} exceeded end to end timeout of ${failure.endToEndTimeout}"
 }

@@ -26,9 +26,12 @@ import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.pki.ReleaseTrustStore
 import java.net.URI
 import java.net.http.HttpClient
+import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.net.http.HttpTimeoutException
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeoutException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -37,7 +40,7 @@ class GitHubHttp(
     gitHubApiAuthority: GitHubApiAuthority,
     releaseTrustStore: ReleaseTrustStore,
     private val auditor: Auditor<AuditEvent>,
-    connectTimeout: Duration = 1.seconds,
+    private val connectTimeout: Duration = 1.seconds,
     private val firstByteTimeout: Duration = 2.seconds,
     private val endToEndTimeout: Duration = 2.seconds,
 ) : GitHub {
@@ -50,7 +53,7 @@ class GitHubHttp(
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).connectTimeout(connectTimeout.toJavaDuration()).build()
 
     override fun latestReleaseVersion() = runBlocking(IO) {
-        kotlin.runCatching {
+        try {
             httpClient.sendAsync(
                 HttpRequest.newBuilder(releasesUri)
                     .GET()
@@ -85,7 +88,16 @@ class GitHubHttp(
                     GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
                 }
             }
-        }.getOrElse { exception ->
+        } catch (exception: HttpConnectTimeoutException) {
+            auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
+            GitHub.ReleaseVersionOutcome.Failure(Failure.ConnectTimeout(releasesUri, connectTimeout, exception))
+        } catch (exception: HttpTimeoutException) {
+            auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
+            GitHub.ReleaseVersionOutcome.Failure(Failure.FirstByteTimeout(releasesUri, firstByteTimeout, exception))
+        } catch (exception: TimeoutException) {
+            auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
+            GitHub.ReleaseVersionOutcome.Failure(Failure.EndToEndTimeout(releasesUri, endToEndTimeout, exception))
+        } catch (exception: Exception) {
             auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
             GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception))
         }

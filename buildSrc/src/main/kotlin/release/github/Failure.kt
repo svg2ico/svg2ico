@@ -11,9 +11,16 @@
 package release.github
 
 import java.net.URI
+import kotlin.time.Duration
 
 sealed interface Failure {
     data class InvalidResponseCode(val uri: URI, val responseCode: Int, val expectedResponseCode: Int, val responseBody: String) : Failure
-    data class ResponseHandlingException(val uri: URI, val responseCode: Int, val responseBody: String, val exception: Throwable) : Failure
-    data class RequestSubmittingException(val uri: URI, val exception: Throwable) : Failure
+    sealed interface ExceptionalFailure : Failure {
+        val exception: Throwable
+    }
+    data class ResponseHandlingException(val uri: URI, val responseCode: Int, val responseBody: String, override val exception: Throwable) : ExceptionalFailure
+    data class RequestSubmittingException(val uri: URI, override val exception: Throwable) : ExceptionalFailure
+    data class ConnectTimeout(val uri: URI, val connectTimeout: Duration, override val exception: Throwable) : ExceptionalFailure
+    data class FirstByteTimeout(val uri: URI, val firstByteTimeout: Duration, override val exception: Throwable) : ExceptionalFailure
+    data class EndToEndTimeout(val uri: URI, val endToEndTimeout: Duration, override val exception: Throwable) : ExceptionalFailure
 }

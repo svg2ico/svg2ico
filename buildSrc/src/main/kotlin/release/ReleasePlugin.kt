@@ -12,6 +12,7 @@ package release
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import release.github.Failure
 import release.github.GitHub
 import release.github.GitHubHttp
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
@@ -45,7 +46,10 @@ class ReleasePlugin : Plugin<Project> {
                 }
             }).latestReleaseVersion()) {
             is GitHub.ReleaseVersionOutcome.Failure -> {
-                target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(latestReleaseVersionOutcome.failure))
+                when(val failure = latestReleaseVersionOutcome.failure) {
+                    is Failure.ExceptionalFailure -> target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(failure), failure.exception)
+                    else -> target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(failure))
+                }
                 VersionNumber.DevelopmentVersion
             }
 
