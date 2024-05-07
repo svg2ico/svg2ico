@@ -21,6 +21,7 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
+    implementation(libs.kotlinCoroutines)
     implementation(libs.maverickSynergyClient)
     implementation(libs.argo)
     implementation(libs.urin)

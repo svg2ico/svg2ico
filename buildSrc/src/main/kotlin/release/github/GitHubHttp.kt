@@ -11,6 +11,9 @@
 package release.github
 
 import argo.JsonParser
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
 import net.sourceforge.urin.Authority
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
@@ -25,6 +28,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -34,7 +38,8 @@ class GitHubHttp(
     releaseTrustStore: ReleaseTrustStore,
     private val auditor: Auditor<AuditEvent>,
     connectTimeout: Duration = 1.seconds,
-    private val firstByteTimeout: Duration = 1.seconds,
+    private val firstByteTimeout: Duration = 2.seconds,
+    private val endToEndTimeout: Duration = 2.seconds,
 ) : GitHub {
 
     private val releasesUri = https(
@@ -44,37 +49,46 @@ class GitHubHttp(
     ).asUri()
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).connectTimeout(connectTimeout.toJavaDuration()).build()
 
-    override fun latestReleaseVersion() = kotlin.runCatching {
-        httpClient.send(
-            HttpRequest.newBuilder(releasesUri)
-                .GET()
-                .setHeader("content-type", "application/json")
-                .setHeader("accept", "application/vnd.github+json")
-                .setHeader("x-github-api-version", "2022-11-28")
-                .timeout(firstByteTimeout.toJavaDuration())
-                .build(),
-            HttpResponse.BodyHandlers.ofString()
-        ).let { response ->
-            runCatching {
-                auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
-                if (response.statusCode() != 200) {
-                    GitHub.ReleaseVersionOutcome.Failure(Failure.InvalidResponseCode(releasesUri, response.statusCode(), 200, response.body()))
-                } else {
-                    GitHub.ReleaseVersionOutcome.Success(
-                        JsonParser().parse(response.body()).getArrayNode().map { release ->
-                            release.getStringValue("tag_name")
-                        }.map { releaseString ->
-                            VersionNumber.fromString(releaseString)
-                        }.maxOf { it }
-                    )
+    override fun latestReleaseVersion() = runBlocking(IO) {
+        kotlin.runCatching {
+            httpClient.sendAsync(
+                HttpRequest.newBuilder(releasesUri)
+                    .GET()
+                    .setHeader("content-type", "application/json")
+                    .setHeader("accept", "application/vnd.github+json")
+                    .setHeader("x-github-api-version", "2022-11-28")
+                    .timeout(firstByteTimeout.toJavaDuration())
+                    .build(),
+                HttpResponse.BodyHandlers.ofString()
+            ).orTimeout(endToEndTimeout.inWholeMilliseconds, MILLISECONDS).await().let { response ->
+                runCatching {
+                    auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
+                    if (response.statusCode() != 200) {
+                        GitHub.ReleaseVersionOutcome.Failure(
+                            Failure.InvalidResponseCode(
+                                releasesUri,
+                                response.statusCode(),
+                                200,
+                                response.body()
+                            )
+                        )
+                    } else {
+                        GitHub.ReleaseVersionOutcome.Success(
+                            JsonParser().parse(response.body()).getArrayNode().map { release ->
+                                release.getStringValue("tag_name")
+                            }.map { releaseString ->
+                                VersionNumber.fromString(releaseString)
+                            }.maxOf { it }
+                        )
+                    }
+                }.getOrElse { exception ->
+                    GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
                 }
-            }.getOrElse {
-                    exception -> GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
             }
+        }.getOrElse { exception ->
+            auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
+            GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception))
         }
-    }.getOrElse { exception ->
-        auditor.event(AuditEvent.RequestFailed(releasesUri, exception))
-        GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(releasesUri, exception))
     }
 
     data class GitHubApiAuthority(val authority: Authority) {
