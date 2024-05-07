@@ -167,7 +167,7 @@ class GitHubHttpTest {
         val responseBody = """"something short""""
         val responseCode = 200
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 1000)
+            exchange.sendResponseHeaders(responseCode, 1024)
             exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
