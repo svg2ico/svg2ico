@@ -28,11 +28,8 @@ import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.PrivilegedGitHub.*
 import release.pki.ReleaseTrustStore
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpConnectTimeoutException
+import java.net.http.*
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
-import java.net.http.HttpTimeoutException
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeoutException
@@ -57,14 +54,10 @@ class GitHubHttp(
     fun privileged(gitHubUploadAuthority: GitHubUploadAuthority, gitHubToken: GitHubToken): PrivilegedGitHub = object: PrivilegedGitHub {
 
         override fun release(versionNumber: VersionNumber.ReleaseVersion) = httpClient.send(
-            RequestBuilder
-                .post(
-                    releasesUri,
-                    firstByteTimeout,
-                    BodyPublishers.ofString(JsonGenerator().generate(`object`(field("tag_name", string(versionNumber.toString())))))
-                )
-                .withContentType("application/json")
-                .withAuthorization(gitHubToken)
+            baseHttpRequestBuilder(releasesUri)
+                .POST(BodyPublishers.ofString(JsonGenerator().generate(`object`(field("tag_name", string(versionNumber.toString()))))))
+                .setHeader("content-type", "application/json")
+                .setHeader("authorization", "Bearer $gitHubToken")
                 .build(),
             HttpResponse.BodyHandlers.ofString()
         ).let { response ->
@@ -90,10 +83,10 @@ class GitHubHttp(
                 )
             ).asUri()
             return httpClient.send(
-                RequestBuilder
-                    .post(uploadUri, firstByteTimeout, BodyPublishers.ofFile(path))
-                    .withContentType("application/java-archive")
-                    .withAuthorization(gitHubToken)
+                baseHttpRequestBuilder(uploadUri)
+                    .POST(BodyPublishers.ofFile(path))
+                    .setHeader("content-type", "application/java-archive")
+                    .setHeader("authorization", "Bearer $gitHubToken")
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
             ).let { response ->
@@ -110,7 +103,7 @@ class GitHubHttp(
     override fun latestReleaseVersion() = runBlocking(IO) {
         try {
             httpClient.sendAsync(
-                RequestBuilder.get(pagedReleasesUri, firstByteTimeout).build(),
+                baseHttpRequestBuilder(pagedReleasesUri).GET().build(),
                 HttpResponse.BodyHandlers.ofString()
             ).orTimeout(endToEndTimeout.inWholeMilliseconds, MILLISECONDS).await().let { response ->
                 val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
@@ -158,6 +151,13 @@ class GitHubHttp(
             GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(pagedReleasesUri, exception))
         }
     }
+
+    private fun baseHttpRequestBuilder(uri: URI) = HttpRequest.newBuilder(uri)
+        .setHeader("accept", "application/vnd.github+json")
+        .setHeader("accept", "application/vnd.github+json")
+        .setHeader("x-github-api-version", "2022-11-28")
+        .setHeader("user-agent", "svg2ico-build")
+        .timeout(firstByteTimeout.toJavaDuration())
 
     data class GitHubApiAuthority(val authority: Authority) {
         companion object {
