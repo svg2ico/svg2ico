@@ -13,10 +13,12 @@ package release.github
 import argo.InvalidSyntaxException
 import io.kotest.assertions.assertSoftly
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.forOne
 import io.kotest.matchers.collections.shouldBeSingleton
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldExistInOrder
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldBeEqualIgnoringCase
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldNotBeInstanceOf
 import net.sourceforge.urin.Authority.authority
@@ -83,6 +85,33 @@ class GitHubHttpTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun `sets request headers`() {
+        val responseCode = 200
+        val responseBodyBytes = SAMPLE_VALID_RESPONSE_BODY.toByteArray(UTF_8)
+        val receivedRequestHeaders = mutableListOf<Pair<String, String>>()
+        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            exchange.requestHeaders.forEach { entry ->
+                entry.value.forEach { value ->
+                    receivedRequestHeaders.add(entry.key to value)
+                }
+            }
+            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
+            exchange.responseBody.use { it.write(responseBodyBytes) }
+        }.use { fakeGitHubServer ->
+            GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, {}).latestReleaseVersion()
+            receivedRequestHeaders
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "x-github-api-version"
+                    value shouldBe "2022-11-28"
+                }
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "accept"
+                    value shouldBe "application/vnd.github+json"
+                }
         }
     }
 
