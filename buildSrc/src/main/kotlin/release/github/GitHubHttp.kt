@@ -59,6 +59,7 @@ class GitHubHttp(
                     .GET()
                     .setHeader("accept", "application/vnd.github+json")
                     .setHeader("x-github-api-version", "2022-11-28")
+                    .setHeader("user-agent", "svg2ico-build")
                     .timeout(firstByteTimeout.toJavaDuration())
                     .build(),
                 HttpResponse.BodyHandlers.ofString()

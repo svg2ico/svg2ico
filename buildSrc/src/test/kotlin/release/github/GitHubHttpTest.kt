@@ -112,6 +112,10 @@ class GitHubHttpTest {
                     key shouldBeEqualIgnoringCase "accept"
                     value shouldBe "application/vnd.github+json"
                 }
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "user-agent"
+                    value shouldBe "svg2ico-build"
+                }
         }
     }
 
