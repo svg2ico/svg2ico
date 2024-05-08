@@ -57,7 +57,6 @@ class GitHubHttp(
             httpClient.sendAsync(
                 HttpRequest.newBuilder(releasesUri)
                     .GET()
-                    .setHeader("content-type", "application/json")
                     .setHeader("accept", "application/vnd.github+json")
                     .setHeader("x-github-api-version", "2022-11-28")
                     .timeout(firstByteTimeout.toJavaDuration())
