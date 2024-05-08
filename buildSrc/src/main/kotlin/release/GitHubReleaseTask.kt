@@ -15,12 +15,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import release.github.GitHubHttp
 import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubApi
 import release.github.PrivilegedGitHub.ReleaseOutcome
 import release.github.PrivilegedGitHub.UploadArtifactOutcome
-import release.github.PrivilegedGitHubHttp
-import release.github.PrivilegedGitHubHttp.GitHubToken
-import release.github.PrivilegedGitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
+import release.github.GitHubHttp.GitHubToken
+import release.github.GitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
 abstract class GitHubReleaseTask : DefaultTask() {
@@ -34,7 +34,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
             is VersionNumber.DevelopmentVersion -> throw GradleException("Cannot release development version")
             is VersionNumber.ReleaseVersion -> {
                 val gitHubToken = project.property("gitHubToken").toString()
-                val privilegedGitHub = PrivilegedGitHubHttp(productionGitHubApi, productionGitHubUpload, defaultReleaseTrustStore, GitHubToken(gitHubToken))
+                val privilegedGitHub = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, {}).privileged(productionGitHubUpload, GitHubToken(gitHubToken))
                 when (val releaseOutcome = privilegedGitHub.release(version)) {
                     is ReleaseOutcome.Success -> {
                         when (val uploadArtifactOutcome = privilegedGitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())) {

@@ -23,7 +23,7 @@ import release.VersionNumber
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.github.PrivilegedGitHub.ReleaseId
 import release.github.PrivilegedGitHub.ReleaseOutcome
-import release.github.PrivilegedGitHubHttp.GitHubUploadAuthority
+import release.github.GitHubHttp.GitHubUploadAuthority
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets.UTF_8
@@ -52,12 +52,11 @@ class PrivilegedGitHubHttpTest {
             start()
         }
         val releaseOutcome = try {
-            PrivilegedGitHubHttp(
+            GitHubHttp(
                 GitHubApiAuthority(authority(LOCAL_HOST, port(httpsServer.address.port))),
-                GitHubUploadAuthority(authority(LOCAL_HOST, port(httpsServer.address.port))),
                 publicKeyInfrastructure.releaseTrustStore,
-                PrivilegedGitHubHttp.GitHubToken("not checked yet")
-            ).release(VersionNumber.ReleaseVersion.of(10, 10))
+                {}
+            ).privileged(GitHubUploadAuthority(authority(LOCAL_HOST, port(httpsServer.address.port))), GitHubHttp.GitHubToken("not checked yet")).release(VersionNumber.ReleaseVersion.of(10, 10))
         } finally {
             httpsServer.stop(0)
         }
