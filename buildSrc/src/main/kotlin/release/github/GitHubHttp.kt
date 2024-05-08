@@ -64,14 +64,21 @@ class GitHubHttp(
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
             ).orTimeout(endToEndTimeout.inWholeMilliseconds, MILLISECONDS).await().let { response ->
+                val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
                 runCatching {
-                    auditor.event(RequestCompleted(releasesUri, response.statusCode(), response.body()))
+                    auditor.event(RequestCompleted(
+                        releasesUri,
+                        response.statusCode(),
+                        responseHeaders,
+                        response.body()
+                    ))
                     if (response.statusCode() != 200) {
                         GitHub.ReleaseVersionOutcome.Failure(
                             Failure.InvalidResponseCode(
                                 releasesUri,
                                 response.statusCode(),
                                 200,
+                                responseHeaders,
                                 response.body()
                             )
                         )
@@ -85,7 +92,7 @@ class GitHubHttp(
                         )
                     }
                 }.getOrElse { exception ->
-                    GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), response.body(), exception))
+                    GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(releasesUri, response.statusCode(), responseHeaders, response.body(), exception))
                 }
             }
         } catch (exception: HttpConnectTimeoutException) {
@@ -110,7 +117,7 @@ class GitHubHttp(
     }
 
     sealed interface AuditEvent {
-        data class RequestCompleted(val uri: URI, val statusCode: Int, val responseBody: String) : AuditEvent
+        data class RequestCompleted(val uri: URI, val statusCode: Int, val headers: List<Pair<String, String>>, val responseBody: String) : AuditEvent
         data class RequestFailed(val uri: URI, val cause: Throwable) : AuditEvent
     }
 

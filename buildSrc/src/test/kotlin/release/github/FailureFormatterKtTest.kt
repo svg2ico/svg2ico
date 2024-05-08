@@ -27,9 +27,15 @@ class FailureFormatterKtTest {
                 URI("http://example.com"),
                 404,
                 200,
+                listOf("date" to "Wed, 21 Oct 2015 07:28:00 GMT"),
                 "Not found"
             )
-        ) shouldBe "Expected request to http://example.com to respond with status code 200 but got 404 with body Not found"
+        ) shouldBe """Expected request to http://example.com to respond with status code 200 but got 404
+response headers:
+	date: Wed, 21 Oct 2015 07:28:00 GMT
+response body:
+Not found
+"""
     }
 
     @Test
@@ -48,10 +54,17 @@ class FailureFormatterKtTest {
             Failure.ResponseHandlingException(
                 URI("http://example.com"),
                 200,
+                listOf("date" to "Wed, 21 Oct 2015 07:28:00 GMT"),
                 "whoops",
                 IllegalArgumentException("whoops")
             )
-        ) shouldBe "Request to http://example.com responded with status code 200 and body whoops which caused java.lang.IllegalArgumentException: whoops"
+        ) shouldBe """Request to http://example.com caused java.lang.IllegalArgumentException: whoops
+response status code: 200
+response headers:
+	date: Wed, 21 Oct 2015 07:28:00 GMT
+response body:
+whoops
+"""
     }
 
     @Test

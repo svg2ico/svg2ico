@@ -12,7 +12,9 @@ package release.github
 
 import argo.InvalidSyntaxException
 import io.kotest.assertions.assertSoftly
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldBeSingleton
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldExistInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -58,36 +60,40 @@ class GitHubHttpTest {
     @Test
     fun `can get latest release version`() {
         val responseCode = 200
+        val responseBodyBytes = SAMPLE_VALID_RESPONSE_BODY.toByteArray(UTF_8)
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            val responseBytes = SAMPLE_VALID_RESPONSE_BODY.toByteArray(UTF_8)
-            exchange.sendResponseHeaders(responseCode, responseBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBytes) }
+            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
+            exchange.responseBody.use { it.write(responseBodyBytes) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
                 .latestReleaseVersion()
             releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82)
-            recordingAuditor.auditEvents() shouldContainExactly listOf(
-                RequestCompleted(
-                    https(
-                        fakeGitHubServer.authority,
-                        path("repos", "svg2ico", "svg2ico", "releases"),
-                        queryParameters(queryParameter("per_page", "1"))
-                    ).asUri(),
-                    responseCode,
-                    SAMPLE_VALID_RESPONSE_BODY
-                )
-            )
+            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                element.shouldBeInstanceOf<RequestCompleted>().also {
+                    assertSoftly(element) {
+                        it.uri shouldBe https(
+                            fakeGitHubServer.authority,
+                            path("repos", "svg2ico", "svg2ico", "releases"),
+                            queryParameters(queryParameter("per_page", "1"))
+                        ).asUri()
+                        it.statusCode shouldBe responseCode
+                        it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                        it.responseBody shouldBe responseBody
+                    }
+                }
+            }
         }
     }
 
     @Test
     fun `handles unexpectedly-shaped json response`() {
-        val responseBody = """{}"""
         val responseCode = 200
+        val responseBody = """{}"""
+        val responseBodyBytes = responseBody.toByteArray(UTF_8)
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 2)
-            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
+            exchange.responseBody.use { it.write(responseBodyBytes) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
@@ -99,24 +105,33 @@ class GitHubHttpTest {
                     assertSoftly(failure) {
                         it.uri shouldBe expectedRequestUri
                         it.responseCode shouldBe responseCode
+                        it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
                         it.responseBody shouldBe responseBody
                         it.exception.shouldBeInstanceOf<IllegalArgumentException>()
                     }
                 }
-            recordingAuditor.auditEvents() shouldContainExactly listOf(
-                RequestCompleted(expectedRequestUri, responseCode, responseBody)
-            )
+            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                element.shouldBeInstanceOf<RequestCompleted>().also {
+                    assertSoftly(element) {
+                        it.uri shouldBe expectedRequestUri
+                        it.statusCode shouldBe responseCode
+                        it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                        it.responseBody shouldBe responseBody
+                    }
+                }
+            }
         }
     }
 
 
     @Test
     fun `handles non-json response`() {
-        val responseBody = """not json"""
         val responseCode = 200
+        val responseBody = """not json"""
+        val responseBodyBytes = responseBody.toByteArray(UTF_8)
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 8)
-            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
+            exchange.responseBody.use { it.write(responseBodyBytes) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
@@ -128,24 +143,31 @@ class GitHubHttpTest {
                     assertSoftly(failure) {
                         it.uri shouldBe expectedRequestUri
                         it.responseCode shouldBe responseCode
+                        it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
                         it.responseBody shouldBe responseBody
                         it.exception.shouldBeInstanceOf<InvalidSyntaxException>()
                     }
                 }
-            recordingAuditor.auditEvents() shouldContainExactly listOf(
-                RequestCompleted(expectedRequestUri, responseCode, responseBody)
-            )
+            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                element.shouldBeInstanceOf<RequestCompleted>().also { assertSoftly(element) {
+                    it.uri shouldBe expectedRequestUri
+                    it.statusCode shouldBe responseCode
+                    it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                    it.responseBody shouldBe responseBody
+                } }
+            }
         }
     }
 
 
     @Test
     fun `handles unexpected response code`() {
-        val responseBody = """"you're not allowed to see this""""
         val responseCode = 403
+        val responseBody = """"you're not allowed to see this""""
+        val responseBodyBytes = responseBody.toByteArray(UTF_8)
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 32)
-            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
+            exchange.responseBody.use { it.write(responseBodyBytes) }
         }.use { fakeGitHubServer ->
             val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
             val releaseVersionOutcome = GitHubHttp(
@@ -163,12 +185,18 @@ class GitHubHttpTest {
                         it.uri shouldBe expectedRequestUri
                         it.expectedResponseCode shouldBe 200
                         it.responseCode shouldBe responseCode
+                        it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
                         it.responseBody shouldBe responseBody
                     }
                 }
-            recordingAuditor.auditEvents() shouldContainExactly listOf(
-                RequestCompleted(expectedRequestUri, responseCode, responseBody)
-            )
+            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                element.shouldBeInstanceOf<RequestCompleted>().also { assertSoftly(element) {
+                    it.uri shouldBe expectedRequestUri
+                    it.statusCode shouldBe responseCode
+                    it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                    it.responseBody shouldBe responseBody
+                } }
+            }
         }
     }
 

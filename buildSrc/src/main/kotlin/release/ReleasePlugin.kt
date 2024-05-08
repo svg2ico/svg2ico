@@ -19,6 +19,8 @@ import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.formatFailure
 import release.pki.ReleaseTrustStore
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class ReleasePlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -41,7 +43,20 @@ class ReleasePlugin : Plugin<Project> {
         null -> when (val latestReleaseVersionOutcome =
             GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore, { auditEvent ->
                 when (auditEvent) {
-                    is RequestCompleted -> target.logger.info("Completed request to ${auditEvent.uri} with response status code ${auditEvent.statusCode} and response body ${auditEvent.responseBody}")
+                    is RequestCompleted -> {
+                        target.logger.info(StringWriter().also {
+                            PrintWriter(it).use { printWriter ->
+                                printWriter.println("Completed request to ${auditEvent.uri}")
+                                printWriter.println("response status code: ${auditEvent.statusCode}")
+                                printWriter.println("response headers:")
+                                auditEvent.headers.forEach { (key, value) ->
+                                    printWriter.println("\t$key: $value")
+                                }
+                                printWriter.println("response body:")
+                                printWriter.println(auditEvent.responseBody)
+                            }
+                        }.toString())
+                    }
                     is RequestFailed -> target.logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
                 }
             }).latestReleaseVersion()) {

@@ -10,10 +10,34 @@
 
 package release.github
 
+import java.io.PrintWriter
+import java.io.StringWriter
+
 fun formatFailure(failure: Failure) = when (failure) {
-    is Failure.InvalidResponseCode -> "Expected request to ${failure.uri} to respond with status code ${failure.expectedResponseCode} but got ${failure.responseCode} with body ${failure.responseBody}"
+    is Failure.InvalidResponseCode -> StringWriter().also {
+        PrintWriter(it).use { printWriter ->
+            printWriter.println("Expected request to ${failure.uri} to respond with status code ${failure.expectedResponseCode} but got ${failure.responseCode}")
+            printWriter.println("response headers:")
+            failure.responseHeaders.forEach { (key, value) ->
+                printWriter.println("\t$key: $value")
+            }
+            printWriter.println("response body:")
+            printWriter.println(failure.responseBody)
+        }
+    }.toString()
     is Failure.RequestSubmittingException -> "Failed submitting request to ${failure.uri} with ${failure.exception}"
-    is Failure.ResponseHandlingException -> "Request to ${failure.uri} responded with status code ${failure.responseCode} and body ${failure.responseBody} which caused ${failure.exception}"
+    is Failure.ResponseHandlingException -> StringWriter().also {
+        PrintWriter(it).use { printWriter ->
+            printWriter.println("Request to ${failure.uri} caused ${failure.exception}")
+            printWriter.println("response status code: ${failure.responseCode}")
+            printWriter.println("response headers:")
+            failure.responseHeaders.forEach { (key, value) ->
+                printWriter.println("\t$key: $value")
+            }
+            printWriter.println("response body:")
+            printWriter.println(failure.responseBody)
+        }
+    }.toString()
     is Failure.ConnectTimeout -> "Request to ${failure.uri} exceeded connect timeout of ${failure.connectTimeout}"
     is Failure.FirstByteTimeout -> "Request to ${failure.uri} exceeded first byte timeout of ${failure.firstByteTimeout}"
     is Failure.EndToEndTimeout -> "Request to ${failure.uri} exceeded end to end timeout of ${failure.endToEndTimeout}"
