@@ -11,13 +11,15 @@
 package release.utilities
 
 import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
+import kotlin.io.path.createTempFile
+import kotlin.io.path.writeBytes
 
-fun <T> inTempDirectory(block: (Path) -> T): T {
-    val tempDirectory: Path = createTempDirectory()
+fun <T> withTemporaryFile(contents: ByteArray, block: (Path) -> T): T {
+    val temporaryFile: Path = createTempFile()
     return try {
-        block(tempDirectory)
+        temporaryFile.writeBytes(contents)
+        block(temporaryFile)
     } finally {
-        tempDirectory.toFile().deleteRecursively()
+        temporaryFile.toFile().delete()
     }
 }

@@ -43,7 +43,7 @@ import release.github.PrivilegedGitHub.*
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import release.pki.ReleaseTrustStore
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
-import release.utilities.inTempDirectory
+import release.utilities.withTemporaryFile
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpConnectTimeoutException
@@ -52,7 +52,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.TimeoutException
-import kotlin.io.path.writeBytes
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -114,17 +113,17 @@ class GitHubHttpTest {
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
                 private val releaseId = "152871162"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
+                private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
                 override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                    inTempDirectory { tempDirectory -> // TODO should be 'withTempFile'
-                        val file = tempDirectory.resolve("my.jar")
-                        file.writeBytes("Hello, World!".toByteArray(UTF_8)) // TODO should just be some bytes
+                    withTemporaryFile(fileContents) { file ->
                         GitHubHttp(
                             apiAuthority,
                             publicKeyInfrastructure.releaseTrustStore,
                             auditor
                         ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).uploadArtifact(
                             versionNumber,
-                            ReleaseId(releaseId), file
+                            ReleaseId(releaseId),
+                            file
                         ) // TODO test token and file contents are handled correctly
                     }
                 }
