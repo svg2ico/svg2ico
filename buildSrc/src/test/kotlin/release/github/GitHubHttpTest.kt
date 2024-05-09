@@ -112,6 +112,8 @@ class GitHubHttpTest {
                 }
             },
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
+                private val releaseId = "152871162"
+                private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
                     inTempDirectory { tempDirectory -> // TODO should be 'withTempFile'
                         val file = tempDirectory.resolve("my.jar")
@@ -121,9 +123,9 @@ class GitHubHttpTest {
                             publicKeyInfrastructure.releaseTrustStore,
                             auditor
                         ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).uploadArtifact(
-                            VersionNumber.ReleaseVersion.of(1, 82),
-                            ReleaseId("152871162"), file
-                        ) // TODO test token, version, releaseId, and file are handled correctly
+                            versionNumber,
+                            ReleaseId(releaseId), file
+                        ) // TODO test token and file contents are handled correctly
                     }
                 }
                 override val validResponseCode = 201
@@ -132,9 +134,9 @@ class GitHubHttpTest {
                 override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { _, uploadAuthority ->
                     https(
                         uploadAuthority,
-                        path("repos", "svg2ico", "svg2ico", "releases", "152871162", "assets"), // TODO substitute in release id
+                        path("repos", "svg2ico", "svg2ico", "releases", releaseId, "assets"),
                         queryParameters(
-                            queryParameter("name", "svg2ico-1.82.jar"), // TODO substitute in version
+                            queryParameter("name", "svg2ico-${versionNumber}.jar"),
                             queryParameter("label", "Jar"),
                         )
                     ).asUri()
