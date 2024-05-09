@@ -92,13 +92,14 @@ class GitHubHttpTest {
                 }
             },
             object : TestSuiteParameters<ReleaseOutcome>("create release") {
+                private val gitHubToken = "MY_TOKEN"
                 override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
                     GitHubHttp(
                         apiAuthority,
                         publicKeyInfrastructure.releaseTrustStore,
                         auditor
-                    ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me"))
-                        .release(VersionNumber.ReleaseVersion.of(1, 82)) // TODO test token and version are handled correctly
+                    ).privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
+                        .release(VersionNumber.ReleaseVersion.of(1, 82)) // TODO test version is handled correctly
                 }
                 override val validResponseCode = 201
                 override val sunnyDayResponse = SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY
@@ -109,8 +110,16 @@ class GitHubHttpTest {
                         path("repos", "svg2ico", "svg2ico", "releases")
                     ).asUri()
                 }
+                override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
+                    requestHeaders
+                        .forOne { (key, value) ->
+                            key shouldBeEqualIgnoringCase "authorization"
+                            value shouldBe "Bearer $gitHubToken"
+                        }
+                }
             },
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
+                private val gitHubToken = "MY_TOKEN"
                 private val releaseId = "152871162"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
@@ -120,11 +129,11 @@ class GitHubHttpTest {
                             apiAuthority,
                             publicKeyInfrastructure.releaseTrustStore,
                             auditor
-                        ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).uploadArtifact(
+                        ).privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken)).uploadArtifact(
                             versionNumber,
                             ReleaseId(releaseId),
                             file
-                        ) // TODO test token and file contents are handled correctly
+                        ) // TODO test file contents are handled correctly
                     }
                 }
                 override val validResponseCode = 201
@@ -140,6 +149,13 @@ class GitHubHttpTest {
                         )
                     ).asUri()
                 }
+                override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
+                    requestHeaders
+                        .forOne { (key, value) ->
+                            key shouldBeEqualIgnoringCase "authorization"
+                            value shouldBe "Bearer $gitHubToken"
+                        }
+                }
             },
         ).map { it.toDynamicNode() }
     }
@@ -150,6 +166,8 @@ class GitHubHttpTest {
         abstract val sunnyDayResponse: String
         abstract val sunnyDayAssertion: (result: OUTCOME) -> Unit
         abstract val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
+        open val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = {}
+
 
         private fun sunnyDay(): DynamicTest = dynamicTest("sunny day") {
             val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
@@ -199,6 +217,7 @@ class GitHubHttpTest {
                         key shouldBeEqualIgnoringCase "user-agent"
                         value shouldBe "svg2ico-build"
                     }
+                supplementaryRequestHeaderAssertions(receivedRequestHeaders)
             }
         }
 

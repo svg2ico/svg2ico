@@ -57,7 +57,7 @@ class GitHubHttp(
             baseHttpRequestBuilder(releasesUri)
                 .POST(BodyPublishers.ofString(JsonGenerator().generate(`object`(field("tag_name", string(versionNumber.toString()))))))
                 .setHeader("content-type", "application/json")
-                .setHeader("authorization", "Bearer $gitHubToken")
+                .setHeader("authorization", "Bearer ${gitHubToken.token}")
                 .build(),
             HttpResponse.BodyHandlers.ofString()
         ).let { response ->
@@ -93,7 +93,7 @@ class GitHubHttp(
                 baseHttpRequestBuilder(uploadUri)
                     .POST(BodyPublishers.ofFile(path))
                     .setHeader("content-type", "application/java-archive")
-                    .setHeader("authorization", "Bearer $gitHubToken")
+                    .setHeader("authorization", "Bearer ${gitHubToken.token}")
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
             ).let { response ->
