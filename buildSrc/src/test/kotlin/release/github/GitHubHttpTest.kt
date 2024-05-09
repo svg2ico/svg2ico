@@ -28,12 +28,9 @@ import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.DynamicContainer.dynamicContainer
-import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestFactory
-import org.junit.jupiter.api.Timeout
 import release.VersionNumber
 import release.github.ConnectionRefusingServer.Companion.connectionRefusingServer
 import release.github.FakeHttpServer.Companion.fakeHttpServer
@@ -74,141 +71,139 @@ class GitHubHttpTest {
     private val publicKeyInfrastructure = aPublicKeyInfrastructure()
 
     @TestFactory
-    fun `test suites`() = listOf(
-        dynamicContainer("latest release version", testSuite(
-            executor = { apiAuthority: GitHubApiAuthority, _, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                GitHubHttp(
-                    apiAuthority,
-                    publicKeyInfrastructure.releaseTrustStore,
-                    auditor
-                ).latestReleaseVersion()
-            },
-            validResponseCode = 200,
-            sunnyDayResponse = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY,
-            sunnyDayAssertion = { it.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82) }
-        ) { apiAuthority, _ ->
-            https(
-                apiAuthority,
-                path("repos", "svg2ico", "svg2ico", "releases"),
-                queryParameters(queryParameter("per_page", "1"))
-            ).asUri()
-        }),
-        dynamicContainer("create release", testSuite(
-            executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                GitHubHttp(
-                    apiAuthority,
-                    publicKeyInfrastructure.releaseTrustStore,
-                    auditor
-                ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).release(VersionNumber.ReleaseVersion.of(1, 82)) // TODO test token and version are handled correctly
-            },
-            validResponseCode = 201,
-            sunnyDayResponse = SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY,
-            sunnyDayAssertion = { it.shouldBeInstanceOf<ReleaseOutcome.Success>().releaseId shouldBe ReleaseId("152871162") }
-        ) { apiAuthority, _ ->
-            https(
-                apiAuthority,
-                path("repos", "svg2ico", "svg2ico", "releases")
-            ).asUri()
-        }),
-        dynamicContainer("upload artifact", testSuite(
-            executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                inTempDirectory { tempDirectory -> // TODO should be 'withTempFile'
-                    val file = tempDirectory.resolve("my.jar")
-                    file.writeBytes("Hello, World!".toByteArray(UTF_8)) // TODO should just be some bytes
+    fun `test suites`(): List<DynamicNode> {
+        return listOf(
+            object : TestSuiteParameters<ReleaseVersionOutcome>("latest release version") {
+                override val executor = { apiAuthority: GitHubApiAuthority, _: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
                     GitHubHttp(
                         apiAuthority,
                         publicKeyInfrastructure.releaseTrustStore,
                         auditor
-                    ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).uploadArtifact(VersionNumber.ReleaseVersion.of(1, 82), ReleaseId("152871162"), file) // TODO test token, version, releaseId, and file are handled correctly
+                    ).latestReleaseVersion()
+                }
+                override val validResponseCode = 200
+                override val sunnyDayResponse = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY
+                override val sunnyDayAssertion: (result: ReleaseVersionOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82) }
+                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
+                    https(
+                        apiAuthority,
+                        path("repos", "svg2ico", "svg2ico", "releases"),
+                        queryParameters(queryParameter("per_page", "1"))
+                    ).asUri()
                 }
             },
-            validResponseCode = 201,
-            sunnyDayResponse = SAMPLE_VALID_UPLOAD_ARTIFACT_RESPONSE_BODY,
-            sunnyDayAssertion = { it.shouldBeInstanceOf<UploadArtifactOutcome.Success>() }
-        ) { _, uploadAuthority ->
-            https(
-                uploadAuthority,
-                path("repos", "svg2ico", "svg2ico", "releases", "152871162", "assets"), // TODO substitute in release id
-                queryParameters(
-                    queryParameter("name", "svg2ico-1.82.jar"), // TODO substitute in version
-                    queryParameter("label", "Jar"),
-                )
-            ).asUri()
-        }),
-    )
-
-    private fun <OUTCOME> testSuite(
-        executor: (GitHubApiAuthority, GitHubUploadAuthority, Auditor<GitHubHttp.AuditEvent>) -> OUTCOME,
-        validResponseCode: Int,
-        sunnyDayResponse: String,
-        sunnyDayAssertion: (result: OUTCOME) -> Unit,
-        expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
-    ): List<DynamicTest> {
-        return listOf(
-            `sunny day`(executor, validResponseCode, sunnyDayResponse, sunnyDayAssertion, expectedUri),
-            `sets request headers`(executor, validResponseCode, sunnyDayResponse) // TODO extra expected headers
-        )
+            object : TestSuiteParameters<ReleaseOutcome>("create release") {
+                override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
+                    GitHubHttp(
+                        apiAuthority,
+                        publicKeyInfrastructure.releaseTrustStore,
+                        auditor
+                    ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me"))
+                        .release(VersionNumber.ReleaseVersion.of(1, 82)) // TODO test token and version are handled correctly
+                }
+                override val validResponseCode = 201
+                override val sunnyDayResponse = SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY
+                override val sunnyDayAssertion: (result: ReleaseOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseOutcome.Success>().releaseId shouldBe ReleaseId("152871162") }
+                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
+                    https(
+                        apiAuthority,
+                        path("repos", "svg2ico", "svg2ico", "releases")
+                    ).asUri()
+                }
+            },
+            object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
+                override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
+                    inTempDirectory { tempDirectory -> // TODO should be 'withTempFile'
+                        val file = tempDirectory.resolve("my.jar")
+                        file.writeBytes("Hello, World!".toByteArray(UTF_8)) // TODO should just be some bytes
+                        GitHubHttp(
+                            apiAuthority,
+                            publicKeyInfrastructure.releaseTrustStore,
+                            auditor
+                        ).privileged(uploadAuthority, GitHubHttp.GitHubToken("Test me")).uploadArtifact(
+                            VersionNumber.ReleaseVersion.of(1, 82),
+                            ReleaseId("152871162"), file
+                        ) // TODO test token, version, releaseId, and file are handled correctly
+                    }
+                }
+                override val validResponseCode = 201
+                override val sunnyDayResponse = SAMPLE_VALID_UPLOAD_ARTIFACT_RESPONSE_BODY
+                override val sunnyDayAssertion: (result: UploadArtifactOutcome) -> Unit = { it.shouldBeInstanceOf<UploadArtifactOutcome.Success>() }
+                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { _, uploadAuthority ->
+                    https(
+                        uploadAuthority,
+                        path("repos", "svg2ico", "svg2ico", "releases", "152871162", "assets"), // TODO substitute in release id
+                        queryParameters(
+                            queryParameter("name", "svg2ico-1.82.jar"), // TODO substitute in version
+                            queryParameter("label", "Jar"),
+                        )
+                    ).asUri()
+                }
+            },
+        ).map { it.toDynamicNode() }
     }
 
-    private fun <OUTCOME> `sunny day`(
-        executor: (apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent>) -> OUTCOME,
-        responseCode: Int,
-        responseBody: String,
-        outcomeAssertions: (result: OUTCOME) -> Unit,
-        expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
-    ): DynamicTest = dynamicTest("sunny day") {
-        val responseBodyBytes = responseBody.toByteArray(UTF_8)
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBodyBytes) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority), recordingAuditor) // TODO do we need separate test servers for api and upload
-            outcomeAssertions(releaseVersionOutcome)
-            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                element.shouldBeInstanceOf<RequestCompleted>().also {
-                    assertSoftly(element) {
-                        it.uri shouldBe expectedUri(fakeGitHubServer.authority, fakeGitHubServer.authority)
-                        it.statusCode shouldBe responseCode
-                        it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                        it.responseBody shouldBe responseBody
+    private abstract inner class TestSuiteParameters<OUTCOME>(val name: String) {
+        abstract val executor: (GitHubApiAuthority, GitHubUploadAuthority, Auditor<GitHubHttp.AuditEvent>) -> OUTCOME
+        abstract val validResponseCode: Int
+        abstract val sunnyDayResponse: String
+        abstract val sunnyDayAssertion: (result: OUTCOME) -> Unit
+        abstract val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
+
+        private fun sunnyDay(): DynamicTest = dynamicTest("sunny day") {
+            val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
+            fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }.use { fakeGitHubServer ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val releaseVersionOutcome = executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority), recordingAuditor) // TODO do we need separate test servers for api and upload
+                sunnyDayAssertion(releaseVersionOutcome)
+                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                    element.shouldBeInstanceOf<RequestCompleted>().also {
+                        assertSoftly(element) {
+                            it.uri shouldBe expectedUri(fakeGitHubServer.authority, fakeGitHubServer.authority)
+                            it.statusCode shouldBe validResponseCode
+                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                        }
                     }
                 }
             }
         }
-    }
 
-    private fun <OUTCOME> `sets request headers`(
-        executor: (apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent>) -> OUTCOME,
-        responseCode: Int,
-        responseBody: String
-    ): DynamicTest = dynamicTest("sets request headers") {
-        val responseBodyBytes = responseBody.toByteArray(UTF_8)
-        val receivedRequestHeaders = mutableListOf<Pair<String, String>>()
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.requestHeaders.forEach { entry ->
-                entry.value.forEach { value ->
-                    receivedRequestHeaders.add(entry.key to value)
+        private fun setsRequestHeaders(): DynamicTest = dynamicTest("sets request headers") {
+            val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
+            val receivedRequestHeaders = mutableListOf<Pair<String, String>>()
+            fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.requestHeaders.forEach { entry ->
+                    entry.value.forEach { value ->
+                        receivedRequestHeaders.add(entry.key to value)
+                    }
                 }
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }.use { fakeGitHubServer ->
+                executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority)) {}
+                receivedRequestHeaders
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "x-github-api-version"
+                        value shouldBe "2022-11-28"
+                    }
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "accept"
+                        value shouldBe "application/vnd.github+json"
+                    }
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "user-agent"
+                        value shouldBe "svg2ico-build"
+                    }
             }
-            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBodyBytes) }
-        }.use { fakeGitHubServer ->
-            executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority)) {}
-            receivedRequestHeaders
-                .forOne { (key, value) ->
-                    key shouldBeEqualIgnoringCase "x-github-api-version"
-                    value shouldBe "2022-11-28"
-                }
-                .forOne { (key, value) ->
-                    key shouldBeEqualIgnoringCase "accept"
-                    value shouldBe "application/vnd.github+json"
-                }
-                .forOne { (key, value) ->
-                    key shouldBeEqualIgnoringCase "user-agent"
-                    value shouldBe "svg2ico-build"
-                }
         }
+
+        fun toDynamicNode() : DynamicNode = dynamicContainer(name, listOf(
+            sunnyDay(), setsRequestHeaders()
+        ))
     }
 
     @Test
