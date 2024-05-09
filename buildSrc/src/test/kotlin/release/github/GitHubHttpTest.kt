@@ -117,7 +117,8 @@ class GitHubHttpTest {
         expectedUri: (authority: Authority) -> URI
     ): List<DynamicTest> {
         return listOf(
-            `sunny day`(executor, validResponseCode, sunnyDayResponse, sunnyDayAssertion, expectedUri)
+            `sunny day`(executor, validResponseCode, sunnyDayResponse, sunnyDayAssertion, expectedUri),
+            `sets request headers`(executor, validResponseCode, sunnyDayResponse) // TODO extra expected headers
         )
     }
 
@@ -149,10 +150,12 @@ class GitHubHttpTest {
         }
     }
 
-    @Test
-    fun `sets request headers`() {
-        val responseCode = 200
-        val responseBodyBytes = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY.toByteArray(UTF_8)
+    private fun <OUTCOME> `sets request headers`(
+        executor: (apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent>) -> OUTCOME,
+        responseCode: Int,
+        responseBody: String
+    ): DynamicTest = dynamicTest("sets request headers") {
+        val responseBodyBytes = responseBody.toByteArray(UTF_8)
         val receivedRequestHeaders = mutableListOf<Pair<String, String>>()
         fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
             exchange.requestHeaders.forEach { entry ->
@@ -163,7 +166,7 @@ class GitHubHttpTest {
             exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
             exchange.responseBody.use { it.write(responseBodyBytes) }
         }.use { fakeGitHubServer ->
-            GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, {}).latestReleaseVersion()
+            executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority)) {}
             receivedRequestHeaders
                 .forOne { (key, value) ->
                     key shouldBeEqualIgnoringCase "x-github-api-version"
