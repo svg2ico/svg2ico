@@ -75,7 +75,7 @@ class GitHubHttpTest {
     @TestFactory
     fun `test suites`(): List<DynamicNode> {
         return listOf(
-            object : TestSuiteParameters<ReleaseVersionOutcome>("latest release version") {
+            object : TestSuite<ReleaseVersionOutcome>("latest release version") {
                 override val executor = { apiAuthority: GitHubApiAuthority, _: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
                     GitHubHttp(
                         apiAuthority,
@@ -95,7 +95,7 @@ class GitHubHttpTest {
                 }
                 override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe byteArrayOf() } }
             },
-            object : TestSuiteParameters<ReleaseOutcome>("create release") {
+            object : TestSuite<ReleaseOutcome>("create release") {
                 private val gitHubToken = "MY_TOKEN"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
@@ -128,7 +128,7 @@ class GitHubHttpTest {
                 }
                 override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) } }
             },
-            object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
+            object : TestSuite<UploadArtifactOutcome>("upload artifact") {
                 private val gitHubToken = "MY_TOKEN"
                 private val releaseId = "152871162"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
@@ -179,7 +179,7 @@ class GitHubHttpTest {
         ).map { it.toDynamicNode() }
     }
 
-    private abstract inner class TestSuiteParameters<OUTCOME>(val name: String) {
+    private abstract inner class TestSuite<OUTCOME>(val name: String) {
         abstract val executor: (GitHubApiAuthority, GitHubUploadAuthority, Auditor<GitHubHttp.AuditEvent>) -> OUTCOME
         abstract val validResponseCode: Int
         abstract val sunnyDayResponse: String
