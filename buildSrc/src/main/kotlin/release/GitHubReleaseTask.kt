@@ -15,12 +15,14 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import release.github.Failure
 import release.github.GitHubHttp
 import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubApi
 import release.github.PrivilegedGitHub.ReleaseOutcome
 import release.github.PrivilegedGitHub.UploadArtifactOutcome
 import release.github.GitHubHttp.GitHubToken
 import release.github.GitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
+import release.github.formatFailure
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
 abstract class GitHubReleaseTask : DefaultTask() {
@@ -39,10 +41,16 @@ abstract class GitHubReleaseTask : DefaultTask() {
                     is ReleaseOutcome.Success -> {
                         when (val uploadArtifactOutcome = privilegedGitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())) {
                             UploadArtifactOutcome.Success -> Unit
-                            is UploadArtifactOutcome.Failure -> throw GradleException(uploadArtifactOutcome.failureMessage)
+                            is UploadArtifactOutcome.Failure -> throw when(val failure = uploadArtifactOutcome.failure) {
+                                is Failure.ExceptionalFailure -> GradleException("Uploading artifact for release $version failed: " + formatFailure(failure), failure.exception)
+                                else -> GradleException("Uploading artifact for release $version failed: " + formatFailure(failure))
+                            }
                         }
                     }
-                    is ReleaseOutcome.Failure -> throw GradleException(releaseOutcome.failureMessage)
+                    is ReleaseOutcome.Failure -> throw when(val failure = releaseOutcome.failure) {
+                        is Failure.ExceptionalFailure -> GradleException("Releasing version $version failed: " + formatFailure(failure), failure.exception)
+                        else -> GradleException("Releasing version $version failed: " + formatFailure(failure))
+                    }
                 }
             }
         }

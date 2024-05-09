@@ -69,7 +69,15 @@ class GitHubHttp(
                 response.body()
             ))
             if (response.statusCode() != 201) {
-                ReleaseOutcome.Failure("Creating GitHub release via {$releasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
+                ReleaseOutcome.Failure(
+                    Failure.InvalidResponseCode(
+                        releasesUri,
+                        response.statusCode(),
+                        201,
+                        responseHeaders,
+                        response.body()
+                    )
+                )
             } else {
                 val releaseId = JsonParser().parse(response.body()).getNumberValue("id")
                 ReleaseOutcome.Success(ReleaseId(releaseId))
@@ -105,7 +113,15 @@ class GitHubHttp(
                     response.body()
                 ))
                 if (response.statusCode() != 201) {
-                    UploadArtifactOutcome.Failure("Adding jar to GitHub release via {$uploadUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
+                    UploadArtifactOutcome.Failure(
+                        Failure.InvalidResponseCode(
+                            uploadUri,
+                            response.statusCode(),
+                            201,
+                            responseHeaders,
+                            response.body()
+                        )
+                    )
                 } else {
                     UploadArtifactOutcome.Success
                 }
