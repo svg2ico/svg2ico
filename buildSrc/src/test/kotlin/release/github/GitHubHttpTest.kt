@@ -16,6 +16,7 @@ import argo.jdom.JsonNodeFactories.*
 import io.kotest.assertions.assertSoftly
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forOne
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldBeSingleton
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldExistInOrder
@@ -92,6 +93,7 @@ class GitHubHttpTest {
                         queryParameters(queryParameter("per_page", "1"))
                     ).asUri()
                 }
+                override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe byteArrayOf() } }
             },
             object : TestSuiteParameters<ReleaseOutcome>("create release") {
                 private val gitHubToken = "MY_TOKEN"
@@ -124,7 +126,7 @@ class GitHubHttpTest {
                             value shouldBe "application/json"
                         }
                 }
-                override val requestBodyAssertions: (requestBody: ByteArray) -> Unit = { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) }
+                override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) } }
             },
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
                 private val gitHubToken = "MY_TOKEN"
@@ -172,7 +174,7 @@ class GitHubHttpTest {
                             value shouldBe "application/java-archive"
                         }
                 }
-                override val requestBodyAssertions: (requestBody: ByteArray) -> Unit = { it shouldBe fileContents }
+                override val uploadRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe fileContents } }
             },
         ).map { it.toDynamicNode() }
     }
@@ -184,33 +186,42 @@ class GitHubHttpTest {
         abstract val sunnyDayAssertion: (result: OUTCOME) -> Unit
         abstract val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
         open val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = {}
-        open val requestBodyAssertions: (requestBody: ByteArray) -> Unit = {}
+        open val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { it.shouldBeEmpty() }
+        open val uploadRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { it.shouldBeEmpty() }
 
         private fun sunnyDay(): DynamicTest = dynamicTest("sunny day") {
             val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
-            val requestBodies = mutableListOf<ByteArray>()
+            val apiRequestBodies = mutableListOf<ByteArray>()
+            val uploadRequestBodies = mutableListOf<ByteArray>()
             fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
                 exchange.requestBody.use { requestBody ->
-                    requestBodies.add(requestBody.readBytes())
+                    apiRequestBodies.add(requestBody.readBytes())
                 }
                 exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
                 exchange.responseBody.use { it.write(responseBodyBytes) }
-            }.use { fakeGitHubServer ->
-                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-                val releaseVersionOutcome = executor(GitHubApiAuthority(fakeGitHubServer.authority), GitHubUploadAuthority(fakeGitHubServer.authority), recordingAuditor) // TODO do we need separate test servers for api and upload
-                sunnyDayAssertion(releaseVersionOutcome)
-                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                    element.shouldBeInstanceOf<RequestCompleted>().also {
-                        assertSoftly(element) {
-                            it.uri shouldBe expectedUri(fakeGitHubServer.authority, fakeGitHubServer.authority)
-                            it.statusCode shouldBe validResponseCode
-                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                            it.responseBody shouldBe responseBody
+            }.use { fakeApiServer ->
+                fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+                    exchange.requestBody.use { requestBody ->
+                        uploadRequestBodies.add(requestBody.readBytes())
+                    }
+                    exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                    exchange.responseBody.use { it.write(responseBodyBytes) }
+                }.use { fakeUploadServer ->
+                    val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                    val releaseVersionOutcome = executor(GitHubApiAuthority(fakeApiServer.authority), GitHubUploadAuthority(fakeUploadServer.authority), recordingAuditor)
+                    sunnyDayAssertion(releaseVersionOutcome)
+                    recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                        element.shouldBeInstanceOf<RequestCompleted>().also {
+                            assertSoftly(element) {
+                                it.uri shouldBe expectedUri(fakeApiServer.authority, fakeUploadServer.authority)
+                                it.statusCode shouldBe validResponseCode
+                                it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                                it.responseBody shouldBe responseBody
+                            }
                         }
                     }
-                }
-                requestBodies.shouldBeSingleton {
-                    requestBodyAssertions(it)
+                    apiRequestBodiesAssertions(apiRequestBodies)
+                    uploadRequestBodiesAssertions(uploadRequestBodies)
                 }
             }
         }
