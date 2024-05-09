@@ -168,7 +168,6 @@ class GitHubHttp(
 
     private fun baseHttpRequestBuilder(uri: URI) = HttpRequest.newBuilder(uri)
         .setHeader("accept", "application/vnd.github+json")
-        .setHeader("accept", "application/vnd.github+json")
         .setHeader("x-github-api-version", "2022-11-28")
         .setHeader("user-agent", "svg2ico-build")
         .timeout(firstByteTimeout.toJavaDuration())
