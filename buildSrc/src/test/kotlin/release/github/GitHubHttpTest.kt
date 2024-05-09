@@ -116,6 +116,10 @@ class GitHubHttpTest {
                             key shouldBeEqualIgnoringCase "authorization"
                             value shouldBe "Bearer $gitHubToken"
                         }
+                        .forOne { (key, value) ->
+                            key shouldBeEqualIgnoringCase "content-type"
+                            value shouldBe "application/json"
+                        }
                 }
             },
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
@@ -154,6 +158,14 @@ class GitHubHttpTest {
                         .forOne { (key, value) ->
                             key shouldBeEqualIgnoringCase "authorization"
                             value shouldBe "Bearer $gitHubToken"
+                        }
+                        .forOne { (key, value) ->
+                            key shouldBeEqualIgnoringCase "content-length"
+                            value shouldBe "${fileContents.size}"
+                        }
+                        .forOne { (key, value) ->
+                            key shouldBeEqualIgnoringCase "content-type"
+                            value shouldBe "application/java-archive"
                         }
                 }
             },
