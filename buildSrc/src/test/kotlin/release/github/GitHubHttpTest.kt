@@ -11,6 +11,8 @@
 package release.github
 
 import argo.InvalidSyntaxException
+import argo.JsonParser
+import argo.jdom.JsonNodeFactories.*
 import io.kotest.assertions.assertSoftly
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forOne
@@ -93,13 +95,14 @@ class GitHubHttpTest {
             },
             object : TestSuiteParameters<ReleaseOutcome>("create release") {
                 private val gitHubToken = "MY_TOKEN"
+                private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
                     GitHubHttp(
                         apiAuthority,
                         publicKeyInfrastructure.releaseTrustStore,
                         auditor
                     ).privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
-                        .release(VersionNumber.ReleaseVersion.of(1, 82)) // TODO test version is handled correctly
+                        .release(versionNumber)
                 }
                 override val validResponseCode = 201
                 override val sunnyDayResponse = SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY
@@ -121,6 +124,7 @@ class GitHubHttpTest {
                             value shouldBe "application/json"
                         }
                 }
+                override val requestBodyAssertions: (requestBody: ByteArray) -> Unit = { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) }
             },
             object : TestSuiteParameters<UploadArtifactOutcome>("upload artifact") {
                 private val gitHubToken = "MY_TOKEN"
@@ -137,7 +141,7 @@ class GitHubHttpTest {
                             versionNumber,
                             ReleaseId(releaseId),
                             file
-                        ) // TODO test file contents are handled correctly
+                        )
                     }
                 }
                 override val validResponseCode = 201
@@ -168,6 +172,7 @@ class GitHubHttpTest {
                             value shouldBe "application/java-archive"
                         }
                 }
+                override val requestBodyAssertions: (requestBody: ByteArray) -> Unit = { it shouldBe fileContents }
             },
         ).map { it.toDynamicNode() }
     }
@@ -179,11 +184,15 @@ class GitHubHttpTest {
         abstract val sunnyDayAssertion: (result: OUTCOME) -> Unit
         abstract val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI
         open val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = {}
-
+        open val requestBodyAssertions: (requestBody: ByteArray) -> Unit = {}
 
         private fun sunnyDay(): DynamicTest = dynamicTest("sunny day") {
             val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
+            val requestBodies = mutableListOf<ByteArray>()
             fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.requestBody.use { requestBody ->
+                    requestBodies.add(requestBody.readBytes())
+                }
                 exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
                 exchange.responseBody.use { it.write(responseBodyBytes) }
             }.use { fakeGitHubServer ->
@@ -199,6 +208,9 @@ class GitHubHttpTest {
                             it.responseBody shouldBe responseBody
                         }
                     }
+                }
+                requestBodies.shouldBeSingleton {
+                    requestBodyAssertions(it)
                 }
             }
         }
