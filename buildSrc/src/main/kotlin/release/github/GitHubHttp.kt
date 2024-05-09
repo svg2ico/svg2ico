@@ -61,6 +61,13 @@ class GitHubHttp(
                 .build(),
             HttpResponse.BodyHandlers.ofString()
         ).let { response ->
+            val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
+            auditor.event(RequestCompleted(
+                releasesUri,
+                response.statusCode(),
+                responseHeaders,
+                response.body()
+            ))
             if (response.statusCode() != 201) {
                 ReleaseOutcome.Failure("Creating GitHub release via {$releasesUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
             } else {
