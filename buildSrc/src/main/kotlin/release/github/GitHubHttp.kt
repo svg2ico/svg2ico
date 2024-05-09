@@ -97,6 +97,13 @@ class GitHubHttp(
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
             ).let { response ->
+                val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
+                auditor.event(RequestCompleted(
+                    uploadUri,
+                    response.statusCode(),
+                    responseHeaders,
+                    response.body()
+                ))
                 if (response.statusCode() != 201) {
                     UploadArtifactOutcome.Failure("Adding jar to GitHub release via {$uploadUri} resulted in response code ${response.statusCode()} with body\n${response.body()}")
                 } else {
