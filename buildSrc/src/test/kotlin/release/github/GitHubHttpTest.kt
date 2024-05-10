@@ -48,6 +48,7 @@ import release.github.GitHubHttp.GitHubUploadAuthority
 import release.github.GitHubHttpTest.FakeServers.Companion.fakeServers
 import release.github.PrivilegedGitHub.*
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
+import release.pki.PkiTestingFactories.PublicKeyInfrastructure
 import release.pki.ReleaseTrustStore
 import release.utilities.withTemporaryFile
 import release.utilities.withTimeout
@@ -79,7 +80,7 @@ class GitHubHttpTest {
     @TestFactory
     fun `test suites`(): List<DynamicNode> {
         return listOf(
-            object : TestSuite<ReleaseVersionOutcome>("latest release version") {
+            object : TestSuite<ReleaseVersionOutcome>("latest release version", publicKeyInfrastructure) {
                 override val executor = { gitHubHttp: GitHubHttp, _: GitHubUploadAuthority -> gitHubHttp.latestReleaseVersion() }
                 override val validResponseCode = 200
                 override val sunnyDayResponse = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY
@@ -95,7 +96,7 @@ class GitHubHttpTest {
                 override val failureOutcomeAssertions: (outcome: ReleaseVersionOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure }
                 override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
             },
-            object : TestSuite<ReleaseOutcome>("create release") {
+            object : TestSuite<ReleaseOutcome>("create release", publicKeyInfrastructure) {
                 private val gitHubToken = "MY_TOKEN"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
@@ -127,7 +128,7 @@ class GitHubHttpTest {
                 override val failureOutcomeAssertions: (outcome: ReleaseOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseOutcome.Failure>().failure }
                 override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
             },
-            object : TestSuite<UploadArtifactOutcome>("upload artifact") { // TODO slow upload test
+            object : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) { // TODO slow upload test
                 private val gitHubToken = "MY_TOKEN"
                 private val releaseId = "152871162"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
@@ -173,7 +174,7 @@ class GitHubHttpTest {
         ).map { it.toDynamicNode() }
     }
 
-    private abstract inner class TestSuite<OUTCOME>(val name: String) { // TODO this is only an inner class to get access to the PKI
+    private abstract class TestSuite<OUTCOME>(val name: String, val publicKeyInfrastructure: PublicKeyInfrastructure) {
         abstract val executor: (GitHubHttp, GitHubUploadAuthority) -> OUTCOME
         abstract val validResponseCode: Int
         abstract val sunnyDayResponse: String
