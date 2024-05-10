@@ -17,7 +17,7 @@ batikRasterizer = { group = "org.apache.xmlgraphics", name = "batik-rasterizer",
 commonsCli = { group = "commons-cli", name = "commons-cli", version = "1.7.0" }
 image4j = { group = "org.jclarion", name = "image4j", version = "0.7" }
 
-spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.3" }
+spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.5" }
 
 kotlinCoroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.0" }
 maverickSynergyClient = { group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1" }
