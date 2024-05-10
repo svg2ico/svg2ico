@@ -6,5 +6,5 @@ jobs:
     container:
       image: eclipse-temurin:11.0.23_9-jdk-jammy@sha256:f222d1e1d705cd9f66a6ece7ebde97c04da2fe8628cf9c8f606f77fecf0bd97d
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - run: ./gradlew buildSrc:build clean build
