@@ -12,15 +12,14 @@ package release
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import release.github.Failure
-import release.github.GitHub
+import release.github.Failure.ExceptionalFailure
+import release.github.GitHub.ReleaseVersionOutcome.Failure
+import release.github.GitHub.ReleaseVersionOutcome.Success
 import release.github.GitHubHttp
-import release.github.GitHubHttp.AuditEvent.RequestCompleted
-import release.github.GitHubHttp.AuditEvent.RequestFailed
+import release.github.GitHubHttp.GitHubApiAuthority.Companion.productionGitHubApi
+import release.github.LoggingAuditor
 import release.github.formatFailure
-import release.pki.ReleaseTrustStore
-import java.io.PrintWriter
-import java.io.StringWriter
+import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
 class ReleasePlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -40,37 +39,16 @@ class ReleasePlugin : Plugin<Project> {
     }
 
     private fun determineVersion(target: Project) = when (val versionFromEnvironment = System.getenv("SVG2ICO_VERSION")) {
-        null -> when (val latestReleaseVersionOutcome =
-            GitHubHttp(GitHubHttp.GitHubApiAuthority.productionGitHubApi, ReleaseTrustStore.defaultReleaseTrustStore, { auditEvent ->
-                when (auditEvent) {
-                    is RequestCompleted -> {
-                        target.logger.info(StringWriter().also {
-                            PrintWriter(it).use { printWriter ->
-                                printWriter.println("Completed request to ${auditEvent.uri}")
-                                printWriter.println("response status code: ${auditEvent.statusCode}")
-                                printWriter.println("response headers:")
-                                auditEvent.headers.forEach { (key, value) ->
-                                    printWriter.println("\t$key: $value")
-                                }
-                                printWriter.println("response body:")
-                                printWriter.println(auditEvent.responseBody)
-                            }
-                        }.toString())
-                    }
-                    is RequestFailed -> target.logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
-                }
-            }).latestReleaseVersion()) {
-            is GitHub.ReleaseVersionOutcome.Failure -> {
-                when(val failure = latestReleaseVersionOutcome.failure) {
-                    is Failure.ExceptionalFailure -> target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(failure), failure.exception)
+        null -> when (val outcome = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, LoggingAuditor(target.logger)).latestReleaseVersion()) {
+            is Failure -> {
+                when(val failure = outcome.failure) {
+                    is ExceptionalFailure -> target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(failure), failure.exception)
                     else -> target.logger.warn("Defaulting to development version: getting latest GitHub release failed: " + formatFailure(failure))
                 }
                 VersionNumber.DevelopmentVersion
             }
-
-            is GitHub.ReleaseVersionOutcome.Success -> latestReleaseVersionOutcome.versionNumber.increment()
+            is Success -> outcome.versionNumber.increment()
         }
-
         else -> VersionNumber.fromString(versionFromEnvironment)
     }
 

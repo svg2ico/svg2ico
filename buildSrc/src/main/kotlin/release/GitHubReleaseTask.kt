@@ -22,6 +22,7 @@ import release.github.PrivilegedGitHub.ReleaseOutcome
 import release.github.PrivilegedGitHub.UploadArtifactOutcome
 import release.github.GitHubHttp.GitHubToken
 import release.github.GitHubHttp.GitHubUploadAuthority.Companion.productionGitHubUpload
+import release.github.LoggingAuditor
 import release.github.formatFailure
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
@@ -31,29 +32,28 @@ abstract class GitHubReleaseTask : DefaultTask() {
     abstract val jar: RegularFileProperty
 
     @TaskAction
-    fun release() { // TODO logging
+    fun release() {
         when (val version = project.version) {
             is VersionNumber.DevelopmentVersion -> throw GradleException("Cannot release development version")
             is VersionNumber.ReleaseVersion -> {
                 val gitHubToken = project.property("gitHubToken").toString()
-                val privilegedGitHub = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, {}).privileged(productionGitHubUpload, GitHubToken(gitHubToken))
+                val privilegedGitHub = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, LoggingAuditor(project.logger))
+                    .privileged(productionGitHubUpload, GitHubToken(gitHubToken))
                 when (val releaseOutcome = privilegedGitHub.release(version)) {
                     is ReleaseOutcome.Success -> {
                         when (val uploadArtifactOutcome = privilegedGitHub.uploadArtifact(version, releaseOutcome.releaseId, jar.get().asFile.toPath())) {
                             UploadArtifactOutcome.Success -> Unit
-                            is UploadArtifactOutcome.Failure -> throw when(val failure = uploadArtifactOutcome.failure) {
-                                is Failure.ExceptionalFailure -> GradleException("Uploading artifact for release $version failed: " + formatFailure(failure), failure.exception)
-                                else -> GradleException("Uploading artifact for release $version failed: " + formatFailure(failure))
-                            }
+                            is UploadArtifactOutcome.Failure -> throw uploadArtifactOutcome.failure.toGradleException("Uploading artifact for release $version failed")
                         }
                     }
-                    is ReleaseOutcome.Failure -> throw when(val failure = releaseOutcome.failure) {
-                        is Failure.ExceptionalFailure -> GradleException("Releasing version $version failed: " + formatFailure(failure), failure.exception)
-                        else -> GradleException("Releasing version $version failed: " + formatFailure(failure))
-                    }
+                    is ReleaseOutcome.Failure -> throw releaseOutcome.failure.toGradleException("Releasing version $version failed")
                 }
             }
         }
     }
 
+    private fun Failure.toGradleException(message: String) = when(this) {
+        is Failure.ExceptionalFailure -> GradleException("$message: ${formatFailure(this)}", this.exception)
+        else -> GradleException("$message: ${formatFailure(this)}")
+    }
 }
