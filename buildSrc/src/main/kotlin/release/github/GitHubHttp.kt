@@ -184,7 +184,7 @@ class GitHubHttp(
 
     data class GitHubUploadAuthority(val authority: Authority) {
         companion object {
-            val productionGitHubUpload = GitHubUploadAuthority(authority(registeredName("upload.github.com")))
+            val productionGitHubUpload = GitHubUploadAuthority(authority(registeredName("uploads.github.com")))
         }
     }
 
