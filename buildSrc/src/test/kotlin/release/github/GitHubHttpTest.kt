@@ -66,111 +66,128 @@ import kotlin.time.Duration.Companion.seconds
 class GitHubHttpTest {
 
     companion object {
-        @Suppress("SpellCheckingInspection")
-        const val SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY =
-            """[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162","assets_url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162/assets","upload_url":"https://uploads.github.com/repos/svg2ico/svg2ico/releases/152871162/assets{?name,label}","html_url":"https://github.com/svg2ico/svg2ico/releases/tag/1.82","id":152871162,"author":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"node_id":"RE_kwDOLuWgG84JHKD6","tag_name":"1.82","target_commitish":"master","name":null,"draft":false,"prerelease":false,"created_at":"2024-04-25T19:15:30Z","published_at":"2024-04-25T19:17:40Z","assets":[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/assets/164247312","id":164247312,"node_id":"RA_kwDOLuWgG84JyjcQ","name":"svg2ico-1.82.jar","label":"Jar","uploader":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"content_type":"application/java-archive","state":"uploaded","size":7275600,"download_count":4,"created_at":"2024-04-25T19:17:41Z","updated_at":"2024-04-25T19:17:42Z","browser_download_url":"https://github.com/svg2ico/svg2ico/releases/download/1.82/svg2ico-1.82.jar"}],"tarball_url":"https://api.github.com/repos/svg2ico/svg2ico/tarball/1.82","zipball_url":"https://api.github.com/repos/svg2ico/svg2ico/zipball/1.82","body":null}]"""
-        @Suppress("SpellCheckingInspection")
-        const val SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY = """{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162","assets_url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162/assets","upload_url":"https://uploads.github.com/repos/svg2ico/svg2ico/releases/152871162/assets{?name,label}","html_url":"https://github.com/svg2ico/svg2ico/releases/tag/1.82","id":152871162,"author":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"node_id":"RE_kwDOLuWgG84JHKD6","tag_name":"1.82","target_commitish":"master","name":null,"draft":false,"prerelease":false,"created_at":"2024-04-25T19:15:30Z","published_at":"2024-04-25T19:17:40Z","assets":[],"tarball_url":"https://api.github.com/repos/svg2ico/svg2ico/tarball/1.82","zipball_url":"https://api.github.com/repos/svg2ico/svg2ico/zipball/1.82","body":null}"""
-        @Suppress("SpellCheckingInspection")
-        const val SAMPLE_VALID_UPLOAD_ARTIFACT_RESPONSE_BODY = """{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/assets/164247312","id":164247312,"node_id":"RA_kwDOLuWgG84JyjcQ","name":"svg2ico-1.82.jar","label":"Jar","uploader":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"content_type":"application/java-archive","state":"uploaded","size":7275600,"download_count":0,"created_at":"2024-04-25T19:17:41Z","updated_at":"2024-04-25T19:17:42Z","browser_download_url":"https://github.com/svg2ico/svg2ico/releases/download/1.82/svg2ico-1.82.jar"}"""
+        private val publicKeyInfrastructure = aPublicKeyInfrastructure()
     }
 
-    private val publicKeyInfrastructure = aPublicKeyInfrastructure()
+    private object LatestReleaseVersion : TestSuite<ReleaseVersionOutcome>("latest release version", publicKeyInfrastructure) {
+        override val executor = { gitHubHttp: GitHubHttp, _: GitHubUploadAuthority -> gitHubHttp.latestReleaseVersion() }
+        override val validResponseCode = 200
+        @Suppress("SpellCheckingInspection")
+        override val sunnyDayResponse =
+            """[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162","assets_url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162/assets","upload_url":"https://uploads.github.com/repos/svg2ico/svg2ico/releases/152871162/assets{?name,label}","html_url":"https://github.com/svg2ico/svg2ico/releases/tag/1.82","id":152871162,"author":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"node_id":"RE_kwDOLuWgG84JHKD6","tag_name":"1.82","target_commitish":"master","name":null,"draft":false,"prerelease":false,"created_at":"2024-04-25T19:15:30Z","published_at":"2024-04-25T19:17:40Z","assets":[{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/assets/164247312","id":164247312,"node_id":"RA_kwDOLuWgG84JyjcQ","name":"svg2ico-1.82.jar","label":"Jar","uploader":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"content_type":"application/java-archive","state":"uploaded","size":7275600,"download_count":4,"created_at":"2024-04-25T19:17:41Z","updated_at":"2024-04-25T19:17:42Z","browser_download_url":"https://github.com/svg2ico/svg2ico/releases/download/1.82/svg2ico-1.82.jar"}],"tarball_url":"https://api.github.com/repos/svg2ico/svg2ico/tarball/1.82","zipball_url":"https://api.github.com/repos/svg2ico/svg2ico/zipball/1.82","body":null}]"""
+        override val sunnyDayAssertion: (outcome: ReleaseVersionOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82) }
+        override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
+            https(
+                apiAuthority,
+                path("repos", "svg2ico", "svg2ico", "releases"),
+                queryParameters(queryParameter("per_page", "1"))
+            ).asUri()
+        }
+        override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe byteArrayOf() } }
+        override val failureOutcomeAssertions: (outcome: ReleaseVersionOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure }
+        override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
+    }
+
+    private object CreateRelease : TestSuite<ReleaseOutcome>("create release", publicKeyInfrastructure) {
+        private const val GIT_HUB_TOKEN = "MY_TOKEN"
+        private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
+        override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
+            gitHubHttp
+                .privileged(uploadAuthority, GitHubHttp.GitHubToken(GIT_HUB_TOKEN))
+                .release(versionNumber)
+        }
+        override val validResponseCode = 201
+        @Suppress("SpellCheckingInspection")
+        override val sunnyDayResponse =
+            """{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162","assets_url":"https://api.github.com/repos/svg2ico/svg2ico/releases/152871162/assets","upload_url":"https://uploads.github.com/repos/svg2ico/svg2ico/releases/152871162/assets{?name,label}","html_url":"https://github.com/svg2ico/svg2ico/releases/tag/1.82","id":152871162,"author":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"node_id":"RE_kwDOLuWgG84JHKD6","tag_name":"1.82","target_commitish":"master","name":null,"draft":false,"prerelease":false,"created_at":"2024-04-25T19:15:30Z","published_at":"2024-04-25T19:17:40Z","assets":[],"tarball_url":"https://api.github.com/repos/svg2ico/svg2ico/tarball/1.82","zipball_url":"https://api.github.com/repos/svg2ico/svg2ico/zipball/1.82","body":null}"""
+        override val sunnyDayAssertion: (outcome: ReleaseOutcome) -> Unit =
+            { it.shouldBeInstanceOf<ReleaseOutcome.Success>().releaseId shouldBe ReleaseId("152871162") }
+        override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
+            https(
+                apiAuthority,
+                path("repos", "svg2ico", "svg2ico", "releases")
+            ).asUri()
+        }
+        override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
+            requestHeaders
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "authorization"
+                    value shouldBe "Bearer $GIT_HUB_TOKEN"
+                }
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "content-type"
+                    value shouldBe "application/json"
+                }
+        }
+        override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies ->
+            requestBodies.shouldBeSingleton {
+                JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(
+                    field(
+                        "tag_name",
+                        string(versionNumber.toString())
+                    )
+                )
+            }
+        }
+        override val failureOutcomeAssertions: (outcome: ReleaseOutcome) -> Failure =
+            { outcome -> outcome.shouldBeInstanceOf<ReleaseOutcome.Failure>().failure }
+        override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
+    }
+
+    private object UploadArtifact : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) { // TODO slow upload test
+        private const val GIT_HUB_TOKEN = "MY_TOKEN"
+        private const val RELEASE_ID = "152871162"
+        private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
+        private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
+        override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
+            withTemporaryFile(fileContents) { file ->
+                gitHubHttp
+                    .privileged(uploadAuthority, GitHubHttp.GitHubToken(GIT_HUB_TOKEN))
+                    .uploadArtifact(versionNumber, ReleaseId(RELEASE_ID), file)
+            }
+        }
+        override val validResponseCode = 201
+        @Suppress("SpellCheckingInspection")
+        override val sunnyDayResponse =
+            """{"url":"https://api.github.com/repos/svg2ico/svg2ico/releases/assets/164247312","id":164247312,"node_id":"RA_kwDOLuWgG84JyjcQ","name":"svg2ico-1.82.jar","label":"Jar","uploader":{"login":"markslater","id":642523,"node_id":"MDQ6VXNlcjY0MjUyMw==","avatar_url":"https://avatars.githubusercontent.com/u/642523?v=4","gravatar_id":"","url":"https://api.github.com/users/markslater","html_url":"https://github.com/markslater","followers_url":"https://api.github.com/users/markslater/followers","following_url":"https://api.github.com/users/markslater/following{/other_user}","gists_url":"https://api.github.com/users/markslater/gists{/gist_id}","starred_url":"https://api.github.com/users/markslater/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/markslater/subscriptions","organizations_url":"https://api.github.com/users/markslater/orgs","repos_url":"https://api.github.com/users/markslater/repos","events_url":"https://api.github.com/users/markslater/events{/privacy}","received_events_url":"https://api.github.com/users/markslater/received_events","type":"User","site_admin":false},"content_type":"application/java-archive","state":"uploaded","size":7275600,"download_count":0,"created_at":"2024-04-25T19:17:41Z","updated_at":"2024-04-25T19:17:42Z","browser_download_url":"https://github.com/svg2ico/svg2ico/releases/download/1.82/svg2ico-1.82.jar"}"""
+        override val sunnyDayAssertion: (outcome: UploadArtifactOutcome) -> Unit = { it.shouldBeInstanceOf<UploadArtifactOutcome.Success>() }
+        override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { _, uploadAuthority ->
+            https(
+                uploadAuthority,
+                path("repos", "svg2ico", "svg2ico", "releases", RELEASE_ID, "assets"),
+                queryParameters(
+                    queryParameter("name", "svg2ico-${versionNumber}.jar"),
+                    queryParameter("label", "Jar"),
+                )
+            ).asUri()
+        }
+        override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
+            requestHeaders
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "authorization"
+                    value shouldBe "Bearer $GIT_HUB_TOKEN"
+                }
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "content-length"
+                    value shouldBe "${fileContents.size}"
+                }
+                .forOne { (key, value) ->
+                    key shouldBeEqualIgnoringCase "content-type"
+                    value shouldBe "application/java-archive"
+                }
+        }
+        override val uploadRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit =
+            { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe fileContents } }
+        override val failureOutcomeAssertions: (outcome: UploadArtifactOutcome) -> Failure =
+            { outcome -> outcome.shouldBeInstanceOf<UploadArtifactOutcome.Failure>().failure }
+    }
 
     @TestFactory
     fun `test suites`(): List<DynamicNode> {
         return listOf(
-            object : TestSuite<ReleaseVersionOutcome>("latest release version", publicKeyInfrastructure) {
-                override val executor = { gitHubHttp: GitHubHttp, _: GitHubUploadAuthority -> gitHubHttp.latestReleaseVersion() }
-                override val validResponseCode = 200
-                override val sunnyDayResponse = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY
-                override val sunnyDayAssertion: (outcome: ReleaseVersionOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82) }
-                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
-                    https(
-                        apiAuthority,
-                        path("repos", "svg2ico", "svg2ico", "releases"),
-                        queryParameters(queryParameter("per_page", "1"))
-                    ).asUri()
-                }
-                override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe byteArrayOf() } }
-                override val failureOutcomeAssertions: (outcome: ReleaseVersionOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure }
-                override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
-            },
-            object : TestSuite<ReleaseOutcome>("create release", publicKeyInfrastructure) {
-                private val gitHubToken = "MY_TOKEN"
-                private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
-                override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
-                    gitHubHttp
-                        .privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
-                        .release(versionNumber)
-                }
-                override val validResponseCode = 201
-                override val sunnyDayResponse = SAMPLE_VALID_CREATE_RELEASE_RESPONSE_BODY
-                override val sunnyDayAssertion: (outcome: ReleaseOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseOutcome.Success>().releaseId shouldBe ReleaseId("152871162") }
-                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { apiAuthority, _ ->
-                    https(
-                        apiAuthority,
-                        path("repos", "svg2ico", "svg2ico", "releases")
-                    ).asUri()
-                }
-                override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
-                    requestHeaders
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "authorization"
-                            value shouldBe "Bearer $gitHubToken"
-                        }
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "content-type"
-                            value shouldBe "application/json"
-                        }
-                }
-                override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) } }
-                override val failureOutcomeAssertions: (outcome: ReleaseOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseOutcome.Failure>().failure }
-                override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
-            },
-            object : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) { // TODO slow upload test
-                private val gitHubToken = "MY_TOKEN"
-                private val releaseId = "152871162"
-                private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
-                private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
-                override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
-                    withTemporaryFile(fileContents) { file ->
-                        gitHubHttp
-                            .privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
-                            .uploadArtifact(versionNumber, ReleaseId(releaseId), file)
-                    }
-                }
-                override val validResponseCode = 201
-                override val sunnyDayResponse = SAMPLE_VALID_UPLOAD_ARTIFACT_RESPONSE_BODY
-                override val sunnyDayAssertion: (outcome: UploadArtifactOutcome) -> Unit = { it.shouldBeInstanceOf<UploadArtifactOutcome.Success>() }
-                override val expectedUri: (apiAuthority: Authority, uploadAuthority: Authority) -> URI = { _, uploadAuthority ->
-                    https(
-                        uploadAuthority,
-                        path("repos", "svg2ico", "svg2ico", "releases", releaseId, "assets"),
-                        queryParameters(
-                            queryParameter("name", "svg2ico-${versionNumber}.jar"),
-                            queryParameter("label", "Jar"),
-                        )
-                    ).asUri()
-                }
-                override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
-                    requestHeaders
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "authorization"
-                            value shouldBe "Bearer $gitHubToken"
-                        }
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "content-length"
-                            value shouldBe "${fileContents.size}"
-                        }
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "content-type"
-                            value shouldBe "application/java-archive"
-                        }
-                }
-                override val uploadRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe fileContents } }
-                override val failureOutcomeAssertions: (outcome: UploadArtifactOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<UploadArtifactOutcome.Failure>().failure }
-            },
+            LatestReleaseVersion,
+            CreateRelease,
+            UploadArtifact,
         ).map { it.toDynamicNode() }
     }
 
