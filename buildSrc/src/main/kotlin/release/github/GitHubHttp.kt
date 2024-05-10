@@ -24,6 +24,7 @@ import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
 import release.VersionNumber
+import release.github.GitHub.ReleaseVersionOutcome
 import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.PrivilegedGitHub.*
 import release.pki.ReleaseTrustStore
@@ -51,134 +52,116 @@ class GitHubHttp(
     private val pagedReleasesUri = https(gitHubApiAuthority.authority, releasesPath, queryParameters(queryParameter("per_page", "1"))).asUri()
     private val httpClient = HttpClient.newBuilder().sslContext(releaseTrustStore.sslContext).connectTimeout(connectTimeout.toJavaDuration()).build()
 
-    fun privileged(gitHubUploadAuthority: GitHubUploadAuthority, gitHubToken: GitHubToken): PrivilegedGitHub = object: PrivilegedGitHub {
-
-        override fun release(versionNumber: VersionNumber.ReleaseVersion) = httpClient.send(
-            baseHttpRequestBuilder(releasesUri)
-                .POST(BodyPublishers.ofString(JsonGenerator().generate(`object`(field("tag_name", string(versionNumber.toString()))))))
-                .setHeader("content-type", "application/json")
-                .setHeader("authorization", "Bearer ${gitHubToken.token}")
-                .build(),
-            HttpResponse.BodyHandlers.ofString()
-        ).let { response ->
-            val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
-            auditor.event(RequestCompleted(
-                releasesUri,
-                response.statusCode(),
-                responseHeaders,
-                response.body()
-            ))
-            if (response.statusCode() != 201) {
-                ReleaseOutcome.Failure(
-                    Failure.InvalidResponseCode(
-                        releasesUri,
-                        response.statusCode(),
-                        201,
-                        responseHeaders,
-                        response.body()
-                    )
-                )
-            } else {
-                val releaseId = JsonParser().parse(response.body()).getNumberValue("id")
-                ReleaseOutcome.Success(ReleaseId(releaseId))
-            }
-        }
-
-        override fun uploadArtifact(
-            versionNumber: VersionNumber.ReleaseVersion,
-            releaseId: ReleaseId,
-            path: Path
-        ): UploadArtifactOutcome {
-            val uploadUri = https(
-                gitHubUploadAuthority.authority,
-                path("repos", "svg2ico", "svg2ico", "releases", releaseId.value, "assets"),
-                queryParameters(
-                    queryParameter("name", "svg2ico-${versionNumber}.jar"),
-                    queryParameter("label", "Jar")
-                )
-            ).asUri()
-            return httpClient.send(
-                baseHttpRequestBuilder(uploadUri)
-                    .POST(BodyPublishers.ofFile(path))
-                    .setHeader("content-type", "application/java-archive")
-                    .setHeader("authorization", "Bearer ${gitHubToken.token}")
-                    .build(),
-                HttpResponse.BodyHandlers.ofString()
-            ).let { response ->
-                val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
-                auditor.event(RequestCompleted(
-                    uploadUri,
-                    response.statusCode(),
-                    responseHeaders,
-                    response.body()
-                ))
-                if (response.statusCode() != 201) {
-                    UploadArtifactOutcome.Failure(
-                        Failure.InvalidResponseCode(
-                            uploadUri,
-                            response.statusCode(),
-                            201,
-                            responseHeaders,
-                            response.body()
-                        )
-                    )
-                } else {
-                    UploadArtifactOutcome.Success
-                }
-            }
-        }
-
-    }
-
-    override fun latestReleaseVersion() = runBlocking(IO) {
+    private fun <T> executeRequest(request: HttpRequest, expectedResponseCode: Int, responseBodyHandler: (String) -> T) = runBlocking(IO) {
         try {
             httpClient.sendAsync(
-                baseHttpRequestBuilder(pagedReleasesUri).GET().build(),
+                request,
                 HttpResponse.BodyHandlers.ofString()
             ).orTimeout(endToEndTimeout.inWholeMilliseconds, MILLISECONDS).await().let { response ->
                 val responseHeaders = response.headers().map().flatMap { entry -> entry.value.map { entry.key to it } }
                 runCatching {
-                    auditor.event(RequestCompleted(
-                        pagedReleasesUri,
-                        response.statusCode(),
-                        responseHeaders,
-                        response.body()
-                    ))
-                    if (response.statusCode() != 200) {
-                        GitHub.ReleaseVersionOutcome.Failure(
+                    auditor.event(
+                        RequestCompleted(
+                            request.uri(),
+                            response.statusCode(),
+                            responseHeaders,
+                            response.body()
+                        )
+                    )
+                    if (response.statusCode() != expectedResponseCode) {
+                        Outcome.Failure(
                             Failure.InvalidResponseCode(
-                                pagedReleasesUri,
+                                request.uri(),
                                 response.statusCode(),
-                                200,
+                                expectedResponseCode,
                                 responseHeaders,
                                 response.body()
                             )
                         )
                     } else {
-                        GitHub.ReleaseVersionOutcome.Success(
-                            JsonParser().parse(response.body()).getArrayNode().map { release ->
-                                release.getStringValue("tag_name")
-                            }.map { releaseString ->
-                                VersionNumber.fromString(releaseString)
-                            }.maxOf { it }
-                        )
+                        Outcome.Success(responseBodyHandler(response.body()))
                     }
                 }.getOrElse { exception ->
-                    GitHub.ReleaseVersionOutcome.Failure(Failure.ResponseHandlingException(pagedReleasesUri, response.statusCode(), responseHeaders, response.body(), exception))
+                    Outcome.Failure(
+                        Failure.ResponseHandlingException(
+                            request.uri(),
+                            response.statusCode(),
+                            responseHeaders,
+                            response.body(),
+                            exception
+                        )
+                    )
                 }
             }
         } catch (exception: HttpConnectTimeoutException) {
-            auditor.event(AuditEvent.RequestFailed(pagedReleasesUri, exception))
-            GitHub.ReleaseVersionOutcome.Failure(Failure.ConnectTimeout(pagedReleasesUri, connectTimeout, exception))
+            auditor.event(AuditEvent.RequestFailed(request.uri(), exception))
+            Outcome.Failure(Failure.ConnectTimeout(request.uri(), connectTimeout, exception))
         } catch (exception: HttpTimeoutException) {
-            auditor.event(AuditEvent.RequestFailed(pagedReleasesUri, exception))
-            GitHub.ReleaseVersionOutcome.Failure(Failure.FirstByteTimeout(pagedReleasesUri, firstByteTimeout, exception))
+            auditor.event(AuditEvent.RequestFailed(request.uri(), exception))
+            Outcome.Failure(Failure.FirstByteTimeout(request.uri(), firstByteTimeout, exception))
         } catch (exception: TimeoutException) {
-            auditor.event(AuditEvent.RequestFailed(pagedReleasesUri, exception))
-            GitHub.ReleaseVersionOutcome.Failure(Failure.EndToEndTimeout(pagedReleasesUri, endToEndTimeout, exception))
+            auditor.event(AuditEvent.RequestFailed(request.uri(), exception))
+            Outcome.Failure(Failure.EndToEndTimeout(request.uri(), endToEndTimeout, exception))
         } catch (exception: Exception) {
-            auditor.event(AuditEvent.RequestFailed(pagedReleasesUri, exception))
-            GitHub.ReleaseVersionOutcome.Failure(Failure.RequestSubmittingException(pagedReleasesUri, exception))
+            auditor.event(AuditEvent.RequestFailed(request.uri(), exception))
+            Outcome.Failure(Failure.RequestSubmittingException(request.uri(), exception))
+        }
+    }
+
+    fun privileged(gitHubUploadAuthority: GitHubUploadAuthority, gitHubToken: GitHubToken): PrivilegedGitHub = object : PrivilegedGitHub {
+
+        override fun release(versionNumber: VersionNumber.ReleaseVersion) = executeRequest(
+            baseHttpRequestBuilder(releasesUri)
+                .POST(BodyPublishers.ofString(JsonGenerator().generate(`object`(field("tag_name", string(versionNumber.toString()))))))
+                .setHeader("content-type", "application/json")
+                .setHeader("authorization", "Bearer ${gitHubToken.token}")
+                .build(),
+            201
+        ) { ReleaseId(JsonParser().parse(it).getNumberValue("id")) }
+            .let {
+                when (it) {
+                    is Outcome.Success -> ReleaseOutcome.Success(it.value)
+                    is Outcome.Failure -> ReleaseOutcome.Failure(it.failure)
+                }
+            }
+
+
+        override fun uploadArtifact(versionNumber: VersionNumber.ReleaseVersion, releaseId: ReleaseId, path: Path) = executeRequest(
+            baseHttpRequestBuilder(
+                https(
+                    gitHubUploadAuthority.authority,
+                    path("repos", "svg2ico", "svg2ico", "releases", releaseId.value, "assets"),
+                    queryParameters(
+                        queryParameter("name", "svg2ico-${versionNumber}.jar"),
+                        queryParameter("label", "Jar")
+                    )
+                ).asUri()
+            )
+                .POST(BodyPublishers.ofFile(path))
+                .setHeader("content-type", "application/java-archive")
+                .setHeader("authorization", "Bearer ${gitHubToken.token}")
+                .build(),
+            201
+        ) { }
+            .let {
+                when (it) {
+                    is Outcome.Success -> UploadArtifactOutcome.Success
+                    is Outcome.Failure -> UploadArtifactOutcome.Failure(it.failure)
+                }
+            }
+
+    }
+
+    override fun latestReleaseVersion() = executeRequest(baseHttpRequestBuilder(pagedReleasesUri).GET().build(), 200) { responseBody ->
+        JsonParser().parse(responseBody).getArrayNode().map { release ->
+            release.getStringValue("tag_name")
+        }.map { releaseString ->
+            VersionNumber.fromString(releaseString)
+        }.maxOf { it }
+    }.let {
+        when(it) {
+            is Outcome.Success -> ReleaseVersionOutcome.Success(it.value)
+            is Outcome.Failure -> ReleaseVersionOutcome.Failure(it.failure)
         }
     }
 
@@ -187,6 +170,11 @@ class GitHubHttp(
         .setHeader("x-github-api-version", "2022-11-28")
         .setHeader("user-agent", "svg2ico-build")
         .timeout(firstByteTimeout.toJavaDuration())
+
+    private sealed interface Outcome<T> {
+        data class Success<T>(val value: T): Outcome<T>
+        data class Failure<T>(val failure: release.github.Failure): Outcome<T>
+    }
 
     data class GitHubApiAuthority(val authority: Authority) {
         companion object {

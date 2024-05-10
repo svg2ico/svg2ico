@@ -13,6 +13,7 @@ package release.github
 import argo.InvalidSyntaxException
 import argo.JsonParser
 import argo.jdom.JsonNodeFactories.*
+import com.sun.net.httpserver.HttpHandler
 import io.kotest.assertions.assertSoftly
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forOne
@@ -31,9 +32,11 @@ import net.sourceforge.urin.Path.path
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameter
 import net.sourceforge.urin.scheme.http.HttpQuery.queryParameters
 import net.sourceforge.urin.scheme.http.Https.https
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.DynamicContainer.dynamicContainer
+import org.junit.jupiter.api.DynamicNode
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
+import org.junit.jupiter.api.TestFactory
 import release.VersionNumber
 import release.github.ConnectionRefusingServer.Companion.connectionRefusingServer
 import release.github.FakeHttpServer.Companion.fakeHttpServer
@@ -42,19 +45,20 @@ import release.github.GitHubHttp.AuditEvent.RequestCompleted
 import release.github.GitHubHttp.AuditEvent.RequestFailed
 import release.github.GitHubHttp.GitHubApiAuthority
 import release.github.GitHubHttp.GitHubUploadAuthority
+import release.github.GitHubHttpTest.FakeServers.Companion.fakeServers
 import release.github.PrivilegedGitHub.*
 import release.pki.PkiTestingFactories.Companion.aPublicKeyInfrastructure
 import release.pki.ReleaseTrustStore
-import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 import release.utilities.withTemporaryFile
+import release.utilities.withTimeout
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.TimeoutException
+import javax.net.ssl.KeyManager
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -76,13 +80,7 @@ class GitHubHttpTest {
     fun `test suites`(): List<DynamicNode> {
         return listOf(
             object : TestSuite<ReleaseVersionOutcome>("latest release version") {
-                override val executor = { apiAuthority: GitHubApiAuthority, _: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                    GitHubHttp(
-                        apiAuthority,
-                        publicKeyInfrastructure.releaseTrustStore,
-                        auditor
-                    ).latestReleaseVersion()
-                }
+                override val executor = { gitHubHttp: GitHubHttp, _: GitHubUploadAuthority -> gitHubHttp.latestReleaseVersion() }
                 override val validResponseCode = 200
                 override val sunnyDayResponse = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY
                 override val sunnyDayAssertion: (outcome: ReleaseVersionOutcome) -> Unit = { it.shouldBeInstanceOf<ReleaseVersionOutcome.Success>().versionNumber shouldBe VersionNumber.ReleaseVersion.of(1, 82) }
@@ -95,16 +93,14 @@ class GitHubHttpTest {
                 }
                 override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe byteArrayOf() } }
                 override val failureOutcomeAssertions: (outcome: ReleaseVersionOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure }
+                override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
             },
             object : TestSuite<ReleaseOutcome>("create release") {
                 private val gitHubToken = "MY_TOKEN"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
-                override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
-                    GitHubHttp(
-                        apiAuthority,
-                        publicKeyInfrastructure.releaseTrustStore,
-                        auditor
-                    ).privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
+                override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
+                    gitHubHttp
+                        .privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
                         .release(versionNumber)
                 }
                 override val validResponseCode = 201
@@ -129,23 +125,18 @@ class GitHubHttpTest {
                 }
                 override val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { requestBodies -> requestBodies.shouldBeSingleton { JsonParser().parse(it.toString(UTF_8)) shouldBe `object`(field("tag_name", string(versionNumber.toString()))) } }
                 override val failureOutcomeAssertions: (outcome: ReleaseOutcome) -> Failure = { outcome -> outcome.shouldBeInstanceOf<ReleaseOutcome.Failure>().failure }
+                override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
             },
-            object : TestSuite<UploadArtifactOutcome>("upload artifact") {
+            object : TestSuite<UploadArtifactOutcome>("upload artifact") { // TODO slow upload test
                 private val gitHubToken = "MY_TOKEN"
                 private val releaseId = "152871162"
                 private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
                 private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
-                override val executor = { apiAuthority: GitHubApiAuthority, uploadAuthority: GitHubUploadAuthority, auditor: Auditor<GitHubHttp.AuditEvent> ->
+                override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
                     withTemporaryFile(fileContents) { file ->
-                        GitHubHttp(
-                            apiAuthority,
-                            publicKeyInfrastructure.releaseTrustStore,
-                            auditor
-                        ).privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken)).uploadArtifact(
-                            versionNumber,
-                            ReleaseId(releaseId),
-                            file
-                        )
+                        gitHubHttp
+                            .privileged(uploadAuthority, GitHubHttp.GitHubToken(gitHubToken))
+                            .uploadArtifact(versionNumber, ReleaseId(releaseId), file)
                     }
                 }
                 override val validResponseCode = 201
@@ -182,8 +173,8 @@ class GitHubHttpTest {
         ).map { it.toDynamicNode() }
     }
 
-    private abstract inner class TestSuite<OUTCOME>(val name: String) {
-        abstract val executor: (GitHubApiAuthority, GitHubUploadAuthority, Auditor<GitHubHttp.AuditEvent>) -> OUTCOME
+    private abstract inner class TestSuite<OUTCOME>(val name: String) { // TODO this is only an inner class to get access to the PKI
+        abstract val executor: (GitHubHttp, GitHubUploadAuthority) -> OUTCOME
         abstract val validResponseCode: Int
         abstract val sunnyDayResponse: String
         abstract val sunnyDayAssertion: (outcome: OUTCOME) -> Unit
@@ -192,48 +183,47 @@ class GitHubHttpTest {
         open val apiRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { it.shouldBeEmpty() }
         open val uploadRequestBodiesAssertions: (requestBodies: List<ByteArray>) -> Unit = { it.shouldBeEmpty() }
         abstract val failureOutcomeAssertions: (outcome: OUTCOME) -> Failure
+        open val supplementaryTests: List<DynamicTest> = emptyList()
 
         private fun sunnyDay(): DynamicTest = dynamicTest("sunny day") {
             val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
             val apiRequestBodies = mutableListOf<ByteArray>()
             val uploadRequestBodies = mutableListOf<ByteArray>()
-            fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            fakeServers(publicKeyInfrastructure.keyManagers, { exchange ->
                 exchange.requestBody.use { requestBody ->
                     apiRequestBodies.add(requestBody.readBytes())
                 }
                 exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
                 exchange.responseBody.use { it.write(responseBodyBytes) }
-            }.use { fakeApiServer ->
-                fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-                    exchange.requestBody.use { requestBody ->
-                        uploadRequestBodies.add(requestBody.readBytes())
-                    }
-                    exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
-                    exchange.responseBody.use { it.write(responseBodyBytes) }
-                }.use { fakeUploadServer ->
-                    val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-                    val releaseVersionOutcome = executor(GitHubApiAuthority(fakeApiServer.authority), GitHubUploadAuthority(fakeUploadServer.authority), recordingAuditor)
-                    sunnyDayAssertion(releaseVersionOutcome)
-                    recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                        element.shouldBeInstanceOf<RequestCompleted>().also {
-                            assertSoftly(element) {
-                                it.uri shouldBe expectedUri(fakeApiServer.authority, fakeUploadServer.authority)
-                                it.statusCode shouldBe validResponseCode
-                                it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                                it.responseBody shouldBe responseBody
-                            }
+            }, { exchange ->
+                exchange.requestBody.use { requestBody ->
+                    uploadRequestBodies.add(requestBody.readBytes())
+                }
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }).use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+                sunnyDayAssertion(outcome)
+                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                    element.shouldBeInstanceOf<RequestCompleted>().also {
+                        assertSoftly(element) {
+                            it.uri shouldBe expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+                            it.statusCode shouldBe validResponseCode
+                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
                         }
                     }
-                    apiRequestBodiesAssertions(apiRequestBodies)
-                    uploadRequestBodiesAssertions(uploadRequestBodies)
                 }
+                apiRequestBodiesAssertions(apiRequestBodies)
+                uploadRequestBodiesAssertions(uploadRequestBodies)
             }
         }
 
         private fun setsRequestHeaders(): DynamicTest = dynamicTest("sets request headers") {
             val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
             val receivedRequestHeaders = mutableListOf<Pair<String, String>>()
-            fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
                 exchange.requestHeaders.forEach { entry ->
                     entry.value.forEach { value ->
                         receivedRequestHeaders.add(entry.key to value)
@@ -241,32 +231,22 @@ class GitHubHttpTest {
                 }
                 exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
                 exchange.responseBody.use { it.write(responseBodyBytes) }
-            }.use { fakeApiServer ->
-                fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-                    exchange.requestHeaders.forEach { entry ->
-                        entry.value.forEach { value ->
-                            receivedRequestHeaders.add(entry.key to value)
-                        }
+            }.use { fakeServers ->
+                executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, {}), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+                receivedRequestHeaders
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "x-github-api-version"
+                        value shouldBe "2022-11-28"
                     }
-                    exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
-                    exchange.responseBody.use { it.write(responseBodyBytes) }
-                }.use { fakeUploadServer ->
-                    executor(GitHubApiAuthority(fakeApiServer.authority), GitHubUploadAuthority(fakeUploadServer.authority)) {}
-                    receivedRequestHeaders
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "x-github-api-version"
-                            value shouldBe "2022-11-28"
-                        }
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "accept"
-                            value shouldBe "application/vnd.github+json"
-                        }
-                        .forOne { (key, value) ->
-                            key shouldBeEqualIgnoringCase "user-agent"
-                            value shouldBe "svg2ico-build"
-                        }
-                    supplementaryRequestHeaderAssertions(receivedRequestHeaders)
-                }
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "accept"
+                        value shouldBe "application/vnd.github+json"
+                    }
+                    .forOne { (key, value) ->
+                        key shouldBeEqualIgnoringCase "user-agent"
+                        value shouldBe "svg2ico-build"
+                    }
+                supplementaryRequestHeaderAssertions(receivedRequestHeaders)
             }
         }
 
@@ -274,318 +254,327 @@ class GitHubHttpTest {
             val responseCode = 403
             val responseBody = """"you're not allowed to see this""""
             val responseBodyBytes = responseBody.toByteArray(UTF_8)
-            fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
                 exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
                 exchange.responseBody.use { it.write(responseBodyBytes) }
-            }.use { fakeApiServer ->
-                fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-                    exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
-                    exchange.responseBody.use { it.write(responseBodyBytes) }
-                }.use { fakeUploadServer ->
+            }.use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+
+                val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+
+                failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.InvalidResponseCode>()
+                    .also { failure ->
+                        assertSoftly(failure) {
+                            it.uri shouldBe expectedRequestUri
+                            it.expectedResponseCode shouldBe expectedResponseCode
+                            it.responseCode shouldBe responseCode
+                            it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                        }
+                    }
+                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                    element.shouldBeInstanceOf<RequestCompleted>().also {
+                        assertSoftly(element) {
+                            it.uri shouldBe expectedRequestUri
+                            it.statusCode shouldBe responseCode
+                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun handlesIoExceptionProcessingResponse() : DynamicTest = dynamicTest("handles IOException processing response") {
+            val responseBody = """"something short""""
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.sendResponseHeaders(validResponseCode, 1024)
+                exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
+            }.use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+
+                val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+
+                failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.RequestSubmittingException>()
+                    .also { failure ->
+                        assertSoftly(failure) {
+                            it.uri shouldBe expectedRequestUri
+                            it.exception.shouldBeInstanceOf<IOException>()
+                        }
+                    }
+                recordingAuditor.auditEvents().shouldExistInOrder(
+                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+                )
+            }
+        }
+
+        private fun handlesUnresolvableAddress() : DynamicTest = dynamicTest("handles unresolvable address") {
+            val authority = authority(registeredName("something.invalid"))
+            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+            val outcome = executor(GitHubHttp(GitHubApiAuthority(authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(authority))
+
+            val expectedRequestUri = expectedUri(authority, authority)
+
+            failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.RequestSubmittingException>()
+                .also { failure ->
+                    assertSoftly(failure) {
+                        it.uri shouldBe expectedRequestUri
+                        it.exception.shouldBeInstanceOf<IOException>()
+                    }
+                }
+            recordingAuditor.auditEvents().shouldExistInOrder(
+                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+            )
+        }
+
+        private fun handlesSslFailure() = dynamicTest("handles ssl failure") {
+            val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }.use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), ReleaseTrustStore(emptyList()), recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+
+                val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+
+                failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.RequestSubmittingException>()
+                    .also { failure ->
+                        assertSoftly(failure) {
+                            it.uri shouldBe expectedRequestUri
+                            it.exception.shouldBeInstanceOf<IOException>()
+                        }
+                    }
+                recordingAuditor.auditEvents().shouldExistInOrder(
+                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+                )
+            }
+        }
+
+        private fun handlesConnectTimeout() = dynamicTest("handles connect timeout") {
+            withTimeout(2.seconds) {
+                connectionRefusingServer(publicKeyInfrastructure).use { connectionRefusingServer ->
                     val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-                    val outcome = executor(GitHubApiAuthority(fakeApiServer.authority), GitHubUploadAuthority(fakeUploadServer.authority), recordingAuditor)
+                    val connectTimeout = 100.milliseconds
+                    val outcome = executor(
+                        GitHubHttp(
+                            GitHubApiAuthority(connectionRefusingServer.authority),
+                            publicKeyInfrastructure.releaseTrustStore,
+                            recordingAuditor,
+                            connectTimeout = connectTimeout,
+                            firstByteTimeout = 10.seconds,
+                            endToEndTimeout = 10.seconds,
+                        ),
+                        GitHubUploadAuthority(connectionRefusingServer.authority)
+                    )
+                    val expectedRequestUri = expectedUri(connectionRefusingServer.authority, connectionRefusingServer.authority)
 
-                    val expectedRequestUri = expectedUri(fakeApiServer.authority, fakeUploadServer.authority)
-
-                    failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.InvalidResponseCode>()
+                    failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.ConnectTimeout>()
                         .also { failure ->
                             assertSoftly(failure) {
                                 it.uri shouldBe expectedRequestUri
-                                it.expectedResponseCode shouldBe expectedResponseCode
-                                it.responseCode shouldBe responseCode
-                                it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
-                                it.responseBody shouldBe responseBody
+                                it.connectTimeout shouldBe connectTimeout
+                                it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
                             }
                         }
-                    recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                        element.shouldBeInstanceOf<RequestCompleted>().also {
-                            assertSoftly(element) {
-                                it.uri shouldBe expectedRequestUri
-                                it.statusCode shouldBe responseCode
-                                it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                                it.responseBody shouldBe responseBody
+                    recordingAuditor.auditEvents().shouldExistInOrder(
+                        { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpConnectTimeoutException }
+                    )
+                }
+            }
+        }
+
+        private fun handlesTimeoutAwaitingFirstResponseByte() = dynamicTest("handles timeout awaiting first response byte") {
+            withTimeout(2.seconds) {
+                val countDownLatch = CountDownLatch(1)
+                fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                    countDownLatch.await()
+                    exchange.sendResponseHeaders(validResponseCode, 2)
+                    exchange.responseBody.use { it.write("[]".toByteArray(UTF_8)) }
+                }.use { fakeServers ->
+                    val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                    try {
+                        val firstByteTimeout = 100.milliseconds
+                        val outcome = executor(
+                            GitHubHttp(
+                                GitHubApiAuthority(fakeServers.apiServerAuthority),
+                                publicKeyInfrastructure.releaseTrustStore,
+                                recordingAuditor,
+                                connectTimeout = 10.seconds,
+                                firstByteTimeout = firstByteTimeout,
+                                endToEndTimeout = 10.seconds
+                            ),
+                            GitHubUploadAuthority(fakeServers.uploadServerAuthority)
+                        )
+                        val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+                        failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.FirstByteTimeout>()
+                            .also { failure ->
+                                assertSoftly(failure) {
+                                    it.uri shouldBe expectedRequestUri
+                                    it.firstByteTimeout shouldBe firstByteTimeout
+                                    it.exception.shouldBeInstanceOf<HttpTimeoutException>().shouldNotBeInstanceOf<HttpConnectTimeoutException>()
+                                }
                             }
+                        recordingAuditor.auditEvents().shouldExistInOrder(
+                            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpTimeoutException && it.cause !is HttpConnectTimeoutException }
+                        )
+                    } finally {
+                        countDownLatch.countDown()
+                    }
+                }
+            }
+        }
+
+        private fun handlesTimeoutDuringSlowResponse() = dynamicTest("handles timeout during slow response") {
+            withTimeout(2.seconds) {
+                val countDownLatch = CountDownLatch(1)
+                fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                    exchange.sendResponseHeaders(validResponseCode, 23)
+                    exchange.responseBody.use {
+                        it.write("\"first part".toByteArray(UTF_8))
+                        countDownLatch.await()
+                        it.write("second part/".toByteArray(UTF_8))
+                    }
+                }.use { fakeServers ->
+                    val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                    try {
+                        val endToEndTimeout = 100.milliseconds
+                        val outcome = executor(
+                            GitHubHttp(
+                                GitHubApiAuthority(fakeServers.apiServerAuthority),
+                                publicKeyInfrastructure.releaseTrustStore,
+                                recordingAuditor,
+                                connectTimeout = 10.seconds,
+                                firstByteTimeout = 10.seconds,
+                                endToEndTimeout = endToEndTimeout
+                            ),
+                            GitHubUploadAuthority(fakeServers.uploadServerAuthority)
+                        )
+                        val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+                        failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.EndToEndTimeout>()
+                            .also { failure ->
+                                assertSoftly(failure) {
+                                    it.uri shouldBe expectedRequestUri
+                                    it.endToEndTimeout shouldBe endToEndTimeout
+                                    it.exception.shouldBeInstanceOf<TimeoutException>()
+                                }
+                            }
+                        recordingAuditor.auditEvents().shouldExistInOrder(
+                            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is TimeoutException }
+                        )
+                    } finally {
+                        countDownLatch.countDown()
+                    }
+                }
+            }
+        }
+
+        fun handlesUnexpectedlyShapedJsonResponse(): DynamicTest = dynamicTest("handles unexpectedly-shaped json response") {
+            val responseBody = """{}"""
+            val responseBodyBytes = responseBody.toByteArray(UTF_8)
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }.use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
+
+                val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+
+                failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.ResponseHandlingException>()
+                    .also { failure ->
+                        assertSoftly(failure) {
+                            it.uri shouldBe expectedRequestUri
+                            it.responseCode shouldBe validResponseCode
+                            it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                            it.exception.shouldBeInstanceOf<IllegalArgumentException>()
+                        }
+                    }
+                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                    element.shouldBeInstanceOf<RequestCompleted>().also {
+                        assertSoftly(element) {
+                            it.uri shouldBe expectedRequestUri
+                            it.statusCode shouldBe validResponseCode
+                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
                         }
                     }
                 }
             }
         }
 
+        fun handlesNonJsonResponse(): DynamicTest = dynamicTest("handles non-json response") {
+            val responseBody = """not json"""
+            val responseBodyBytes = responseBody.toByteArray(UTF_8)
+            fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                exchange.responseBody.use { it.write(responseBodyBytes) }
+            }.use { fakeServers ->
+                val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                val outcome = executor(GitHubHttp(GitHubApiAuthority(fakeServers.apiServerAuthority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor), GitHubUploadAuthority(fakeServers.uploadServerAuthority))
 
-        fun toDynamicNode() : DynamicNode = dynamicContainer(name, listOf(
-            sunnyDay(), setsRequestHeaders(), handlesUnexpectedResponseCode()
-        ))
-    }
+                val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
 
-    @Test
-    fun `handles unexpectedly-shaped json response`() {
-        val responseCode = 200
-        val responseBody = """{}"""
-        val responseBodyBytes = responseBody.toByteArray(UTF_8)
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBodyBytes) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
-                .latestReleaseVersion()
-            val expectedRequestUri =
-                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ResponseHandlingException>()
-                .also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.responseCode shouldBe responseCode
-                        it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
-                        it.responseBody shouldBe responseBody
-                        it.exception.shouldBeInstanceOf<IllegalArgumentException>()
+                failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.ResponseHandlingException>()
+                    .also { failure ->
+                        assertSoftly(failure) {
+                            it.uri shouldBe expectedRequestUri
+                            it.responseCode shouldBe validResponseCode
+                            it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                            it.exception.shouldBeInstanceOf<InvalidSyntaxException>()
+                        }
                     }
-                }
-            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                element.shouldBeInstanceOf<RequestCompleted>().also {
-                    assertSoftly(element) {
-                        it.uri shouldBe expectedRequestUri
-                        it.statusCode shouldBe responseCode
-                        it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                        it.responseBody shouldBe responseBody
+                recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
+                    element.shouldBeInstanceOf<RequestCompleted>().also {
+                        assertSoftly(element) {
+                            it.uri shouldBe expectedRequestUri
+                            it.statusCode shouldBe validResponseCode
+                            it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
+                            it.responseBody shouldBe responseBody
+                        }
                     }
                 }
             }
         }
-    }
 
-
-    @Test
-    fun `handles non-json response`() {
-        val responseCode = 200
-        val responseBody = """not json"""
-        val responseBodyBytes = responseBody.toByteArray(UTF_8)
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, responseBodyBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBodyBytes) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
-                .latestReleaseVersion()
-            val expectedRequestUri =
-                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ResponseHandlingException>()
-                .also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.responseCode shouldBe responseCode
-                        it.responseHeaders.shouldContain("content-length" to responseBodyBytes.size.toString())
-                        it.responseBody shouldBe responseBody
-                        it.exception.shouldBeInstanceOf<InvalidSyntaxException>()
-                    }
-                }
-            recordingAuditor.auditEvents().shouldBeSingleton().forAll { element ->
-                element.shouldBeInstanceOf<RequestCompleted>().also {
-                    assertSoftly(element) {
-                        it.uri shouldBe expectedRequestUri
-                        it.statusCode shouldBe responseCode
-                        it.headers.shouldContain("content-length" to responseBodyBytes.size.toString())
-                        it.responseBody shouldBe responseBody
-                    }
-                }
-            }
-        }
-    }
-
-
-    @Test
-    fun `handles IOException processing response`() {
-        val responseBody = """"something short""""
-        val responseCode = 200
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 1024)
-            exchange.responseBody.use { it.write(responseBody.toByteArray(UTF_8)) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), publicKeyInfrastructure.releaseTrustStore, recordingAuditor)
-                .latestReleaseVersion()
-            val expectedRequestUri =
-                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
-                .also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.exception.shouldBeInstanceOf<IOException>()
-                    }
-                }
-            recordingAuditor.auditEvents().shouldExistInOrder(
-                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
-            )
-        }
-    }
-
-
-    @Test
-    fun `handles unresolvable address`() {
-        val authority = authority(registeredName("something.invalid"))
-        val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-        val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(authority), defaultReleaseTrustStore, recordingAuditor).latestReleaseVersion()
-        val expectedRequestUri =
-            https(authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-        releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
-            .also { failure ->
-                assertSoftly(failure) {
-                    it.uri shouldBe expectedRequestUri
-                    it.exception.shouldBeInstanceOf<IOException>()
-                }
-            }
-        recordingAuditor.auditEvents().shouldExistInOrder(
-            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
+        fun toDynamicNode(): DynamicNode = dynamicContainer(
+            name, listOf(
+                sunnyDay(),
+                setsRequestHeaders(),
+                handlesUnexpectedResponseCode(),
+                handlesIoExceptionProcessingResponse(),
+                handlesUnresolvableAddress(),
+                handlesSslFailure(),
+                handlesConnectTimeout(),
+                handlesTimeoutAwaitingFirstResponseByte(),
+                handlesTimeoutDuringSlowResponse(),
+            ) + supplementaryTests
         )
     }
 
+    interface FakeServers : AutoCloseable {
+        val apiServerAuthority: Authority
+        val uploadServerAuthority: Authority
 
-    @Test
-    fun `handles ssl failure`() {
-        val responseCode = 200
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            val responseBytes = SAMPLE_VALID_GET_RELEASES_RESPONSE_BODY.toByteArray(UTF_8)
-            exchange.sendResponseHeaders(responseCode, responseBytes.size.toLong())
-            exchange.responseBody.use { it.write(responseBytes) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val releaseVersionOutcome = GitHubHttp(GitHubApiAuthority(fakeGitHubServer.authority), ReleaseTrustStore(emptyList()), recordingAuditor)
-                .latestReleaseVersion()
-            val expectedRequestUri =
-                https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.RequestSubmittingException>()
-                .also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.exception.shouldBeInstanceOf<IOException>()
+        companion object {
+            fun fakeServers(keyManagers: List<KeyManager>, httpHandler: HttpHandler) = fakeServers(keyManagers, httpHandler, httpHandler)
+            fun fakeServers(keyManagers: List<KeyManager>, apiServerHttpHandler: HttpHandler, uploadServerHttpHandler: HttpHandler) : FakeServers {
+                val fakeApiServer = fakeHttpServer(keyManagers, apiServerHttpHandler)
+                val fakeUploadServer = fakeHttpServer(keyManagers, uploadServerHttpHandler)
+                return object : FakeServers {
+                    override val apiServerAuthority = fakeApiServer.authority
+                    override val uploadServerAuthority = fakeUploadServer.authority
+
+                    override fun close() {
+                        fakeUploadServer.close()
+                        fakeApiServer.close()
                     }
                 }
-            recordingAuditor.auditEvents().shouldExistInOrder(
-                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is IOException }
-            )
-        }
-    }
-
-
-    @Test
-    @Timeout(value = 2, unit = SECONDS)
-    fun `handles connect timeout`() {
-        connectionRefusingServer(publicKeyInfrastructure).use { connectionRefusingServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            val connectTimeout = 100.milliseconds
-            val releaseVersionOutcome = GitHubHttp(
-                GitHubApiAuthority(connectionRefusingServer.authority),
-                publicKeyInfrastructure.releaseTrustStore,
-                recordingAuditor,
-                connectTimeout = connectTimeout,
-                firstByteTimeout = 10.seconds,
-                endToEndTimeout = 10.seconds,
-            ).latestReleaseVersion()
-            val expectedRequestUri =
-                https(
-                    connectionRefusingServer.authority,
-                    path("repos", "svg2ico", "svg2ico", "releases"),
-                    queryParameters(queryParameter("per_page", "1"))
-                ).asUri()
-            releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.ConnectTimeout>()
-                .also { failure ->
-                    assertSoftly(failure) {
-                        it.uri shouldBe expectedRequestUri
-                        it.connectTimeout shouldBe connectTimeout
-                        it.exception.shouldBeInstanceOf<HttpConnectTimeoutException>()
-                    }
-                }
-            recordingAuditor.auditEvents().shouldExistInOrder(
-                { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpConnectTimeoutException }
-            )
-        }
-    }
-
-
-    @Test
-    @Timeout(value = 2, unit = SECONDS)
-    fun `handles timeout awaiting first response byte`() {
-        val responseCode = 200
-        val countDownLatch = CountDownLatch(1)
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            countDownLatch.await()
-            exchange.sendResponseHeaders(responseCode, 2)
-            exchange.responseBody.use { it.write("[]".toByteArray(UTF_8)) }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            try {
-                val firstByteTimeout = 100.milliseconds
-                val releaseVersionOutcome = GitHubHttp(
-                    GitHubApiAuthority(fakeGitHubServer.authority),
-                    publicKeyInfrastructure.releaseTrustStore,
-                    recordingAuditor,
-                    connectTimeout = 10.seconds,
-                    firstByteTimeout = firstByteTimeout,
-                    endToEndTimeout = 10.seconds
-                )
-                    .latestReleaseVersion()
-                val expectedRequestUri =
-                    https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.FirstByteTimeout>()
-                    .also { failure ->
-                        assertSoftly(failure) {
-                            it.uri shouldBe expectedRequestUri
-                            it.firstByteTimeout shouldBe firstByteTimeout
-                            it.exception.shouldBeInstanceOf<HttpTimeoutException>().shouldNotBeInstanceOf<HttpConnectTimeoutException>()
-                        }
-                    }
-                recordingAuditor.auditEvents().shouldExistInOrder(
-                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is HttpTimeoutException && it.cause !is HttpConnectTimeoutException }
-                )
-            } finally {
-                countDownLatch.countDown()
             }
         }
     }
-
-
-    @Test
-    @Timeout(value = 2, unit = SECONDS)
-    fun `handles timeout during slow response`() {
-        val responseCode = 200
-        val countDownLatch = CountDownLatch(1)
-        fakeHttpServer(publicKeyInfrastructure.keyManagers) { exchange ->
-            exchange.sendResponseHeaders(responseCode, 23)
-            exchange.responseBody.use {
-                it.write("\"first part".toByteArray(UTF_8))
-                countDownLatch.await()
-                it.write("second part/".toByteArray(UTF_8))
-            }
-        }.use { fakeGitHubServer ->
-            val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
-            try {
-                val endToEndTimeout = 100.milliseconds
-                val releaseVersionOutcome = GitHubHttp(
-                    GitHubApiAuthority(fakeGitHubServer.authority),
-                    publicKeyInfrastructure.releaseTrustStore,
-                    recordingAuditor,
-                    connectTimeout = 10.seconds,
-                    firstByteTimeout = 10.seconds,
-                    endToEndTimeout = endToEndTimeout
-                )
-                    .latestReleaseVersion()
-                val expectedRequestUri =
-                    https(fakeGitHubServer.authority, path("repos", "svg2ico", "svg2ico", "releases"), queryParameters(queryParameter("per_page", "1"))).asUri()
-                releaseVersionOutcome.shouldBeInstanceOf<ReleaseVersionOutcome.Failure>().failure.shouldBeInstanceOf<Failure.EndToEndTimeout>()
-                    .also { failure ->
-                        assertSoftly(failure) {
-                            it.uri shouldBe expectedRequestUri
-                            it.endToEndTimeout shouldBe endToEndTimeout
-                            it.exception.shouldBeInstanceOf<TimeoutException>()
-                        }
-                    }
-                recordingAuditor.auditEvents().shouldExistInOrder(
-                    { it is RequestFailed && it.uri == expectedRequestUri && it.cause is TimeoutException }
-                )
-            } finally {
-                countDownLatch.countDown()
-            }
-        }
-    }
-
 }
