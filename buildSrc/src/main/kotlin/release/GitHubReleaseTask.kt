@@ -25,6 +25,7 @@ import release.github.GitHubHttp.GitHubUploadAuthority.Companion.productionGitHu
 import release.github.LoggingAuditor
 import release.github.formatFailure
 import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
+import kotlin.time.Duration.Companion.seconds
 
 abstract class GitHubReleaseTask : DefaultTask() {
 
@@ -37,7 +38,7 @@ abstract class GitHubReleaseTask : DefaultTask() {
             is VersionNumber.DevelopmentVersion -> throw GradleException("Cannot release development version")
             is VersionNumber.ReleaseVersion -> {
                 val gitHubToken = project.property("gitHubToken").toString()
-                val privilegedGitHub = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, LoggingAuditor(project.logger))
+                val privilegedGitHub = GitHubHttp(productionGitHubApi, defaultReleaseTrustStore, LoggingAuditor(project.logger), firstByteTimeout = 30.seconds, endToEndTimeout = 30.seconds)
                     .privileged(productionGitHubUpload, GitHubToken(gitHubToken))
                 when (val releaseOutcome = privilegedGitHub.release(version)) {
                     is ReleaseOutcome.Success -> {
