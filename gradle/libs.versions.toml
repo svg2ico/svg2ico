@@ -3,7 +3,7 @@ junit = "5.10.2"
 bouncycastle = "1.78.1"
 
 [plugins]
-spotbugs = { id = "com.github.spotbugs", version = "6.0.9" }
+spotbugs = { id = "com.github.spotbugs", version = "6.0.14" }
 shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 svg2ico = { id = "com.gitlab.svg2ico", version = "1.4" }
