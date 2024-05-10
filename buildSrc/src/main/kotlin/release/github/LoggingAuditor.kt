@@ -16,7 +16,7 @@ import java.io.StringWriter
 
 class LoggingAuditor(private val logger: Logger) : Auditor<GitHubHttp.AuditEvent> {
     override fun event(auditEvent: GitHubHttp.AuditEvent) = when (auditEvent) {
-        is GitHubHttp.AuditEvent.RequestCompleted -> logger.info(StringWriter().also {
+        is GitHubHttp.AuditEvent.RequestCompleted -> logger.debug(StringWriter().also {
             PrintWriter(it).use { printWriter ->
                 printWriter.println("Completed request to ${auditEvent.uri}")
                 printWriter.println("response status code: ${auditEvent.statusCode}")
@@ -28,6 +28,6 @@ class LoggingAuditor(private val logger: Logger) : Auditor<GitHubHttp.AuditEvent
                 printWriter.println(auditEvent.responseBody)
             }
         }.toString())
-        is GitHubHttp.AuditEvent.RequestFailed -> logger.info("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
+        is GitHubHttp.AuditEvent.RequestFailed -> logger.debug("Failed request to ${auditEvent.uri} with exception", auditEvent.cause)
     }
 }
