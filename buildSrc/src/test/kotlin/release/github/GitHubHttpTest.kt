@@ -53,6 +53,7 @@ import release.pki.ReleaseTrustStore
 import release.utilities.withTemporaryFile
 import release.utilities.withTimeout
 import java.io.IOException
+import java.io.OutputStream.nullOutputStream
 import java.net.URI
 import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpTimeoutException
@@ -60,6 +61,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeoutException
 import javax.net.ssl.KeyManager
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -134,11 +136,11 @@ class GitHubHttpTest {
         override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
     }
 
-    private object UploadArtifact : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) { // TODO slow upload test
+    private object UploadArtifact : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) {
         private const val GIT_HUB_TOKEN = "MY_TOKEN"
         private const val RELEASE_ID = "152871162"
         private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
-        private val fileContents = byteArrayOf(0x0f, 0x0d, 0x7a)
+        private val fileContents = Random.Default.nextBytes(1024)
         override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
             withTemporaryFile(fileContents) { file ->
                 gitHubHttp
@@ -160,6 +162,7 @@ class GitHubHttpTest {
                     queryParameter("label", "Jar"),
                 )
             ).asUri()
+
         }
         override val supplementaryRequestHeaderAssertions: (requestHeaders: List<Pair<String, String>>) -> Unit = { requestHeaders ->
             requestHeaders
@@ -180,6 +183,7 @@ class GitHubHttpTest {
             { requestBodies -> requestBodies.shouldBeSingleton { it shouldBe fileContents } }
         override val failureOutcomeAssertions: (outcome: UploadArtifactOutcome) -> Failure =
             { outcome -> outcome.shouldBeInstanceOf<UploadArtifactOutcome.Failure>().failure }
+        override val supplementaryTests = listOf(handlesTimeoutDuringSlowRequestReceipt())
     }
 
     @TestFactory
@@ -455,6 +459,51 @@ class GitHubHttpTest {
                         countDownLatch.await()
                         it.write("second part/".toByteArray(UTF_8))
                     }
+                }.use { fakeServers ->
+                    val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
+                    try {
+                        val endToEndTimeout = 100.milliseconds
+                        val outcome = executor(
+                            GitHubHttp(
+                                GitHubApiAuthority(fakeServers.apiServerAuthority),
+                                publicKeyInfrastructure.releaseTrustStore,
+                                recordingAuditor,
+                                connectTimeout = 10.seconds,
+                                firstByteTimeout = 10.seconds,
+                                endToEndTimeout = endToEndTimeout
+                            ),
+                            GitHubUploadAuthority(fakeServers.uploadServerAuthority)
+                        )
+                        val expectedRequestUri = expectedUri(fakeServers.apiServerAuthority, fakeServers.uploadServerAuthority)
+                        failureOutcomeAssertions(outcome).shouldBeInstanceOf<Failure.EndToEndTimeout>()
+                            .also { failure ->
+                                assertSoftly(failure) {
+                                    it.uri shouldBe expectedRequestUri
+                                    it.endToEndTimeout shouldBe endToEndTimeout
+                                    it.exception.shouldBeInstanceOf<TimeoutException>()
+                                }
+                            }
+                        recordingAuditor.auditEvents().shouldExistInOrder(
+                            { it is RequestFailed && it.uri == expectedRequestUri && it.cause is TimeoutException }
+                        )
+                    } finally {
+                        countDownLatch.countDown()
+                    }
+                }
+            }
+        }
+
+        fun handlesTimeoutDuringSlowRequestReceipt(): DynamicTest = dynamicTest("handles timeout during slow request receipt") {
+            withTimeout(2.seconds) {
+                val responseBodyBytes = sunnyDayResponse.toByteArray(UTF_8)
+                val countDownLatch = CountDownLatch(1)
+                fakeServers(publicKeyInfrastructure.keyManagers) { exchange ->
+                    exchange.requestBody.use {
+                        countDownLatch.await()
+                        it.transferTo(nullOutputStream())
+                    }
+                    exchange.sendResponseHeaders(validResponseCode, responseBodyBytes.size.toLong())
+                    exchange.responseBody.use { it.write(responseBodyBytes) }
                 }.use { fakeServers ->
                     val recordingAuditor = RecordingAuditor<GitHubHttp.AuditEvent>()
                     try {
