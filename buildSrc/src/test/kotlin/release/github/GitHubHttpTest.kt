@@ -71,7 +71,7 @@ class GitHubHttpTest {
         private val publicKeyInfrastructure = aPublicKeyInfrastructure()
     }
 
-    private object LatestReleaseVersion : TestSuite<ReleaseVersionOutcome>("latest release version", publicKeyInfrastructure) {
+    private object LatestReleaseVersionTestSuite : TestSuite<ReleaseVersionOutcome>("latest release version", publicKeyInfrastructure) {
         override val executor = { gitHubHttp: GitHubHttp, _: GitHubUploadAuthority -> gitHubHttp.latestReleaseVersion() }
         override val validResponseCode = 200
         @Suppress("SpellCheckingInspection")
@@ -90,7 +90,7 @@ class GitHubHttpTest {
         override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
     }
 
-    private object CreateRelease : TestSuite<ReleaseOutcome>("create release", publicKeyInfrastructure) {
+    private object CreateReleaseTestSuite : TestSuite<ReleaseOutcome>("create release", publicKeyInfrastructure) {
         private const val GIT_HUB_TOKEN = "MY_TOKEN"
         private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
         override val executor = { gitHubHttp: GitHubHttp, uploadAuthority: GitHubUploadAuthority ->
@@ -136,7 +136,7 @@ class GitHubHttpTest {
         override val supplementaryTests = listOf(handlesUnexpectedlyShapedJsonResponse(), handlesNonJsonResponse())
     }
 
-    private object UploadArtifact : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) {
+    private object UploadArtifactTestSuite : TestSuite<UploadArtifactOutcome>("upload artifact", publicKeyInfrastructure) {
         private const val GIT_HUB_TOKEN = "MY_TOKEN"
         private const val RELEASE_ID = "152871162"
         private val versionNumber = VersionNumber.ReleaseVersion.of(1, 82)
@@ -189,9 +189,9 @@ class GitHubHttpTest {
     @TestFactory
     fun `test suites`(): List<DynamicNode> {
         return listOf(
-            LatestReleaseVersion,
-            CreateRelease,
-            UploadArtifact,
+            LatestReleaseVersionTestSuite,
+            CreateReleaseTestSuite,
+            UploadArtifactTestSuite,
         ).map { it.toDynamicNode() }
     }
 
