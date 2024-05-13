@@ -11,7 +11,7 @@ jobs:
       - run: ./gradlew buildSrc:build clean build
       - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: test-reports
+          name: Test Reports
           path: |
             build/reports/tests/
             buildSrc/build/reports/tests/
