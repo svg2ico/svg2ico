@@ -43,11 +43,23 @@ java {
 
 dependencies {
     implementation(libs.ant)
-    implementation(libs.batikRasterizer)
+    implementation(libs.batikTranscoder)
     implementation(libs.commonsCli)
     implementation(libs.image4j)
 
     spotbugs(libs.spotbugs)
+}
+
+testing {
+    @Suppress("UnstableApiUsage")
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter(libs.versions.junit)
+            dependencies {
+                implementation(libs.commonsIO)
+            }
+        }
+    }
 }
 
 tasks {

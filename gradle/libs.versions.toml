@@ -13,9 +13,11 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
 
 [libraries]
 ant = { group = "org.apache.ant", name = "ant", version = "1.10.14" }
-batikRasterizer = { group = "org.apache.xmlgraphics", name = "batik-rasterizer", version = "1.17" }
+batikTranscoder = { group = "org.apache.xmlgraphics", name = "batik-transcoder", version = "1.17" }
 commonsCli = { group = "commons-cli", name = "commons-cli", version = "1.7.0" }
 image4j = { group = "org.jclarion", name = "image4j", version = "0.7" }
+
+commonsIO = { group = "commons-io", name = "commons-io", version = "2.16.1" }
 
 spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.5" }
 
