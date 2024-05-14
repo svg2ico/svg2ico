@@ -31,8 +31,10 @@ plugins {
     id("release")
 }
 
-group = "net.sourceforge.svg2ico"
-description = "svg2ico converts images in SVG format to ICO."
+allprojects {
+    group = "net.sourceforge.svg2ico"
+    description = "svg2ico converts images in SVG format to ICO."
+}
 
 dependencies {
     releaseJar(project(":svg2ico", "shadow"))

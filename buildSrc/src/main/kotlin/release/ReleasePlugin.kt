@@ -26,8 +26,11 @@ import release.pki.ReleaseTrustStore.Companion.defaultReleaseTrustStore
 
 class ReleasePlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        target.version = determineVersion(target).also {
+        val versionNumber = determineVersion(target).also {
             target.logger.info("Using version $it")
+        }
+        target.allprojects {
+            version = versionNumber
         }
         val releaseJar: Configuration by target.configurations.creating
         val releaseUserGuide: Configuration by target.configurations.creating
