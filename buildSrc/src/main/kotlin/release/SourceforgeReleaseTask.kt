@@ -18,11 +18,10 @@ import com.sshtools.common.ssh.Channel
 import com.sshtools.common.ssh.ChannelEventListener
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -32,11 +31,11 @@ import java.nio.charset.StandardCharsets.US_ASCII
 
 abstract class SourceforgeReleaseTask : DefaultTask() {
 
-    @get:InputFile
-    abstract val jar: RegularFileProperty
+    @get:InputFiles
+    abstract val jarFileCollection: ConfigurableFileCollection
 
-    @get:InputFile
-    abstract val documentationTar: RegularFileProperty
+    @get:InputFiles
+    abstract val userGuideFileCollection: ConfigurableFileCollection
 
     @TaskAction
     fun release() {
@@ -45,6 +44,8 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
         }
         val username = "${project.property("sourceforgeUser")},svg2ico"
         val password = project.property("sourceforgePassword").toString().toCharArray()
+        val userGuide = userGuideFileCollection.singleFile
+        val jar = jarFileCollection.singleFile
         try {
             retrying {
                 SshClient.SshClientBuilder.create()
@@ -64,7 +65,7 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
                     .withPassword(password)
                     .build()
             }.use {
-                it.executePut(documentationTar, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
+                it.executePut(userGuide, "/home/project-web/svg2ico/documentation-${project.version}.tgz")
                 it.executePut(jar, "/home/frs/project/svg2ico/${project.version}/svg2ico-${project.version}.jar")
             }
             retrying {
@@ -146,11 +147,11 @@ abstract class SourceforgeReleaseTask : DefaultTask() {
         }
     }
 
-    private fun SshClient.executePut(localFile: Provider<RegularFile>, remotePath: String) {
+    private fun SshClient.executePut(localFile: File, remotePath: String) {
         runTask(
             UploadFileTaskBuilder.create()
                 .withClient(this)
-                .withLocalFile(localFile.get().asFile)
+                .withLocalFile(localFile)
                 .withRemotePath(remotePath)
                 .build()
         )

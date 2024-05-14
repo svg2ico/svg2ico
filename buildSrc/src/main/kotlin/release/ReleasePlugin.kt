@@ -12,6 +12,9 @@ package release
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
+import org.gradle.kotlin.dsl.creating
+import org.gradle.kotlin.dsl.getValue
 import release.github.Failure.ExceptionalFailure
 import release.github.GitHub.ReleaseVersionOutcome.Failure
 import release.github.GitHub.ReleaseVersionOutcome.Success
@@ -26,15 +29,16 @@ class ReleasePlugin : Plugin<Project> {
         target.version = determineVersion(target).also {
             target.logger.info("Using version $it")
         }
-        val extension = target.extensions.create("releasing", ReleasePluginExtension::class.java)
+        val releaseJar: Configuration by target.configurations.creating
+        val releaseUserGuide: Configuration by target.configurations.creating
         target.tasks.register("sourceforgeRelease", SourceforgeReleaseTask::class.java) {
             group = "publishing"
-            jar.set(extension.jar)
-            documentationTar.set(extension.documentationTar)
+            jarFileCollection.from(releaseJar)
+            userGuideFileCollection.from(releaseUserGuide)
         }
         target.tasks.register("gitHubRelease", GitHubReleaseTask::class.java) {
             group = "publishing"
-            jar.set(extension.jar)
+            jarFileCollection.from(releaseJar)
         }
     }
 
