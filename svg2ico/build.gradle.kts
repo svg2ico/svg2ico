@@ -29,6 +29,9 @@ repositories {
     mavenCentral()
 }
 
+group = "net.sourceforge.svg2ico"
+description = "svg2ico converts images in SVG format to ICO."
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(8)
