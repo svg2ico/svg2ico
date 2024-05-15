@@ -43,8 +43,8 @@ testing {
 
 @Suppress("UnstableApiUsage")
 gradlePlugin {
-    website.set("https://gitlab.com/svg2ico/svg2ico-gradle-plugin")
-    vcsUrl.set("https://gitlab.com/svg2ico/svg2ico-gradle-plugin.git")
+    website.set("https://svg2ico.sourceforge.net")
+    vcsUrl.set("https://github.com/svg2ico/svg2ico.git")
     plugins {
         create("svg2IcoPlugin") {
             id = "com.gitlab.svg2ico"
