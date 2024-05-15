@@ -131,8 +131,6 @@ val documentationTar by tasks.registering(Tar::class) {
 }
 
 artifacts {
-    archives(javadocJar)
-    archives(sourcesJar)
     add(userGuide.name, documentationTar) {
         classifier = "userGuide"
     }
