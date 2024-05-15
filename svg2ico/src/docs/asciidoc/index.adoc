@@ -13,7 +13,7 @@ The project is https://github.com/svg2ico/svg2ico[hosted on GitHub].
 
 == Downloads
 
-Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2 license]. It can be downloaded in three forms:
+Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2 license]. It can be downloaded in four forms:
 
 - a https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[jar], with source code and shadowed dependencies included,
 - as a Maven dependency from https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico[Maven Central], using
@@ -26,9 +26,132 @@ Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2
     <version>{revnumber}</version>
 </dependency>
 ----
+- as a Gradle plugin, from the https://plugins.gradle.org/plugin/com.gitlab.svg2ico[Gradle Plugin Portal] using
+
+[source,kotlin,subs="+attributes"]
+----
+plugins {
+    id("com.gitlab.svg2ico") version "{revnumber}"
+}
+----
 - or as the full source code including tests etc. using Git from link:https://github.com/svg2ico/svg2ico.git[].
 
 https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico/versions[Previous versions] are also available.
+
+== Gradle Instructions
+
+=== Add the plugin to your build
+
+Either Kotlin:
+
+[source,kotlin,subs="+attributes"]
+----
+plugins {
+    id("com.gitlab.svg2ico") version "{revnumber}"
+}
+----
+
+or Groovy:
+
+[source,groovy,subs="+attributes"]
+----
+plugins {
+    id 'com.gitlab.svg2ico' version '{revnumber}'
+}
+----
+
+=== Add a task to make an ICO
+
+Kotlin:
+
+[source,kotlin]
+----
+tasks.register("ico", com.gitlab.svg2ico.Svg2IcoTask::class) {
+    source {
+        sourcePath = file("resources/favicon.svg")
+    }
+    destination = project.layout.buildDirectory.file("icons/favicon.ico")
+}
+----
+
+Groovy:
+
+[source,groovy]
+----
+task ico (type : Svg2IcoTask) {
+    source {
+        sourcePath = file('resources/favicon.svg')
+    }
+    destination = project.layout.buildDirectory.file('icons/favicon.ico')
+}
+----
+
+=== Add a task to make a PNG
+
+Kotlin:
+
+[source,kotlin]
+----
+tasks.register("png", com.gitlab.svg2ico.Svg2PngTask::class) {
+    source = file("resources/favicon.svg")
+    width = 128
+    height = 128
+    destination = project.layout.buildDirectory.file("icons/favicon.png")
+}
+----
+
+Groovy:
+
+[source,groovy]
+----
+task png (type : Svg2PngTask) {
+    source = file('resources/favicon.svg')
+    width = 128
+    height = 128
+    destination = project.layout.buildDirectory.file('icons/favicon.png')
+}
+----
+
+=== Stylesheets
+
+Both tasks accept a `userStyleSheet` parameter to specify a stylesheet to apply to the SVG, for example:
+
+[source,kotlin]
+----
+tasks.register("ico", com.gitlab.svg2ico.Svg2IcoTask::class) {
+    source {
+        sourcePath = file("resources/favicon.svg")
+        userStyleSheet = file("resources/user.css")
+    }
+    destination = project.layout.buildDirectory.file("icons/favicon.ico")
+}
+----
+
+=== Refinements to ICO output
+
+An ICO file can contain images at multiple resolutions, allowing the client to pick the most appropriate resolution.  By default, the `svg2ico` task will produce an ICO containing 64 x 64, 48 x 48, 32 x 32, 24 x 24, and 16 x 16 pixel resolutions.
+
+The task supports specifying a different set of resolutions if you want to reduce the file size, or if you know the ICO will be rendered at a particular resolution, for example.
+
+It's also possible to specify different source SVGs for different resolutions, so you can use a detailed source SVG for high resolutions and a simplified one for low resolutions.
+
+The following example makes an ICO with a 64 x 64 image from a detailed SVG, and a 32 x 32 image from a simplified SVG.
+
+[source,kotlin]
+----
+tasks.register("ico", com.gitlab.svg2ico.Svg2IcoTask::class) {
+    source {
+        sourcePath = file("resources/detailed-favicon.svg")
+        output { width = 64; height = 64 }
+    }
+    source {
+        sourcePath = file("resources/simplified-favicon.svg")
+        output { width = 32; height = 32 }
+    }
+    destination = project.layout.buildDirectory.file("icons/favicon.ico")
+}
+----
+
 
 == Command Line Example
 
