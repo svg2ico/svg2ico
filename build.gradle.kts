@@ -29,7 +29,7 @@ dependencies {
 tasks {
     val release by registering {
         group = "publishing"
-        dependsOn("svg2ico:build", "svg2ico:publish", closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease)
+        dependsOn("svg2ico:build", "svg2ico:publish", closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease, "svg2ico-gradle-plugin:publishPlugins")
     }
 }
 
