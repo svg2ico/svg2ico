@@ -15,3 +15,5 @@ jobs:
           path: |
             build/reports/tests/
             buildSrc/build/reports/tests/
+            svg2ico/build/reports/tests/
+            svg2ico-gradle-plugin/build/reports/tests/
