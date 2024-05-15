@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.commonsCli)
     implementation(libs.image4j)
 
+    runtimeOnly(libs.batikCodec)
+
     spotbugs(libs.spotbugs)
 }
 

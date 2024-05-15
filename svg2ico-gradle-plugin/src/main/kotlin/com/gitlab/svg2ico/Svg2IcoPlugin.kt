@@ -8,10 +8,16 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version ("0.8.0")
+package com.gitlab.svg2ico
+
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+
+@Suppress("unused")
+class Svg2IcoPlugin : Plugin<Project> {
+
+    override fun apply(project: Project) {
+        project.extensions.extraProperties["Svg2IcoTask"] = Svg2IcoTask::class.java
+        project.extensions.extraProperties["Svg2PngTask"] = Svg2PngTask::class.java
+    }
 }
-
-rootProject.name = "svg2ico-root"
-
-include("svg2ico", "svg2ico-gradle-plugin")
