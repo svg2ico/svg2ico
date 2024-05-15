@@ -14,4 +14,4 @@ plugins {
 
 rootProject.name = "svg2ico"
 
-include("svg2ico")
+include("core")
