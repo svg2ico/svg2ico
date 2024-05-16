@@ -15,7 +15,14 @@ The project is https://github.com/svg2ico/svg2ico[hosted on GitHub].
 
 Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2 license]. It can be downloaded in four forms:
 
-- a https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[jar], with source code and shadowed dependencies included,
+- as a Gradle plugin, from the https://plugins.gradle.org/plugin/com.gitlab.svg2ico[Gradle Plugin Portal] using
+
+[source,kotlin,subs="+attributes"]
+----
+plugins {
+    id("com.gitlab.svg2ico") version "{revnumber}"
+}
+----
 - as a Maven dependency from https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico[Maven Central], using
 
 [source,xml,subs="+attributes"]
@@ -26,14 +33,7 @@ Argo is available under the https://www.apache.org/licenses/LICENSE-2.0[Apache 2
     <version>{revnumber}</version>
 </dependency>
 ----
-- as a Gradle plugin, from the https://plugins.gradle.org/plugin/com.gitlab.svg2ico[Gradle Plugin Portal] using
-
-[source,kotlin,subs="+attributes"]
-----
-plugins {
-    id("com.gitlab.svg2ico") version "{revnumber}"
-}
-----
+- as a https://github.com/svg2ico/svg2ico/releases/download/{revnumber}/svg2ico-{revnumber}.jar[jar], to use as an Ant task or from the command line, with source code and shadowed dependencies included,
 - or as the full source code including tests etc. using Git from link:https://github.com/svg2ico/svg2ico.git[].
 
 https://central.sonatype.com/artifact/net.sourceforge.svg2ico/svg2ico/versions[Previous versions] are also available.
@@ -184,4 +184,4 @@ svg2ico can be used as an Ant task to convert `resources/favicon.svg` to an ICO 
 where `lib/build/svg2ico-{revnumber}.jar` points to where the svg2ico jar can be found. As with the command line, three optional attributes are supported. `depth` specifies the colour depth in bits per pixel, e.g. `depth="8"` outputs eight bits per pixel. `compress` causes the output to be compressed ICO, e.g. `compressed="true"`. `userStylesheet` specifies a user stylesheet to use for rendering, e.g. `userStylesheet="resources/favicon.css"`.
 
 == Credits
-svg2ico uses the excellent https://xmlgraphics.apache.org/batik/[Batik] and https://image4j.sourceforge.net/[image4j], included in the distribution using the equally excellent https://github.com/johnrengelman/shadow[Gradle Shadow plugin].
+svg2ico uses the excellent https://xmlgraphics.apache.org/batik/[Batik] and https://image4j.sourceforge.net/[image4j].

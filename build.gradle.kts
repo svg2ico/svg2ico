@@ -22,14 +22,14 @@ plugins {
 group = "net.sourceforge.svg2ico"
 
 dependencies {
-    releaseJar(project(":svg2ico", "shadow"))
+    releaseJar(project(":standalone", "shadow"))
     releaseUserGuide(project(":svg2ico", "userGuide"))
 }
 
 tasks {
     val release by registering {
         group = "publishing"
-        dependsOn("svg2ico:build", "svg2ico:publish", closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease, "svg2ico-gradle-plugin:publishPlugins")
+        dependsOn("svg2ico:build", "svg2ico:publish", "standalone:build", closeAndReleaseStagingRepositories, sourceforgeRelease, gitHubRelease, "svg2ico-gradle-plugin:publishPlugins")
     }
 }
 

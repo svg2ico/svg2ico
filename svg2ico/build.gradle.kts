@@ -20,7 +20,6 @@ plugins {
     `maven-publish`
     `jvm-test-suite`
     alias(libs.plugins.spotbugs)
-    alias(libs.plugins.shadow)
     alias(libs.plugins.svg2ico)
     alias(libs.plugins.asciidoctorConvert)
 }
@@ -41,9 +40,7 @@ java {
 val userGuide: Configuration by configurations.creating
 
 dependencies {
-    implementation(libs.ant)
     implementation(libs.batikTranscoder)
-    implementation(libs.commonsCli)
     implementation(libs.image4j)
 
     runtimeOnly(libs.batikCodec)
@@ -64,24 +61,6 @@ testing {
 }
 
 tasks {
-    jar {
-        manifest {
-            attributes["Main-Class"] = "net.sourceforge.svg2ico.CommandLine"
-        }
-    }
-
-    shadowJar {
-        relocate("net.sf.image4j", "net.sourceforge.svg2ico.shadowjar.net.sf.image4j")
-        relocate("org.apache.batik", "net.sourceforge.svg2ico.shadowjar.org.apache.batik")
-        relocate("org.apache.xmlgraphics", "net.sourceforge.svg2ico.shadowjar.org.apache.xmlgraphics")
-        relocate("org.w3c.dom.svg", "net.sourceforge.svg2ico.shadowjar.org.w3c.dom.svg")
-        relocate("org.apache.commons.cli", "net.sourceforge.svg2ico.shadowjar.org.apache.commons.cli")
-        relocate("org.w3c.css", "org.w3c.css")
-        relocate("org.w3c.dom", "org.w3c.dom")
-        exclude("**/org/w3c/dom/xpath/**/*")
-        exclude("**/org/w3c/dom/events/**/*")
-    }
-
     javadoc {
         title = "svg2ico version $version"
     }
@@ -141,9 +120,7 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifact(tasks.shadowJar) {
-                classifier = ""
-            }
+            from(components["java"])
             artifact(sourcesJar)
             artifact(javadocJar)
             pom {

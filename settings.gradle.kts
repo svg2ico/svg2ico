@@ -14,4 +14,4 @@ plugins {
 
 rootProject.name = "svg2ico-root"
 
-include("svg2ico", "svg2ico-gradle-plugin")
+include("svg2ico", "svg2ico-gradle-plugin", "standalone")
