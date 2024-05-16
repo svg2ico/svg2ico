@@ -24,7 +24,7 @@ commonsIO = { group = "commons-io", name = "commons-io", version = "2.16.1" }
 
 spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.5" }
 
-kotlinCoroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.0" }
+kotlinCoroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.1" }
 maverickSynergyClient = { group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1" }
 argo = { group = "net.sourceforge.argo", name = "argo", version = "7.4" }
 urin = { group = "net.sourceforge.urin", name = "urin", version = "4.16" }
