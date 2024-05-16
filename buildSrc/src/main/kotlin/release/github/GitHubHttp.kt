@@ -133,7 +133,7 @@ class GitHubHttp(
                     path("repos", "svg2ico", "svg2ico", "releases", releaseId.value, "assets"),
                     queryParameters(
                         queryParameter("name", "svg2ico-${versionNumber}.jar"),
-                        queryParameter("label", "Jar")
+                        queryParameter("label", "Ant task & command line package")
                     )
                 ).asUri()
             )
