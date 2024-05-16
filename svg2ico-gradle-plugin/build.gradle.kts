@@ -43,15 +43,15 @@ testing {
 
 @Suppress("UnstableApiUsage")
 gradlePlugin {
-    website.set("https://svg2ico.sourceforge.net")
-    vcsUrl.set("https://github.com/svg2ico/svg2ico.git")
+    website = "https://svg2ico.sourceforge.net"
+    vcsUrl = "https://github.com/svg2ico/svg2ico.git"
     plugins {
         create("svg2IcoPlugin") {
             id = "com.gitlab.svg2ico"
             implementationClass = "com.gitlab.svg2ico.Svg2IcoPlugin"
             displayName = "svg2ico plugin"
             description = "Converts SVG images into ICO and PNG"
-            tags.set(listOf("svg", "ico", "png"))
+            tags = listOf("svg", "ico", "png")
         }
     }
 }
