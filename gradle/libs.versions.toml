@@ -17,7 +17,7 @@ gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.1" }
 ant = { group = "org.apache.ant", name = "ant", version = "1.10.14" }
 batikTranscoder = { group = "org.apache.xmlgraphics", name = "batik-transcoder", version.ref = "batik" }
 batikCodec = { group = "org.apache.xmlgraphics", name = "batik-codec", version.ref = "batik" }
-commonsCli = { group = "commons-cli", name = "commons-cli", version = "1.7.0" }
+commonsCli = { group = "commons-cli", name = "commons-cli", version = "1.8.0" }
 image4j = { group = "org.jclarion", name = "image4j", version = "0.7" }
 
 commonsIO = { group = "commons-io", name = "commons-io", version = "2.16.1" }
