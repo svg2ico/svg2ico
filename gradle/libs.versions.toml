@@ -27,7 +27,7 @@ spotbugs = { group = "com.github.spotbugs", name = "spotbugs", version = "4.8.5"
 kotlinCoroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.1" }
 maverickSynergyClient = { group = "com.sshtools", name = "maverick-synergy-client", version = "3.1.1" }
 argo = { group = "net.sourceforge.argo", name = "argo", version = "7.5" }
-urin = { group = "net.sourceforge.urin", name = "urin", version = "4.23" }
+urin = { group = "net.sourceforge.urin", name = "urin", version = "5.1" }
 kotest = { group = "io.kotest", name = "kotest-assertions-core", version = "5.9.0" }
 bouncycastleProvider = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastlePkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
