@@ -7,7 +7,7 @@ jobs:
       # noinspection SpellCheckingInspection
       image: eclipse-temurin:11.0.23_9-jdk-jammy@sha256:f222d1e1d705cd9f66a6ece7ebde97c04da2fe8628cf9c8f606f77fecf0bd97d
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       - run: ./gradlew buildSrc:build clean build
       - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
