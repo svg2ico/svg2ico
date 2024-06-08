@@ -7,7 +7,7 @@ batik = "1.17"
 spotbugs = { id = "com.github.spotbugs", version = "6.0.15" }
 shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
-svg2ico = { id = "com.gitlab.svg2ico", version = "2.4" }
+svg2ico = { id = "com.gitlab.svg2ico", version = "2.5" }
 asciidoctorConvert = { id = "org.asciidoctor.jvm.convert", version = "4.0.2" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
 gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.1" }
